@@ -1,0 +1,92 @@
+services:
+  db:
+    build:
+      context: ./infrastructure/docker/postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-petmatch}
+      POSTGRES_USER: ${POSTGRES_USER:-petmatch}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    build:
+      context: ./infrastructure/docker/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-petmatch}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-this-minio-password}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  api:
+    build:
+      context: ./apps/api
+    working_dir: /app
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://petmatch:change-me-locally@db:5432/petmatch}
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-secret}
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-60}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      S3_BUCKET: ${S3_BUCKET:-pet-photos}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-petmatch}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-change-this-minio-password}
+      MAX_PHOTO_SIZE_BYTES: ${MAX_PHOTO_SIZE_BYTES:-10485760}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0"
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+      GEOCODER_BASE_URL: ${GEOCODER_BASE_URL:-https://photon.komoot.io}
+      NEXT_PUBLIC_SEARCH_COUNTRY: ${NEXT_PUBLIC_SEARCH_COUNTRY:-UY}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  minio_data:
+  web_node_modules:
+

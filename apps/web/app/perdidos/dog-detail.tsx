@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { dogTraits, lostDate, lostDogsEndpoint } from "@/lib/lost-dogs";
+import { dogTraits, lostDate, lostDogsEndpoint, sexLabel } from "@/lib/lost-dogs";
 import type { LostDogNotice } from "@/lib/lost-dogs";
 import { DogPhoto } from "./dog-photo";
 
@@ -35,6 +35,7 @@ export function DogDetail({ id }: { id: string }) {
           <h1>{dog.name}</h1>
           <p className="dog-traits">{dogTraits(dog).join(" · ") || "Perro"}</p>
           <dl className="review-details">
+            <div><dt>Sexo</dt><dd>{sexLabel(dog.sex)}</dd></div>
             <div><dt>Zona donde se perdió</dt><dd>{dog.public_location || "No indicada"}</dd></div>
             <div><dt>Perdido desde el</dt><dd><time dateTime={dog.lost_at}>{lostDate(dog.lost_at)}</time></dd></div>
           </dl>

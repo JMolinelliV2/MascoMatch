@@ -53,3 +53,13 @@ El mapa y la búsqueda de direcciones requieren Internet. Las teselas de OpenStr
 Esta entrega agrega consulta pública de perros perdidos. El contacto privado entre personas, el panel de administración de avisos, los embeddings, el matching y las alertas siguen pendientes.
 
 Referencias: [Leaflet](https://leafletjs.com/) y [política de teselas de OpenStreetMap](https://operations.osmfoundation.org/policies/tiles/).
+
+## Actualización: campo Sexo
+
+El primer paso de los tres formularios incluye Sexo, con Macho (`male`), Hembra (`female`) y No lo sé (`unknown`, valor predeterminado). Se guarda en la mascota o el avistamiento y aparece en el resumen de revisión. El listado de perros perdidos muestra el sexo conocido entre sus características; la ficha también informa si no está indicado.
+
+La migración `0004_observation_sex` agrega el dato a avistamientos y animales encontrados. Los existentes quedan como `unknown`; la mascota ya tenía el campo. La migración inicial mantiene el esquema original de avistamientos para que una base nueva pueda aplicar toda la secuencia. No se agregan variables de entorno ni llamadas de IA.
+
+Archivos: modelos, esquemas, migraciones, ruta pública, formulario compartido, ficha y etiquetas públicas, README y pruebas de sexo/migraciones/listado. Para aplicar: `docker compose restart api web`.
+
+Comprobado: **72 pruebas de API aprobadas y 1 integración opcional omitida**, tanto en Windows como en el contenedor; **13 pruebas de frontend**, TypeScript y compilación de producción correctos. PostgreSQL está en `0004_observation_sex (head)`. En el navegador se verificaron las opciones del formulario y la selección Macho, y el aviso anterior de Kobe muestra Sexo: No indicado.

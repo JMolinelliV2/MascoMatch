@@ -69,6 +69,7 @@ class Observation(TimestampMixin, Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     author_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), index=True)
     species: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
+    sex: Mapped[str] = mapped_column(String(24), default="unknown", server_default="unknown", nullable=False)
     description: Mapped[str] = mapped_column(String(4000), nullable=False)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     latitude: Mapped[float | None] = mapped_column(Float)

@@ -2,9 +2,10 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Species = Literal["dog", "cat", "rabbit", "bird", "other", "unknown"]
+Sex = Literal["male", "female", "unknown"]
 
 
 class ORMModel(BaseModel):
@@ -43,7 +44,7 @@ class PetCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     species: Species
     breed: str = Field(default="unknown", max_length=120)
-    sex: str = Field(default="unknown", max_length=24)
+    sex: Sex = "unknown"
     size: str = Field(default="unknown", max_length=24)
     age_estimate: str | None = Field(default=None, max_length=80)
     primary_color: str = Field(default="unknown", max_length=40)
@@ -58,7 +59,7 @@ class PetUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     species: Species | None = None
     breed: str | None = Field(default=None, max_length=120)
-    sex: str | None = Field(default=None, max_length=24)
+    sex: Sex | None = None
     size: str | None = Field(default=None, max_length=24)
     age_estimate: str | None = Field(default=None, max_length=80)
     primary_color: str | None = Field(default=None, max_length=40)
@@ -67,6 +68,13 @@ class PetUpdate(BaseModel):
     distinctive_features: list[str] | None = None
     collar_description: str | None = Field(default=None, max_length=255)
     microchip_reference: str | None = Field(default=None, max_length=80)
+
+    @field_validator("sex")
+    @classmethod
+    def sex_cannot_be_null(cls, value):
+        if value is None:
+            raise ValueError("Use 'unknown' when sex is not known")
+        return value
 
 
 class PetRead(ORMModel):
@@ -137,6 +145,7 @@ class PublicLostDogRead(BaseModel):
     id: UUID
     name: str
     species: Literal["dog"] = "dog"
+    sex: str
     breed: str
     size: str
     primary_color: str
@@ -155,6 +164,7 @@ class PublicLostDogList(BaseModel):
 
 class ObservationCreate(BaseModel):
     species: Species
+    sex: Sex = "unknown"
     description: str = Field(min_length=1, max_length=4000)
     observed_at: datetime
     latitude: float | None = Field(default=None, ge=-90, le=90)
@@ -172,6 +182,7 @@ class ObservationCreate(BaseModel):
 
 class ObservationUpdate(BaseModel):
     species: Species | None = None
+    sex: Sex | None = None
     description: str | None = Field(default=None, min_length=1, max_length=4000)
     observed_at: datetime | None = None
     latitude: float | None = Field(default=None, ge=-90, le=90)
@@ -179,10 +190,18 @@ class ObservationUpdate(BaseModel):
     location_accuracy_meters: int | None = Field(default=None, ge=0)
     confidence: float | None = Field(default=None, ge=0, le=1)
 
+    @field_validator("sex")
+    @classmethod
+    def sex_cannot_be_null(cls, value):
+        if value is None:
+            raise ValueError("Use 'unknown' when sex is not known")
+        return value
+
 
 class ObservationRead(ORMModel):
     id: UUID
     species: str
+    sex: str
     description: str
     observed_at: datetime
     latitude: float | None

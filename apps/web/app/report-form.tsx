@@ -164,7 +164,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     const text = (key: string) => String(form.get(key) ?? "").trim();
     const selected = (key: string) => formElement.querySelector<HTMLSelectElement>(`[name="${key}"]`)?.selectedOptions[0]?.textContent ?? "";
     setReview({
-      animal: [kind === "lost" ? text("petName") : "", selected("species"), text("color") !== "unknown" ? selected("color") : "", text("size") !== "unknown" ? selected("size") : ""].filter(Boolean).join(" · "),
+      animal: [kind === "lost" ? text("petName") : "", selected("species"), text("sex") !== "unknown" ? selected("sex") : "", text("color") !== "unknown" ? selected("color") : "", text("size") !== "unknown" ? selected("size") : ""].filter(Boolean).join(" · "),
       description: text("description"),
       when: text("observedAt"),
       note: kind === "lost" ? "" : text("eventNote"),
@@ -200,6 +200,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       });
       const token = session.access_token;
       const species = text("species");
+      const sex = text("sex");
       const color = text("color");
       const size = text("size");
       // Exact addresses stay in the picker; reports include only the locality.
@@ -221,7 +222,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       let ownerType: "lost_case" | "observation";
       if (kind === "lost") {
         const pet = await send<{ id: string }>("/pets", {
-          name: text("petName"), species, primary_color: color, size, breed: "unknown",
+          name: text("petName"), species, sex, primary_color: color, size, breed: "unknown",
         }, token);
         report = await send("/lost-cases", {
           pet_id: pet.id, lost_at: when.toISOString(), last_seen_at: when.toISOString(),
@@ -231,7 +232,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         ownerType = "lost_case";
       } else {
         report = await send("/observations", {
-          species, description, observed_at: when.toISOString(), ...locationData,
+          species, sex, description, observed_at: when.toISOString(), ...locationData,
           source_type: kind === "found" ? "FOUND_ANIMAL" : "USER_SIGHTING",
         }, token);
         ownerType = "observation";
@@ -306,6 +307,12 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
               {kind === "lost" && <label className="field-label">Nombre
                 <input name="petName" required minLength={1} maxLength={120} autoComplete="off" placeholder="Nombre de tu mascota" className={inputClass} />
               </label>}
+              <label className="field-label">Sexo <span className="optional">(opcional)</span>
+                <select name="sex" defaultValue="unknown" className={inputClass}>
+                  <option value="unknown">No lo sé</option>
+                  <option value="male">Macho</option><option value="female">Hembra</option>
+                </select>
+              </label>
               <label className="field-label">Color <span className="optional">(opcional)</span>
                 <select name="color" defaultValue="unknown" className={inputClass}>
                   <option value="unknown">No lo sé</option><option value="brown">Marrón</option>

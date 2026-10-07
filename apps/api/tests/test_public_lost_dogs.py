@@ -4,9 +4,9 @@ from uuid import uuid4
 import pytest
 
 
-def publish(client, headers, *, name="Luna", species="dog", description="Perro marrón con pecho blanco", area="El Pinar, Canelones, Uruguay"):
+def publish(client, headers, *, name="Luna", species="dog", sex="unknown", description="Perro marrón con pecho blanco", area="El Pinar, Canelones, Uruguay"):
     pet = client.post("/api/v1/pets", headers=headers, json={
-        "name": name, "species": species, "primary_color": "brown", "size": "medium",
+        "name": name, "species": species, "sex": sex, "primary_color": "brown", "size": "medium",
         "microchip_reference": "private-chip",
     }).json()
     case_response = client.post("/api/v1/lost-cases", headers=headers, json={
@@ -34,8 +34,9 @@ def test_public_dogs_need_no_login_and_expose_only_notice_fields(client, auth_he
     assert listing.headers["cache-control"] == "no-store"
     assert listing.json()["total"] == 1
     dog = listing.json()["items"][0]
-    assert set(dog) == {"id", "name", "species", "breed", "size", "primary_color", "description", "public_location", "lost_at", "photo_url"}
+    assert set(dog) == {"id", "name", "species", "sex", "breed", "size", "primary_color", "description", "public_location", "lost_at", "photo_url"}
     assert dog["name"] == "Luna"
+    assert dog["sex"] == "unknown"
     assert dog["public_location"] == "El Pinar, Canelones, Uruguay"
     assert dog["photo_url"] is None
     assert "private-chip" not in listing.text
@@ -43,6 +44,16 @@ def test_public_dogs_need_no_login_and_expose_only_notice_fields(client, auth_he
     detail = client.get(f"/api/v1/public/lost-dogs/{case['id']}")
     assert detail.json() == dog
     assert client.get(f"/api/v1/lost-cases/{case['id']}").status_code == 401
+
+
+@pytest.mark.parametrize("sex", ["male", "female"])
+def test_declared_pet_sex_is_public_and_updates_with_pet(client, auth_headers, sex):
+    pet, case = publish(client, auth_headers, sex=sex)
+    path = f"/api/v1/public/lost-dogs/{case['id']}"
+    assert client.get(path).json()["sex"] == sex
+    assert client.get("/api/v1/public/lost-dogs").json()["items"][0]["sex"] == sex
+    assert client.patch(f"/api/v1/pets/{pet['id']}", headers=auth_headers, json={"sex": "unknown"}).status_code == 200
+    assert client.get(path).json()["sex"] == "unknown"
 
 
 @pytest.mark.parametrize("status", ["FOUND", "CLOSED", "CANCELLED"])

@@ -37,7 +37,7 @@ def public_area(case: LostCase) -> str | None:
 def notice(case: LostCase, pet: Pet, has_photo: bool) -> PublicLostDogRead:
     # Explicit allowlist: never serialize the owner, microchip, storage key or GPS point.
     return PublicLostDogRead(
-        id=case.id, name=pet.name, breed=pet.breed, size=pet.size,
+        id=case.id, name=pet.name, sex=pet.sex, breed=pet.breed, size=pet.size,
         primary_color=pet.primary_color, description=case.description,
         public_location=public_area(case), lost_at=case.lost_at,
         photo_url=f"/api/v1/public/lost-dogs/{case.id}/photo" if has_photo else None,

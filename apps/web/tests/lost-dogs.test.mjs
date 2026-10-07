@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { dogTraits, lostDate } from "../lib/lost-dogs.ts";
+import { dogTraits, lostDate, sexLabel } from "../lib/lost-dogs.ts";
 import { placeAtMapPoint } from "../lib/places.ts";
 
 test("el pin guarda el punto nuevo sin conservar la dirección o precisión del GPS anterior", () => {
@@ -14,8 +14,15 @@ test("el pin guarda el punto nuevo sin conservar la dirección o precisión del 
 });
 
 test("las características públicas usan etiquetas en español y omiten datos desconocidos", () => {
-  assert.deepEqual(dogTraits({ breed: "unknown", size: "medium", primary_color: "brown" }), ["Mediano", "Marrón"]);
-  assert.deepEqual(dogTraits({ breed: "unknown", size: "unknown", primary_color: "unknown" }), []);
+  assert.deepEqual(dogTraits({ breed: "unknown", sex: "unknown", size: "medium", primary_color: "brown" }), ["Mediano", "Marrón"]);
+  assert.deepEqual(dogTraits({ breed: "unknown", sex: "unknown", size: "unknown", primary_color: "unknown" }), []);
+});
+
+test("el sexo declarado se muestra con etiquetas en español", () => {
+  assert.equal(sexLabel("male"), "Macho");
+  assert.equal(sexLabel("female"), "Hembra");
+  assert.equal(sexLabel("unknown"), "No indicado");
+  assert.deepEqual(dogTraits({ breed: "unknown", sex: "female", size: "medium", primary_color: "white" }), ["Hembra", "Mediano", "Blanco"]);
 });
 
 test("las fechas del aviso son legibles y toleran datos inválidos", () => {

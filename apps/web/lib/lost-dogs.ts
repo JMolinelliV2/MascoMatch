@@ -1,15 +1,19 @@
 export type LostDogNotice = {
-  id: string; name: string; species: "dog"; breed: string; size: string;
+  id: string; name: string; species: "dog"; sex: string; breed: string; size: string;
   primary_color: string; description: string; public_location: string | null;
   lost_at: string; photo_url: string | null;
 };
 export type LostDogList = { items: LostDogNotice[]; total: number; limit: number; offset: number };
 export const lostDogsEndpoint = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1"}/public/lost-dogs`;
 
-export function dogTraits(dog: Pick<LostDogNotice, "breed" | "size" | "primary_color">): string[] {
+export function sexLabel(sex: string): string {
+  return sex === "male" ? "Macho" : sex === "female" ? "Hembra" : "No indicado";
+}
+
+export function dogTraits(dog: Pick<LostDogNotice, "breed" | "size" | "primary_color" | "sex">): string[] {
   const sizes: Record<string, string> = { tiny: "Muy pequeño", small: "Pequeño", medium: "Mediano", large: "Grande" };
   const colors: Record<string, string> = { brown: "Marrón", black: "Negro", white: "Blanco", gray: "Gris", cream: "Crema", orange: "Naranja", tan: "Beige / canela", red: "Rojizo", multicolor: "Varios colores" };
-  return [dog.breed !== "unknown" ? dog.breed : "", sizes[dog.size], colors[dog.primary_color]].filter((trait): trait is string => Boolean(trait));
+  return [dog.breed !== "unknown" ? dog.breed : "", dog.sex === "male" || dog.sex === "female" ? sexLabel(dog.sex) : "", sizes[dog.size], colors[dog.primary_color]].filter((trait): trait is string => Boolean(trait));
 }
 
 export function lostDate(value: string): string {

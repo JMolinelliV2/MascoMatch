@@ -2,19 +2,21 @@ import importlib
 
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 
 
 def test_fresh_and_existing_core_database_migrations(monkeypatch):
     core = importlib.import_module("migrations.versions.0001_initial_core")
     extraction = importlib.import_module("migrations.versions.0002_ai_extraction")
     public = importlib.import_module("migrations.versions.0003_public_lost_dogs")
+    sex = importlib.import_module("migrations.versions.0004_observation_sex")
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
         operations = Operations(MigrationContext.configure(connection))
         monkeypatch.setattr(core, "op", operations)
         monkeypatch.setattr(extraction, "op", operations)
         monkeypatch.setattr(public, "op", operations)
+        monkeypatch.setattr(sex, "op", operations)
         # SQLite cannot install PostgreSQL extensions; table migrations remain real DDL.
         monkeypatch.setattr(operations, "execute", lambda statement: None)
         core.upgrade()
@@ -27,6 +29,13 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         assert "feature_sets" in inspect(connection).get_table_names()
         assert "public_location" not in {column["name"] for column in inspect(connection).get_columns("lost_cases")}
         public.upgrade()
+        assert "sex" not in {column["name"] for column in inspect(connection).get_columns("observations")}
+        connection.execute(text("INSERT INTO observations (id, species, description, observed_at, source_type, confidence) VALUES ('00000000000000000000000000000001', 'dog', 'existing sighting', CURRENT_TIMESTAMP, 'USER_SIGHTING', 0.5)"))
+        sex.upgrade()
+        assert connection.scalar(text("SELECT sex FROM observations")) == "unknown"
+        sex.downgrade()
+        assert "sex" not in {column["name"] for column in inspect(connection).get_columns("observations")}
+        sex.upgrade()
         assert "public_location" in {column["name"] for column in inspect(connection).get_columns("lost_cases")}
         public.downgrade()
         assert "public_location" not in {column["name"] for column in inspect(connection).get_columns("lost_cases")}

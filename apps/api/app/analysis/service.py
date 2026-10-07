@@ -1,0 +1,124 @@
+from datetime import datetime, timezone
+import hashlib
+import json
+from uuid import UUID
+
+from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
+
+from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
+from app.core.config import settings
+from app.models import AnalysisJob, FeatureSet, LostCase, Observation, Pet, Photo
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def input_hash(snapshot: dict) -> str:
+    return hashlib.sha256(json.dumps(snapshot, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def text_snapshot(db: Session, owner_type: str, owner_id: UUID) -> dict | None:
+    if owner_type == "observation":
+        observation = db.get(Observation, owner_id)
+        if observation is None:
+            return None
+        return {"description": observation.description, "declared_features": {"species": observation.species}}
+    if owner_type == "lost_case":
+        case = db.get(LostCase, owner_id)
+        if case is None:
+            return None
+        pet, description = case.pet, case.description
+    elif owner_type == "pet":
+        pet, description = db.get(Pet, owner_id), ""
+        if pet is None:
+            return None
+    else:
+        return None
+    # Names, contact information, microchips and coordinates are not model inputs.
+    return {"description": description, "declared_features": {
+        name: getattr(pet, name) for name in (
+            "species", "breed", "size", "primary_color", "secondary_colors",
+            "coat_type", "distinctive_features", "collar_description",
+        )
+    }}
+
+
+def photo_snapshot(photo: Photo) -> dict:
+    return {"storage_key": photo.storage_key, "mime_type": photo.mime_type}
+
+
+def is_current(db: Session, job: AnalysisJob) -> bool:
+    if job.source_type == "image":
+        photo = db.get(Photo, job.photo_id) if job.photo_id else None
+        if photo is None or photo.owner_type != job.owner_type or photo.owner_id != job.owner_id:
+            return False
+        snapshot = photo_snapshot(photo)
+        # A photo must still have an existing report or pet.
+        if text_snapshot(db, job.owner_type, job.owner_id) is None:
+            return False
+    else:
+        snapshot = text_snapshot(db, job.owner_type, job.owner_id)
+    return snapshot is not None and input_hash(snapshot) == job.input_hash
+
+
+def _schedule(db: Session, owner_type: str, owner_id: UUID, source: str, snapshot: dict, photo_id: UUID | None = None) -> AnalysisJob:
+    model = settings.ai_vision_model if source == "image" else settings.ai_text_model
+    version = VISION_PROMPT_VERSION if source == "image" else TEXT_PROMPT_VERSION
+    digest = input_hash(snapshot)
+    key = input_hash({"owner_type": owner_type, "owner_id": str(owner_id), "photo_id": str(photo_id or ""),
+                      "source": source, "input": digest, "provider": settings.ai_provider, "model": model, "version": version})
+    existing = db.scalar(select(AnalysisJob).where(AnalysisJob.deduplication_key == key))
+    if existing is not None:
+        return existing
+    # The nested transaction handles competing requests without rolling back the report.
+    from sqlalchemy.exc import IntegrityError
+    try:
+        with db.begin_nested():
+            job = AnalysisJob(
+                deduplication_key=key, owner_type=owner_type, owner_id=owner_id, photo_id=photo_id,
+                source_type=source, provider=settings.ai_provider, model=model, prompt_version=version,
+                input_hash=digest, input_snapshot=snapshot, max_attempts=settings.ai_max_attempts,
+                available_at=utcnow(),
+            )
+            db.add(job)
+            db.flush()
+        return job
+    except IntegrityError:
+        existing = db.scalar(select(AnalysisJob).where(AnalysisJob.deduplication_key == key))
+        if existing is None:
+            raise
+        return existing
+
+
+def schedule_text(db: Session, owner_type: str, owner_id: UUID) -> AnalysisJob | None:
+    if not settings.ai_enabled:
+        return None
+    snapshot = text_snapshot(db, owner_type, owner_id)
+    return _schedule(db, owner_type, owner_id, "text", snapshot) if snapshot is not None else None
+
+
+def schedule_photo(db: Session, photo: Photo) -> AnalysisJob | None:
+    if not settings.ai_enabled:
+        return None
+    return _schedule(db, photo.owner_type, photo.owner_id, "image", photo_snapshot(photo), photo.id)
+
+
+def schedule_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
+    schedule_text(db, owner_type, owner_id)
+    if settings.ai_enabled:
+        for photo in db.scalars(select(Photo).where(Photo.owner_type == owner_type, Photo.owner_id == owner_id)):
+            schedule_photo(db, photo)
+
+
+def purge_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
+    ids = select(AnalysisJob.id).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id)
+    db.execute(delete(FeatureSet).where(FeatureSet.analysis_job_id.in_(ids)))
+    db.execute(delete(AnalysisJob).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id))
+
+
+def purge_photo(db: Session, photo_id: UUID) -> None:
+    ids = select(AnalysisJob.id).where(AnalysisJob.photo_id == photo_id)
+    db.execute(delete(FeatureSet).where(FeatureSet.analysis_job_id.in_(ids)))
+    db.execute(delete(AnalysisJob).where(AnalysisJob.photo_id == photo_id))

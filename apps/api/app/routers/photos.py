@@ -8,18 +8,12 @@ from app.db.session import get_db
 from app.dependencies import current_user
 from app.core.config import settings
 from app.core.image_storage import create_download_url, delete_private_image, store_private_image
-from app.models import LostCase, Observation, Pet, Photo, User
+from app.analysis.service import purge_photo, schedule_photo
+from app.models import Photo, User
 from app.schemas import PhotoCreate, PhotoRead, PhotoUpdate, PhotoUploadRead
+from app.services.access import owner_has_access
 
 router = APIRouter(prefix="/photos", tags=["photos"])
-
-
-def owner_has_access(owner_type: str, owner_id: UUID, db: Session, user: User) -> bool:
-    if owner_type == "pet":
-        return db.scalar(select(Pet.id).where(Pet.id == owner_id, Pet.owner_id == user.id)) is not None
-    if owner_type == "lost_case":
-        return db.scalar(select(LostCase.id).join(Pet).where(LostCase.id == owner_id, Pet.owner_id == user.id)) is not None
-    return db.scalar(select(Observation.id).where(Observation.id == owner_id, Observation.author_id == user.id)) is not None
 
 
 def owned_photo(db: Session, photo_id: UUID, user: User) -> Photo:
@@ -38,6 +32,8 @@ def create_photo_metadata(payload: PhotoCreate, db: Session = Depends(get_db), u
         raise HTTPException(status_code=422, detail="Storage key must be scoped to the photo owner")
     photo = Photo(**payload.model_dump())
     db.add(photo)
+    db.flush()
+    schedule_photo(db, photo)
     db.commit()
     db.refresh(photo)
     return photo
@@ -74,6 +70,8 @@ def upload_photo(
     )
     try:
         db.add(photo)
+        db.flush()
+        schedule_photo(db, photo)
         db.commit()
         db.refresh(photo)
     except Exception:
@@ -116,6 +114,7 @@ def get_photo_url(photo_id: UUID, db: Session = Depends(get_db), user: User = De
 def delete_photo_metadata(photo_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
     photo = owned_photo(db, photo_id, user)
     delete_private_image(photo.storage_key)
+    purge_photo(db, photo_id)
     db.delete(photo)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

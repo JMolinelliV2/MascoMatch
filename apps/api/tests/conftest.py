@@ -8,16 +8,26 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app import models  # noqa: F401
+from app.core.config import settings
 
 
 @pytest.fixture()
-def client():
+def db_factory():
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     TestingSession = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     Base.metadata.create_all(engine)
+    yield TestingSession
+    Base.metadata.drop_all(engine)
+    engine.dispose()
+
+
+@pytest.fixture()
+def client(db_factory, monkeypatch):
+    # No Redis or model request is started by the test application lifespan.
+    monkeypatch.setattr(settings, "ai_enabled", False)
 
     def override_get_db():
-        db = TestingSession()
+        db = db_factory()
         try:
             yield db
         finally:
@@ -27,8 +37,6 @@ def client():
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
-    Base.metadata.drop_all(engine)
-    engine.dispose()
 
 
 @pytest.fixture()

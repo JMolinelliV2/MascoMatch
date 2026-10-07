@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.analysis.service import purge_owner, schedule_text
 from app.dependencies import current_user
 from app.models import Pet, User
 from app.schemas import PetCreate, PetRead, PetUpdate
@@ -43,6 +44,9 @@ def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), 
     pet = owned_pet(db, pet_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(pet, field, value)
+    db.flush()
+    for case in pet.lost_cases:
+        schedule_text(db, "lost_case", case.id)
     db.commit()
     db.refresh(pet)
     return pet
@@ -53,6 +57,7 @@ def delete_pet(pet_id: UUID, db: Session = Depends(get_db), user: User = Depends
     pet = owned_pet(db, pet_id, user)
     if pet.lost_cases:
         raise HTTPException(status_code=409, detail="A pet with lost-case history cannot be deleted")
+    purge_owner(db, "pet", pet_id)
     db.delete(pet)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

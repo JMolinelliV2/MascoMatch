@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.analysis.service import purge_owner, schedule_text
 from app.dependencies import current_user
 from app.models import LostCase, Pet, User
 from app.schemas import LostCaseCreate, LostCaseRead, LostCaseUpdate
@@ -26,6 +27,8 @@ def create_lost_case(payload: LostCaseCreate, db: Session = Depends(get_db), use
         raise HTTPException(status_code=404, detail="Pet not found")
     case = LostCase(**payload.model_dump())
     db.add(case)
+    db.flush()
+    schedule_text(db, "lost_case", case.id)
     db.commit()
     db.refresh(case)
     return case
@@ -47,6 +50,8 @@ def update_lost_case(case_id: UUID, payload: LostCaseUpdate, db: Session = Depen
     case = owned_case(db, case_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(case, field, value)
+    db.flush()
+    schedule_text(db, "lost_case", case.id)
     db.commit()
     db.refresh(case)
     return case
@@ -54,7 +59,9 @@ def update_lost_case(case_id: UUID, payload: LostCaseUpdate, db: Session = Depen
 
 @router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_lost_case(case_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    db.delete(owned_case(db, case_id, user))
+    case = owned_case(db, case_id, user)
+    purge_owner(db, "lost_case", case_id)
+    db.delete(case)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

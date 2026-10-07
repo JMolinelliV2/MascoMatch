@@ -117,6 +117,15 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
   .success-page { padding-top: 72px; }
   .success-mark { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; color: #166534; background: #edf7ee; border-radius: 50%; font-size: 24px; }
   .success-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .analysis-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .analysis-section h2 { margin: 0; font-size: 21px; font-weight: 600; }
+  .analysis-status p { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
+  .analysis-result { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; }
+  .analysis-result h3 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+  .analysis-details { display: grid; gap: 10px; margin: 0; font-size: 14px; }
+  .analysis-details dt { color: var(--muted); font-size: 12px; }
+  .analysis-details dd { margin: 0; overflow-wrap: anywhere; }
+  .analysis-uncertain { color: #87571b; font-size: 12px; }
 
   .location-picker { display: grid; gap: 10px; }
   .location-search { position: relative; }

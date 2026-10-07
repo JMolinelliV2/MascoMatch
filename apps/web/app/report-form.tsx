@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import type { Place } from "@/lib/places";
 import { LocationPicker } from "./location-picker";
+import { ReportAnalysis } from "./report-analysis";
 
 type ReportKind = "lost" | "sighting" | "found";
 type AccountMode = "register" | "login";
@@ -69,6 +70,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const pendingFocus = useRef<{ name: string; native: boolean } | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [review, setReview] = useState<Review | null>(null);
+  const [savedReport, setSavedReport] = useState<{ ownerType: "lost_case" | "observation"; ownerId: string; token: string } | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [photoWarning, setPhotoWarning] = useState("");
@@ -216,7 +218,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         ...(location.accuracyMeters === undefined ? {} : { location_accuracy_meters: location.accuracyMeters }),
       } : {};
       let report: { id: string };
-      let ownerType: string;
+      let ownerType: "lost_case" | "observation";
       if (kind === "lost") {
         const pet = await send<{ id: string }>("/pets", {
           name: text("petName"), species, primary_color: color, size, breed: "unknown",
@@ -238,6 +240,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         catch { setPhotoWarning("El reporte se guardó, pero la foto no pudo subirse. La información que compartiste quedó registrada."); }
       }
       setSuccess(kind === "lost" ? `El aviso de ${text("petName")} quedó guardado.` : "Gracias por ayudar. Tu reporte quedó guardado.");
+      setSavedReport({ ownerType, ownerId: report.id, token });
       formElement.reset();
       setLocation(null);
       setPhoto(null);
@@ -256,10 +259,11 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         <h1>Tu reporte quedó guardado</h1>
         <p role="status" className="page-intro">{success}</p>
         {photoWarning && <p role="alert" className="notice notice-warning">{photoWarning}</p>}
+        {savedReport && <ReportAnalysis {...savedReport} />}
         <div className="success-actions">
           <Link href="/" className="button button-primary">Volver al inicio</Link>
           <button type="button" className="button button-secondary" onClick={() => {
-            setSuccess(""); setPhotoWarning(""); setReview(null); goToStep(1);
+            setSuccess(""); setPhotoWarning(""); setReview(null); setSavedReport(null); goToStep(1);
           }}>Crear otro reporte</button>
         </div>
       </main>

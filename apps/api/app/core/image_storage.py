@@ -98,3 +98,23 @@ def delete_private_image(storage_key: str) -> None:
     client = _client(settings.s3_endpoint)
     client.delete_object(Bucket=settings.s3_bucket, Key=storage_key)
 
+
+def load_analysis_image(storage_key: str, mime_type: str) -> tuple[bytes, str]:
+    response = _client(settings.s3_endpoint).get_object(Bucket=settings.s3_bucket, Key=storage_key)
+    stream = response["Body"]
+    try:
+        payload = stream.read(settings.max_photo_size_bytes + 1)
+    finally:
+        stream.close()
+    if len(payload) > settings.max_photo_size_bytes:
+        raise ValueError("Image is too large for analysis")
+    clean_payload, _, _, _ = _clean_image(payload, mime_type)
+    with Image.open(BytesIO(clean_payload)) as image:
+        image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+        rgba = image.convert("RGBA")
+        clean = Image.new("RGB", rgba.size, "white")
+        clean.paste(rgba, mask=rgba.getchannel("A"))
+        output = BytesIO()
+        clean.save(output, format="JPEG", quality=85, optimize=True, exif=b"")
+        return output.getvalue(), "image/jpeg"
+

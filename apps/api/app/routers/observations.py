@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.analysis.service import purge_owner, schedule_text
 from app.dependencies import current_user
 from app.models import Observation, User
 from app.schemas import ObservationCreate, ObservationRead, ObservationUpdate
@@ -16,6 +17,8 @@ router = APIRouter(prefix="/observations", tags=["observations"])
 def create_observation(payload: ObservationCreate, db: Session = Depends(get_db), user: User = Depends(current_user)):
     observation = Observation(author_id=user.id, **payload.model_dump())
     db.add(observation)
+    db.flush()
+    schedule_text(db, "observation", observation.id)
     db.commit()
     db.refresh(observation)
     return observation
@@ -42,6 +45,8 @@ def update_observation(observation_id: UUID, payload: ObservationUpdate, db: Ses
         raise HTTPException(status_code=404, detail="Observation not found")
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(observation, field, value)
+    db.flush()
+    schedule_text(db, "observation", observation.id)
     db.commit()
     db.refresh(observation)
     return observation
@@ -52,6 +57,7 @@ def delete_observation(observation_id: UUID, db: Session = Depends(get_db), user
     observation = db.get(Observation, observation_id)
     if observation is None or observation.author_id != user.id:
         raise HTTPException(status_code=404, detail="Observation not found")
+    purge_owner(db, "observation", observation_id)
     db.delete(observation)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

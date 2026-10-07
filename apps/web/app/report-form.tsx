@@ -226,6 +226,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         report = await send("/lost-cases", {
           pet_id: pet.id, lost_at: when.toISOString(), last_seen_at: when.toISOString(),
           ...locationData, description,
+          public_location: location?.locality ?? null,
         }, token);
         ownerType = "lost_case";
       } else {
@@ -261,6 +262,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         {photoWarning && <p role="alert" className="notice notice-warning">{photoWarning}</p>}
         {savedReport && <ReportAnalysis {...savedReport} />}
         <div className="success-actions">
+          {kind === "lost" && <Link href="/perdidos" className="button button-primary">Ver perros perdidos</Link>}
           <Link href="/" className="button button-primary">Volver al inicio</Link>
           <button type="button" className="button button-secondary" onClick={() => {
             setSuccess(""); setPhotoWarning(""); setReview(null); setSavedReport(null); goToStep(1);

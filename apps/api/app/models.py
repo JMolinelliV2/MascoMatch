@@ -58,6 +58,7 @@ class LostCase(TimestampMixin, Base):
     longitude: Mapped[float | None] = mapped_column(Float)
     location_accuracy_meters: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(String(4000), default="", nullable=False)
+    public_location: Mapped[str | None] = mapped_column(String(350))
     search_radius_meters: Mapped[int] = mapped_column(Integer, default=15000, nullable=False)
     pet: Mapped[Pet] = relationship(back_populates="lost_cases")
 

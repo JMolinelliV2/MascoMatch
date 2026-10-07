@@ -141,11 +141,58 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
   .location-attribution { margin: 0; font-size: 11px; color: var(--muted); }
   .location-attribution a { text-decoration: underline; }
   .status-text { margin: 0; font-size: 13px; color: var(--muted); }
+  .location-map-section { display: grid; gap: 10px; }
+  .location-map { height: 300px; width: 100%; border: 1px solid var(--line); border-radius: 8px; z-index: 0; font-family: inherit; }
+  .location-pin { background: none; border: none; }
+  .location-pin-shape { display: block; width: 32px; height: 32px; margin: 2px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; background: var(--accent); transform: rotate(-45deg); box-shadow: -2px 2px 8px #16243a44; }
+  .location-pin-shape::after { content: ""; position: absolute; width: 8px; height: 8px; top: 11px; left: 11px; border-radius: 50%; background: #fff; }
+  .location-pin:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+  .lost-dogs-invitation { max-width: 1136px; margin: 0 auto; padding: 32px 0; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); }
+  .lost-dogs-invitation h2 { margin: 0; font-size: 23px; font-weight: 600; }
+  .lost-dogs-invitation p { margin: 6px 0 0; color: var(--muted); }
+  .lost-dogs-page { max-width: 1200px; }
+  .lost-dogs-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .lost-dogs-search { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin: 32px 0; }
+  .lost-dogs-search label { flex: 1; min-width: 220px; }
+  .lost-dogs-results { margin-top: 24px; }
+  .lost-results-title { margin: 0 0 6px; font-size: 21px; font-weight: 600; }
+  .lost-dogs-results > .notice { margin-top: 18px; }
+  .lost-dogs-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .lost-dog-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; background: #fff; }
+  .dog-photo-link { display: block; }
+  .dog-photo { aspect-ratio: 4 / 3; background: #f3eef8; overflow: hidden; }
+  .dog-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dog-photo-placeholder { display: flex; height: 100%; align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: #8e759f; font-size: 13px; }
+  .lost-dog-content { padding: 20px; }
+  .lost-status { display: inline-block; padding: 3px 10px; color: var(--accent); background: #f2eaf8; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .lost-dog-content h3 { margin: 10px 0 6px; font-size: 23px; font-weight: 600; overflow-wrap: anywhere; }
+  .lost-dog-content h3 a:hover { color: var(--accent); }
+  .dog-traits { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  .dog-area { margin: 0 0 6px; font-size: 14px; overflow-wrap: anywhere; }
+  .dog-date { margin: 0; color: var(--muted); font-size: 12px; }
+  .dog-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 16px 0 8px; font-size: 14px; overflow-wrap: anywhere; }
+  .lost-dogs-empty { margin-top: 20px; padding: 36px 24px; background: #faf8fc; border: 1px solid var(--line); border-radius: 12px; }
+  .lost-dogs-empty h3 { margin: 0; font-size: 20px; font-weight: 600; }
+  .lost-dogs-empty p { color: var(--muted); }
+  .lost-dogs-pagination { margin-top: 32px; display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 13px; }
+  .lost-dogs-pagination .button:disabled { cursor: default; }
+  .dog-detail-page { max-width: 1120px; }
+  .dog-detail { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 36px; }
+  .dog-detail > .dog-photo { border-radius: 12px; }
+  .dog-detail > .dog-photo img { object-fit: contain; }
+  .dog-detail-info h1 { margin: 10px 0 8px; overflow-wrap: anywhere; }
+  .dog-detail-info h2 { font-size: 18px; font-weight: 600; margin: 24px 0 10px; }
+  .dog-full-description { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; margin: 0; }
+  .dog-help { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .dog-help h2 { margin-top: 0; }
+  .dog-help p { color: var(--muted); font-size: 14px; }
 
   @media (min-width: 1440px) {
     .hero-content { padding-left: 152px; }
   }
   @media (max-width: 1000px) {
+    .lost-dogs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lost-dogs-invitation { margin: 0 32px; }
     .hero-content { padding: 44px 32px; }
     .hero-content h1 { font-size: 42px; }
     .hero-actions { grid-template-columns: 1fr; }
@@ -154,6 +201,14 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
     .how-steps { gap: 28px; }
   }
   @media (max-width: 760px) {
+    .site-header-inner { flex-wrap: wrap; }
+    .site-header nav { flex-wrap: wrap; }
+    .lost-dogs-invitation { margin: 0 24px; align-items: flex-start; flex-direction: column; gap: 16px; }
+    .lost-dogs-heading { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .lost-dogs-grid { grid-template-columns: 1fr; }
+    .lost-dogs-pagination { gap: 12px; }
+    .lost-dogs-pagination .button { padding: 10px 14px; }
+    .dog-detail { grid-template-columns: 1fr; gap: 24px; }
     .site-header-inner { padding: 18px 20px; }
     .site-name { font-size: 22px; }
     .site-header nav { gap: 16px; }

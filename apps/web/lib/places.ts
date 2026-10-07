@@ -9,8 +9,15 @@ export type Place = {
   latitude: number;
   longitude: number;
   accuracyMeters?: number;
-  source: "search" | "device";
+  source: "search" | "device" | "map";
 };
+
+export function placeAtMapPoint(latitude: number, longitude: number): Place {
+  return {
+    id: `map:${latitude}:${longitude}`, label: "Punto elegido en el mapa",
+    detail: "Ubicación ajustada manualmente", latitude, longitude, source: "map",
+  };
+}
 
 function record(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object" ? value as Record<string, unknown> : {};

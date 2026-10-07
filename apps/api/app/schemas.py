@@ -96,6 +96,7 @@ class LostCaseCreate(BaseModel):
     longitude: float | None = Field(default=None, ge=-180, le=180)
     location_accuracy_meters: int | None = Field(default=None, ge=0)
     description: str = Field(default="", max_length=4000)
+    public_location: str | None = Field(default=None, max_length=350)
     search_radius_meters: int = Field(default=15000, ge=100, le=200000)
 
     @model_validator(mode="after")
@@ -112,6 +113,7 @@ class LostCaseUpdate(BaseModel):
     longitude: float | None = Field(default=None, ge=-180, le=180)
     location_accuracy_meters: int | None = Field(default=None, ge=0)
     description: str | None = Field(default=None, max_length=4000)
+    public_location: str | None = Field(default=None, max_length=350)
     search_radius_meters: int | None = Field(default=None, ge=100, le=200000)
 
 
@@ -125,9 +127,30 @@ class LostCaseRead(ORMModel):
     longitude: float | None
     location_accuracy_meters: int | None
     description: str
+    public_location: str | None
     search_radius_meters: int
     created_at: datetime
     updated_at: datetime
+
+
+class PublicLostDogRead(BaseModel):
+    id: UUID
+    name: str
+    species: Literal["dog"] = "dog"
+    breed: str
+    size: str
+    primary_color: str
+    description: str
+    public_location: str | None
+    lost_at: datetime
+    photo_url: str | None
+
+
+class PublicLostDogList(BaseModel):
+    items: list[PublicLostDogRead]
+    total: int
+    limit: int
+    offset: int
 
 
 class ObservationCreate(BaseModel):

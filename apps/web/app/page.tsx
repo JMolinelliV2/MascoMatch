@@ -27,6 +27,10 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="lost-dogs-invitation" aria-labelledby="lost-dogs-home-title">
+        <div><h2 id="lost-dogs-home-title">¿Reconocés a alguno?</h2><p>Mirá los perros publicados como perdidos.</p></div>
+        <Link href="/perdidos" className="button button-secondary">Ver perros perdidos <span aria-hidden="true"> →</span></Link>
+      </section>
       <section id="como-funciona" className="how-it-works" aria-labelledby="how-title">
         <h2 id="how-title">Cada dato puede ayudar.</h2>
         <p className="section-intro">Publicar un reporte lleva tres pasos.</p>

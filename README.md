@@ -169,6 +169,8 @@ Copiar `.env.example` a `.env` antes de ejecutar Compose. Cambiar contraseñas y
 
 ## Ubicación en los formularios
 
+**Ver en mapa** despliega un mapa de 300 px dentro del mismo formulario. Permite arrastrar el pin, tocar otro punto o mover el pin con las flechas del teclado. El punto nuevo se guarda inmediatamente y se consulta su dirección; si esa consulta falla, conserva el punto elegido sin usar la dirección ni la precisión GPS anterior. El mapa usa Leaflet 1.9.4 y las teselas HTTPS de OpenStreetMap, sin clave de API. Referencias: [Leaflet](https://leafletjs.com/) y [política de teselas](https://operations.osmfoundation.org/policies/tiles/).
+
 La portada presenta una fotografía y tres acciones: mascota perdida, avistamiento y animal encontrado. Los formularios se completan en tres etapas: **Mascota**, **Fecha y lugar**, y **Contacto y revisión**. Se valida cada etapa al continuar; el botón Atrás conserva los datos y la foto seleccionada. La última etapa muestra un resumen editable antes de crear la cuenta o ingresar y guardar el reporte. Las fotos son opcionales.
 
 El lugar se elige buscando una dirección, barrio o punto de referencia, o con el GPS del dispositivo. Los resultados deben seleccionarse para guardar su ubicación; escribir un texto sin elegir un resultado no asigna coordenadas. El GPS se solicita únicamente al tocar el botón y conserva la precisión que informa el dispositivo. Funciona en `localhost` o con HTTPS y requiere permiso del navegador.
@@ -180,6 +182,30 @@ Las sugerencias se restringen al país de la persona, determinado con una consul
 La consulta al proveedor usa `countrycode` y sesgo geográfico; el servidor vuelve a filtrar por país y ordena coincidencias exactas antes que coincidencias parciales, y dentro de cada grupo por distancia cuando existe una referencia del dispositivo. Los términos genéricos como “plaza” priorizan la cercanía. Se combina una búsqueda cercana con otra dentro del mismo país para recuperar coincidencias exactas lejanas. Nunca se amplía automáticamente la búsqueda a otros países si no hay resultados.
 
 Validar frontend desde `apps/web`: `npm test`, `npm run typecheck` y `npm run build`.
+
+## Perros publicados como perdidos
+
+En **Perros perdidos** (`/perdidos`), disponible desde la navegación y la portada, cualquier visitante puede consultar los perros con aviso `ACTIVE`, buscar por nombre, zona o descripción y abrir una ficha individual. Se muestran hasta 24 avisos por página. Las fotos son opcionales; si no hay foto o no se puede cargar, se muestra un marcador de ausencia.
+
+Los avisos incluyen nombre del perro, características declaradas, descripción, fecha y localidad. La API pública usa una lista explícita de campos; omite datos de cuenta, microchip y coordenadas exactas. Las fotos siguen en el bucket privado y se sirven mediante una ruta que comprueba que el aviso continúa activo. Al marcar el aviso `FOUND`, `CLOSED` o `CANCELLED`, o eliminarlo, deja de estar disponible en el listado, la ficha y la ruta de imagen. No se agrega contacto público ni matching automático.
+
+Rutas sin autenticación:
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| GET | `/api/v1/public/lost-dogs?q=&limit=24&offset=0` | Listado y búsqueda, máximo 48 por consulta |
+| GET | `/api/v1/public/lost-dogs/{case_id}` | Ficha de un perro que sigue perdido |
+| GET | `/api/v1/public/lost-dogs/{case_id}/photo` | Foto del aviso o de su mascota, limpia y sin metadata EXIF |
+
+La migración `0003_public_lost_dogs` agrega `public_location` a los avisos. La web envía solo la localidad en ese campo; los avisos anteriores usan la línea `Zona:` que ya guardaba el formulario. Las coordenadas internas se conservan para el futuro matching.
+
+Para actualizar servicios existentes:
+
+```powershell
+docker compose restart api web
+```
+
+El inicio de la API ejecuta `alembic upgrade head`; la web instala las dependencias nuevas. Las pruebas cubren publicación, búsqueda, paginación, campos privados, fotos de la mascota y del aviso, cierre de avisos y migración desde una base nueva o existente.
 
 ## Estructura
 

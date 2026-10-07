@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import analysis, auth, lost_cases, observations, pets, photos
+from app.routers import analysis, auth, lost_cases, observations, pets, photos, public_lost_dogs
 
 
 @asynccontextmanager
@@ -44,6 +44,7 @@ app.include_router(lost_cases.router, prefix="/api/v1")
 app.include_router(observations.router, prefix="/api/v1")
 app.include_router(photos.router, prefix="/api/v1")
 app.include_router(analysis.router, prefix="/api/v1")
+app.include_router(public_lost_dogs.router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])

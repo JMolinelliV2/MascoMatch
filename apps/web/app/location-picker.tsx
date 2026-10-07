@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { countryName } from "@/lib/places";
+import { countryName, placeAtMapPoint } from "@/lib/places";
 import type { Place, SearchOrigin } from "@/lib/places";
+import { LocationMap } from "./location-map";
 
 type Props = { value: Place | null; onChange: (place: Place | null) => void; required?: boolean; lost?: boolean };
 const configuredCountry = (process.env.NEXT_PUBLIC_SEARCH_COUNTRY || "UY").toUpperCase();
@@ -27,6 +28,8 @@ export function LocationPicker({ value, onChange, required = false, lost = false
   const [searchOrigin, setSearchOrigin] = useState<SearchOrigin | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [nearbyError, setNearbyError] = useState("");
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapResolving, setMapResolving] = useState(false);
 
   const enableNearby = useCallback(async (silent = false) => {
     if (!navigator.geolocation || !window.isSecureContext) {
@@ -120,6 +123,8 @@ export function LocationPicker({ value, onChange, required = false, lost = false
     operation.current += 1;
     reverseController.current?.abort();
     setLocating(false);
+    setMapResolving(false);
+    setMapOpen(false);
     onChange(null);
     setQuery(next);
     setOpen(true);
@@ -132,11 +137,38 @@ export function LocationPicker({ value, onChange, required = false, lost = false
     operation.current += 1;
     reverseController.current?.abort();
     setLocating(false);
+    setMapResolving(false);
     onChange(place);
     setQuery(place.label);
     setOpen(false);
     setPlaces([]);
     setError("");
+  }
+
+  async function movePin(latitude: number, longitude: number) {
+    const place = placeAtMapPoint(latitude, longitude);
+    // Save the new point immediately; never retain the old address or GPS accuracy after a move.
+    select(place);
+    const requestId = operation.current;
+    const controller = new AbortController();
+    reverseController.current = controller;
+    setMapResolving(true);
+    try {
+      const response = await fetch(`/api/places?lat=${latitude}&lon=${longitude}`, { signal: controller.signal });
+      const data = await response.json();
+      if (!response.ok || !data.places?.[0]) throw new Error("No address");
+      if (requestId !== operation.current) return;
+      const address: Place = data.places[0];
+      const resolved = { ...place, label: address.label, detail: address.detail, locality: address.locality, countryCode: address.countryCode };
+      onChange(resolved);
+      setQuery(resolved.label);
+    } catch {
+      if (!controller.signal.aborted && requestId === operation.current) {
+        setError("El punto del mapa quedó seleccionado, pero no pudimos obtener su dirección.");
+      }
+    } finally {
+      if (requestId === operation.current) setMapResolving(false);
+    }
   }
 
   function locate() {
@@ -153,6 +185,7 @@ export function LocationPicker({ value, onChange, required = false, lost = false
     nearbyController.current?.abort();
     setNearbyLoading(false);
     reverseController.current?.abort();
+    setMapResolving(false);
     onChange(null);
     setQuery("");
     setPlaces([]);
@@ -277,9 +310,13 @@ export function LocationPicker({ value, onChange, required = false, lost = false
         {value.source === "device" && <p className="field-help">Precisión aproximada: {value.accuracyMeters} m.</p>}
         <div className="location-actions">
           <button type="button" onClick={() => { edit(""); inputRef.current?.focus(); }} className="text-button">Cambiar lugar</button>
-          <a href={`https://www.openstreetmap.org/?mlat=${value.latitude}&mlon=${value.longitude}#map=16/${value.latitude}/${value.longitude}`}
-            target="_blank" rel="noopener noreferrer" className="text-button">Ver en mapa</a>
+          <button type="button" className="text-button" aria-expanded={mapOpen} aria-controls={`${id}-map`}
+            onClick={() => setMapOpen(current => !current)}>{mapOpen ? "Ocultar mapa" : "Ver en mapa"}</button>
         </div>
+      </div>}
+      {value && mapOpen && <div id={`${id}-map`}>
+        <LocationMap latitude={value.latitude} longitude={value.longitude} onMove={(lat, lon) => void movePin(lat, lon)} />
+        {mapResolving && <p role="status" className="status-text">Actualizando la dirección del punto elegido…</p>}
       </div>}
       <p className="location-attribution">
         Datos de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>.

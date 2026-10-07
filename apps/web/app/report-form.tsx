@@ -263,7 +263,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         {photoWarning && <p role="alert" className="notice notice-warning">{photoWarning}</p>}
         {savedReport && <ReportAnalysis {...savedReport} />}
         <div className="success-actions">
-          {kind === "lost" && <Link href="/perdidos" className="button button-primary">Ver perros perdidos</Link>}
+          {kind === "lost" && <Link href="/perdidos" className="button button-primary">Ver animales perdidos</Link>}
           <Link href="/" className="button button-primary">Volver al inicio</Link>
           <button type="button" className="button button-secondary" onClick={() => {
             setSuccess(""); setPhotoWarning(""); setReview(null); setSavedReport(null); goToStep(1);

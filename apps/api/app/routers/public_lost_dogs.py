@@ -10,11 +10,12 @@ from app.db.session import get_db
 from app.models import LostCase, Pet, Photo
 from app.schemas import PublicLostDogList, PublicLostDogRead
 
-router = APIRouter(prefix="/public/lost-dogs", tags=["public-lost-dogs"])
+router = APIRouter(prefix="/public/lost-animals", tags=["public-lost-animals"])
+legacy_router = APIRouter(prefix="/public/lost-dogs", include_in_schema=False)
 
 
 def active_dogs():
-    return select(LostCase, Pet).join(Pet).where(LostCase.status == "ACTIVE", Pet.species == "dog")
+    return select(LostCase, Pet).join(Pet).where(LostCase.status == "ACTIVE")
 
 
 def photo_scope(case: LostCase):
@@ -37,14 +38,15 @@ def public_area(case: LostCase) -> str | None:
 def notice(case: LostCase, pet: Pet, has_photo: bool) -> PublicLostDogRead:
     # Explicit allowlist: never serialize the owner, microchip, storage key or GPS point.
     return PublicLostDogRead(
-        id=case.id, name=pet.name, sex=pet.sex, breed=pet.breed, size=pet.size,
+        id=case.id, name=pet.name, species=pet.species, sex=pet.sex, breed=pet.breed, size=pet.size,
         primary_color=pet.primary_color, description=case.description,
         public_location=public_area(case), lost_at=case.lost_at,
-        photo_url=f"/api/v1/public/lost-dogs/{case.id}/photo" if has_photo else None,
+        photo_url=f"/api/v1/public/lost-animals/{case.id}/photo" if has_photo else None,
     )
 
 
 @router.get("", response_model=PublicLostDogList)
+@legacy_router.get("", response_model=PublicLostDogList)
 def list_public_lost_dogs(
     response: Response,
     q: str = Query(default="", max_length=120),
@@ -71,6 +73,7 @@ def list_public_lost_dogs(
 
 
 @router.get("/{case_id}", response_model=PublicLostDogRead)
+@legacy_router.get("/{case_id}", response_model=PublicLostDogRead)
 def get_public_lost_dog(case_id: UUID, response: Response, db: Session = Depends(get_db)):
     response.headers["Cache-Control"] = "no-store"
     row = db.execute(active_dogs().where(LostCase.id == case_id)).first()
@@ -82,6 +85,7 @@ def get_public_lost_dog(case_id: UUID, response: Response, db: Session = Depends
 
 
 @router.get("/{case_id}/photo")
+@legacy_router.get("/{case_id}/photo")
 def get_public_lost_dog_photo(case_id: UUID, db: Session = Depends(get_db)):
     row = db.execute(active_dogs().where(LostCase.id == case_id)).first()
     if row is None:

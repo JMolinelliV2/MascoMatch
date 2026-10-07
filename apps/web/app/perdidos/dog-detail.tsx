@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { dogTraits, lostDate, lostDogsEndpoint, sexLabel } from "@/lib/lost-dogs";
+import { dogTraits, lostDate, lostDogsEndpoint, sexLabel, speciesLabel } from "@/lib/lost-dogs";
 import type { LostDogNotice } from "@/lib/lost-dogs";
 import { DogPhoto } from "./dog-photo";
 
@@ -24,8 +24,8 @@ export function DogDetail({ id }: { id: string }) {
   }, [id, refresh]);
 
   return <main id="main-content" className="page dog-detail-page">
-    <Link href="/perdidos" className="back-link"><span aria-hidden="true">←</span> Volver a perros perdidos</Link>
-    {missing ? <><h1>Este aviso ya no está disponible</h1><p className="page-intro">Puede que el perro haya sido encontrado o que su dueño haya cerrado el aviso.</p></>
+    <Link href="/perdidos" className="back-link"><span aria-hidden="true">←</span> Volver a animales perdidos</Link>
+    {missing ? <><h1>Este aviso ya no está disponible</h1><p className="page-intro">Puede que el animal haya sido encontrado o que su dueño haya cerrado el aviso.</p></>
       : error ? <div className="notice notice-warning" role="alert">{error} <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>
       : !dog ? <p role="status" className="page-intro">Cargando aviso…</p>
       : <article className="dog-detail">
@@ -33,7 +33,7 @@ export function DogDetail({ id }: { id: string }) {
         <div className="dog-detail-info">
           <span className="lost-status">Sigue perdido</span>
           <h1>{dog.name}</h1>
-          <p className="dog-traits">{dogTraits(dog).join(" · ") || "Perro"}</p>
+          <p className="dog-traits">{[speciesLabel(dog.species), ...dogTraits(dog)].join(" · ")}</p>
           <dl className="review-details">
             <div><dt>Sexo</dt><dd>{sexLabel(dog.sex)}</dd></div>
             <div><dt>Zona donde se perdió</dt><dd>{dog.public_location || "No indicada"}</dd></div>

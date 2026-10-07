@@ -45,6 +45,7 @@ app.include_router(observations.router, prefix="/api/v1")
 app.include_router(photos.router, prefix="/api/v1")
 app.include_router(analysis.router, prefix="/api/v1")
 app.include_router(public_lost_dogs.router, prefix="/api/v1")
+app.include_router(public_lost_dogs.legacy_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])

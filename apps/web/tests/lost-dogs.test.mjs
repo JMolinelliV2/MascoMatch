@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { dogTraits, lostDate, sexLabel } from "../lib/lost-dogs.ts";
+import { dogTraits, lostDate, sexLabel, speciesLabel } from "../lib/lost-dogs.ts";
 import { placeAtMapPoint } from "../lib/places.ts";
 
 test("el pin guarda el punto nuevo sin conservar la dirección o precisión del GPS anterior", () => {
@@ -28,4 +28,10 @@ test("el sexo declarado se muestra con etiquetas en español", () => {
 test("las fechas del aviso son legibles y toleran datos inválidos", () => {
   assert.match(lostDate("2026-10-07T15:00:00Z"), /2026/);
   assert.equal(lostDate("invalid"), "Fecha no indicada");
+});
+
+test("cada aviso muestra la especie correcta con una etiqueta en español", () => {
+  for (const [species, label] of Object.entries({ dog: "Perro", cat: "Gato", rabbit: "Conejo", bird: "Ave", other: "Otro animal", unknown: "Animal" })) {
+    assert.equal(speciesLabel(species), label);
+  }
 });

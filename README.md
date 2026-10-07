@@ -173,7 +173,7 @@ Copiar `.env.example` a `.env` antes de ejecutar Compose. Cambiar contraseñas y
 
 La portada presenta una fotografía y tres acciones: mascota perdida, avistamiento y animal encontrado. Los formularios se completan en tres etapas: **Mascota**, **Fecha y lugar**, y **Contacto y revisión**. Se valida cada etapa al continuar; el botón Atrás conserva los datos y la foto seleccionada. La última etapa muestra un resumen editable antes de crear la cuenta o ingresar y guardar el reporte. Las fotos son opcionales.
 
-El primer paso incluye **Sexo**: Macho, Hembra o No lo sé (valor predeterminado). Se guarda como dato declarado en mascotas, avistamientos y animales encontrados, aparece en la revisión y, si es conocido, en las tarjetas de perros perdidos. La ficha individual muestra también cuando no está indicado. La migración `0004_observation_sex` conserva los avistamientos existentes con valor `unknown`. La IA no infiere el sexo a partir de fotografías.
+El primer paso incluye **Sexo**: Macho, Hembra o No lo sé (valor predeterminado). Se guarda como dato declarado en mascotas, avistamientos y animales encontrados, aparece en la revisión y, si es conocido, en las tarjetas de animales perdidos. La ficha individual muestra también cuando no está indicado. La migración `0004_observation_sex` conserva los avistamientos existentes con valor `unknown`. La IA no infiere el sexo a partir de fotografías.
 
 El lugar se elige buscando una dirección, barrio o punto de referencia, o con el GPS del dispositivo. Los resultados deben seleccionarse para guardar su ubicación; escribir un texto sin elegir un resultado no asigna coordenadas. El GPS se solicita únicamente al tocar el botón y conserva la precisión que informa el dispositivo. Funciona en `localhost` o con HTTPS y requiere permiso del navegador.
 
@@ -185,9 +185,9 @@ La consulta al proveedor usa `countrycode` y sesgo geográfico; el servidor vuel
 
 Validar frontend desde `apps/web`: `npm test`, `npm run typecheck` y `npm run build`.
 
-## Perros publicados como perdidos
+## Animales publicados como perdidos
 
-En **Perros perdidos** (`/perdidos`), disponible desde la navegación y la portada, cualquier visitante puede consultar los perros con aviso `ACTIVE`, buscar por nombre, zona o descripción y abrir una ficha individual. Se muestran hasta 24 avisos por página. Las fotos son opcionales; si no hay foto o no se puede cargar, se muestra un marcador de ausencia.
+En **Animales perdidos** (`/perdidos`), disponible desde la navegación y la portada, cualquier visitante puede consultar los animales de cualquier especie con aviso `ACTIVE`, buscar por nombre, zona o descripción y abrir una ficha individual. Se muestran hasta 24 avisos por página. Las fotos son opcionales; si no hay foto o no se puede cargar, se muestra un marcador de ausencia.
 
 Los avisos incluyen nombre del perro, características declaradas, descripción, fecha y localidad. La API pública usa una lista explícita de campos; omite datos de cuenta, microchip y coordenadas exactas. Las fotos siguen en el bucket privado y se sirven mediante una ruta que comprueba que el aviso continúa activo. Al marcar el aviso `FOUND`, `CLOSED` o `CANCELLED`, o eliminarlo, deja de estar disponible en el listado, la ficha y la ruta de imagen. No se agrega contacto público ni matching automático.
 
@@ -195,9 +195,9 @@ Rutas sin autenticación:
 
 | Método | Ruta | Uso |
 | --- | --- | --- |
-| GET | `/api/v1/public/lost-dogs?q=&limit=24&offset=0` | Listado y búsqueda, máximo 48 por consulta |
-| GET | `/api/v1/public/lost-dogs/{case_id}` | Ficha de un perro que sigue perdido |
-| GET | `/api/v1/public/lost-dogs/{case_id}/photo` | Foto del aviso o de su mascota, limpia y sin metadata EXIF |
+| GET | `/api/v1/public/lost-animals?q=&limit=24&offset=0` | Listado y búsqueda, máximo 48 por consulta |
+| GET | `/api/v1/public/lost-animals/{case_id}` | Ficha de un animal que sigue perdido |
+| GET | `/api/v1/public/lost-animals/{case_id}/photo` | Foto del aviso o de su mascota, limpia y sin metadata EXIF |
 
 La migración `0003_public_lost_dogs` agrega `public_location` a los avisos. La web envía solo la localidad en ese campo; los avisos anteriores usan la línea `Zona:` que ya guardaba el formulario. Las coordenadas internas se conservan para el futuro matching.
 

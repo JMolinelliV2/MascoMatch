@@ -63,3 +63,11 @@ La migración `0004_observation_sex` agrega el dato a avistamientos y animales e
 Archivos: modelos, esquemas, migraciones, ruta pública, formulario compartido, ficha y etiquetas públicas, README y pruebas de sexo/migraciones/listado. Para aplicar: `docker compose restart api web`.
 
 Comprobado: **72 pruebas de API aprobadas y 1 integración opcional omitida**, tanto en Windows como en el contenedor; **13 pruebas de frontend**, TypeScript y compilación de producción correctos. PostgreSQL está en `0004_observation_sex (head)`. En el navegador se verificaron las opciones del formulario y la selección Macho, y el aviso anterior de Kobe muestra Sexo: No indicado.
+
+## Actualización: Animales perdidos
+
+La sección pasa a llamarse **Animales perdidos** en navegación, portada, títulos, botones, estados del listado y fichas. Incluye avisos activos de todas las especies registradas: perros, gatos, conejos, aves y otros animales. Cada tarjeta y ficha informa la especie con una etiqueta en español.
+
+La ruta pública principal es `/api/v1/public/lost-animals`. `/api/v1/public/lost-dogs` se conserva como alias para enlaces y clientes anteriores. La página mantiene `/perdidos`, las fotos privadas y la protección de los datos del dueño. No requiere nueva migración ni variables de entorno.
+
+Comprobado: **83 pruebas de API aprobadas y 1 integración opcional omitida** en Windows y Docker; **14 pruebas de frontend**, TypeScript y compilación correctos. El navegador muestra Animales perdidos y los avisos existentes de Pepe (gato) y Kobe (perro).

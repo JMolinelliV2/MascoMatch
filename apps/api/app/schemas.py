@@ -144,7 +144,7 @@ class LostCaseRead(ORMModel):
 class PublicLostDogRead(BaseModel):
     id: UUID
     name: str
-    species: Literal["dog"] = "dog"
+    species: Species
     sex: str
     breed: str
     size: str

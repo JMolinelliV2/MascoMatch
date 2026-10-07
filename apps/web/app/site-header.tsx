@@ -8,7 +8,7 @@ export function SiteHeader() {
         <Link href="/" className="site-name">PetMatch</Link>
         <nav aria-label="Navegación principal">
           <Link href="/">Inicio</Link>
-          <Link href="/perdidos">Perros perdidos</Link>
+          <Link href="/perdidos">Animales perdidos</Link>
           <Link href="/#como-funciona">Cómo funciona</Link>
         </nav>
       </div>

@@ -43,6 +43,9 @@ def test_linked_photo_notification_and_mailpit(client, tmp_path, monkeypatch):
     app.dependency_overrides[get_db] = local_db
     monkeypatch.setenv("DATABASE_URL", url)
     monkeypatch.setenv("AI_ENABLED", "true")
+    # Keep spawned workers on the same deterministic settings as this fixture.
+    monkeypatch.setenv("EMBEDDINGS_ENABLED", "false")
+    monkeypatch.setenv("MAIL_GROUP_SECONDS", "0")
     monkeypatch.setattr(queue, "SessionLocal", factory)
     monkeypatch.setattr(tasks, "SessionLocal", factory)
     real_queue = get_queue()
@@ -88,15 +91,15 @@ def test_linked_photo_notification_and_mailpit(client, tmp_path, monkeypatch):
         monkeypatch.setattr(settings, "smtp_host", "mailpit")
         monkeypatch.setattr(settings, "smtp_port", 1025)
         monkeypatch.setattr(settings, "smtp_username", "")
-        assert email.deliver_pending(factory) == 2
+        assert email.deliver_pending(factory) == 1
         assert email.deliver_pending(factory) == 0
         with factory() as db:
             assert all(item.email_status == "PREVIEWED" for item in db.scalars(select(Notification)))
         with httpx.Client(trust_env=False, timeout=10) as smtp_api:
             messages = smtp_api.get("http://mailpit:8025/api/v1/messages").json()["messages"]
             captured = [item for item in messages if any(address.get("Address") == recipient for address in item.get("To", []))]
-            assert len(captured) == 2
-            assert all("Posible avistamiento" in item["Subject"] for item in captured)
+            assert len(captured) == 1
+            assert "reportes nuevos" in captured[0]["Subject"]
     finally:
         for key in stored_keys:
             delete_private_image(key)

@@ -13,7 +13,7 @@ from app.analysis.service import is_current, utcnow
 from app.core.config import settings
 from app.core.image_storage import load_analysis_image
 from app.db.session import SessionLocal
-from app.models import AnalysisJob, FeatureSet
+from app.models import AnalysisJob, Embedding, FeatureSet
 
 BACKOFF_SECONDS = (15, 60, 180, 300)
 
@@ -30,7 +30,7 @@ def process_analysis(job_id: str, generation: int) -> str:
         available = job.available_at.replace(tzinfo=timezone.utc) if job.available_at.tzinfo is None else job.available_at
         if job.status == "PENDING" and available > now:
             return "PENDING"
-        if not settings.ai_enabled:
+        if not (settings.embeddings_enabled if job.source_type == "embedding" else settings.ai_enabled):
             job.status, job.lease_expires_at = "PENDING", None
             db.commit()
             return "DISABLED"
@@ -53,19 +53,25 @@ def process_analysis(job_id: str, generation: int) -> str:
     started = monotonic()
     failure: ProviderError | None = None
     features: AnimalFeatures | None = None
+    vector = None
     try:
-        provider = get_provider(provider_name, model)
-        if source == "image":
+        provider = get_provider(provider_name, model) if source != "embedding" else None
+        if source in {"image", "embedding"}:
             try:
                 image, mime_type = load_analysis_image(snapshot["storage_key"], snapshot["mime_type"])
             except Exception as exc:
                 raise ProviderError("IMAGE_UNAVAILABLE") from exc
-            features = asyncio.run(provider.analyze_image(image, mime_type))
+            if source == "embedding":
+                from app.embeddings.provider import get_embedding_provider, normalize
+                vector = normalize(get_embedding_provider().encode(image))
+            else:
+                features = asyncio.run(provider.analyze_image(image, mime_type))
         else:
             features = asyncio.run(provider.extract_observation(json.dumps(snapshot, ensure_ascii=False)))
         # Enforce the common contract for every provider implementation.
-        features = AnimalFeatures.model_validate(features.model_dump())
-        if any(attribute.source != source for attribute in features.__dict__.values()):
+        if source != "embedding":
+            features = AnimalFeatures.model_validate(features.model_dump())
+        if features and any(attribute.source != source for attribute in features.__dict__.values()):
             raise ProviderError("INVALID_FEATURE_SOURCE", retryable=False)
     except ProviderError as exc:
         failure = exc
@@ -87,8 +93,13 @@ def process_analysis(job_id: str, generation: int) -> str:
             else:
                 job.status, job.finished_at = "FAILED", utcnow()
         else:
-            result = db.scalar(select(FeatureSet).where(FeatureSet.analysis_job_id == identity))
-            if result is None:
+            if source == "embedding":
+                result = db.get(Embedding, identity)
+                if result is None:
+                    db.add(Embedding(analysis_job_id=identity, photo_id=job.photo_id, model=model, dimension=len(vector), input_hash=job.input_hash, vector=vector))
+            else:
+                result = db.scalar(select(FeatureSet).where(FeatureSet.analysis_job_id == identity))
+            if source != "embedding" and result is None:
                 db.add(FeatureSet(analysis_job_id=identity, features=features.model_dump(mode="json")))
             job.status, job.error_code, job.finished_at = "SUCCEEDED", None, utcnow()
         db.commit()
@@ -96,6 +107,10 @@ def process_analysis(job_id: str, generation: int) -> str:
     log_event("analysis_finished", job_id=job_id, provider=provider_name, model=model,
               status=status, error_code=failure.code if failure else None, latency_ms=round((monotonic() - started) * 1000))
     try:
+        from app.matching.engine import request_matching
+        with SessionLocal() as db:
+            request_matching(db, owner_type, owner_id)
+            db.commit()
         from app.matching.linked import reconcile_related
         reconcile_related(owner_type, owner_id, session_factory=SessionLocal)
     except Exception:

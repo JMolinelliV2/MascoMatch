@@ -20,6 +20,7 @@ def create_observation(payload: ObservationCreate, db: Session = Depends(get_db)
     db.add(observation)
     db.flush()
     schedule_text(db, "observation", observation.id)
+    mark_related_pending(db, "observation", observation.id)
     db.commit()
     db.refresh(observation)
     return observation
@@ -27,14 +28,14 @@ def create_observation(payload: ObservationCreate, db: Session = Depends(get_db)
 
 @router.get("", response_model=list[ObservationRead])
 def list_observations(limit: int = Query(default=50, ge=1, le=100), db: Session = Depends(get_db)):
-    query = select(Observation).order_by(Observation.created_at.desc()).limit(limit)
+    query = select(Observation).where(Observation.moderation_status=="VISIBLE").order_by(Observation.created_at.desc()).limit(limit)
     return list(db.scalars(query))
 
 
 @router.get("/{observation_id}", response_model=ObservationRead)
 def get_observation(observation_id: UUID, db: Session = Depends(get_db)):
     observation = db.get(Observation, observation_id)
-    if observation is None:
+    if observation is None or observation.moderation_status!="VISIBLE":
         raise HTTPException(status_code=404, detail="Observation not found")
     return observation
 

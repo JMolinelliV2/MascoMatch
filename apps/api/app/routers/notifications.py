@@ -10,7 +10,7 @@ from app.matching.linked import aware
 from app.core.image_storage import load_analysis_image
 from app.db.session import get_db
 from app.dependencies import current_user
-from app.models import LostCase, Notification, Observation, Pet, Photo, User
+from app.models import LostCase, Match, Notification, Observation, Pet, Photo, User
 from app.schemas import NotificationList, NotificationRead
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -19,6 +19,7 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 def private_notifications(user):
     return select(Notification, LostCase, Pet, Observation).join(LostCase, Notification.lost_case_id == LostCase.id).join(Pet, LostCase.pet_id == Pet.id).join(Observation, Notification.observation_id == Observation.id).where(
         Notification.owner_id == user.id, Pet.owner_id == user.id, Notification.is_active.is_(True), LostCase.status == "ACTIVE",
+        LostCase.moderation_status=="VISIBLE",Observation.moderation_status=="VISIBLE",
     )
 
 
@@ -31,14 +32,18 @@ def owned_row(db, identity, user):
 
 def serialize(db, row):
     notification, case, pet, observation = row
+    match = db.get(Match, notification.match_id) if notification.match_id else None
+    author=db.get(User,observation.author_id) if observation.share_contact and observation.author_id else None
     photos = list(db.scalars(select(Photo.id).where(Photo.owner_type == "observation", Photo.owner_id == observation.id).order_by(Photo.created_at, Photo.id)))
     return NotificationRead(
         id=notification.id, kind=notification.kind, title=notification.title, body=notification.body,
         read_at=notification.read_at, created_at=aware(notification.created_at), lost_case_id=case.id,
         pet_name=pet.name, observed_at=aware(observation.observed_at), public_location=observation.public_location,
         latitude=observation.latitude, longitude=observation.longitude,
-        reasons=observation.matching_reasons, photo_ids=photos,
+        reasons=match.explanation if match else observation.matching_reasons, photo_ids=photos,
         email_status=notification.email_status,
+        match_id=notification.match_id, match_status=match.status if match else None,
+        reporter_contact=author.email if author and author.status=="ACTIVE" else None,
     )
 
 

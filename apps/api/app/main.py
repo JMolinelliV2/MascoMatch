@@ -5,15 +5,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import analysis, auth, linked_sightings, lost_cases, notifications, observations, pets, photos, public_lost_dogs
+from app.core.rate_limit import RateLimitMiddleware
+from app.routers import analysis, auth, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, pets, photos, public_lost_dogs
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     from app.matching.linked import reconciliation_loop
     from app.notifications.email import delivery_loop
-    tasks = [asyncio.create_task(reconciliation_loop()), asyncio.create_task(delivery_loop())]
-    if settings.ai_enabled:
+    from app.matching.engine import general_matching_loop
+    tasks = [asyncio.create_task(reconciliation_loop()), asyncio.create_task(delivery_loop()), asyncio.create_task(general_matching_loop())]
+    if settings.ai_enabled or settings.embeddings_enabled:
         from app.analysis.queue import dispatch_loop
         tasks.append(asyncio.create_task(dispatch_loop()))
     try:
@@ -33,6 +35,7 @@ app = FastAPI(
     docs_url="/api/v1/docs",
     redoc_url=None,
 )
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -50,6 +53,10 @@ app.include_router(public_lost_dogs.router, prefix="/api/v1")
 app.include_router(public_lost_dogs.legacy_router, prefix="/api/v1")
 app.include_router(linked_sightings.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(matches.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(map.router, prefix="/api/v1")
+app.include_router(moderation.router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])

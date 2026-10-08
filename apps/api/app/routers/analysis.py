@@ -55,7 +55,7 @@ def get_analysis_job(job_id: UUID, db: Session = Depends(get_db), user: User = D
 @router.post("/jobs/{job_id}/retry", response_model=AnalysisJobRead, status_code=202)
 def retry_analysis_job(job_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
     job = owned_job(db, job_id, user, lock=True)
-    if not settings.ai_enabled:
+    if not (settings.embeddings_enabled if job.source_type == "embedding" else settings.ai_enabled):
         raise HTTPException(status_code=409, detail="Analysis is disabled")
     if not is_current(db, job):
         raise HTTPException(status_code=409, detail="Evidence has changed; request a new analysis")

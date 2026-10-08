@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
 from app.core.config import settings
-from app.models import AnalysisJob, FeatureSet, LostCase, Notification, Observation, Pet, Photo
+from app.models import AnalysisJob, Embedding, FeatureSet, LostCase, Match, Notification, Observation, Pet, Photo
 
 
 def utcnow() -> datetime:
@@ -24,7 +24,7 @@ def text_snapshot(db: Session, owner_type: str, owner_id: UUID) -> dict | None:
         observation = db.get(Observation, owner_id)
         if observation is None:
             return None
-        return {"description": observation.description, "declared_features": {"species": observation.species}}
+        return {"description": observation.description, "declared_features": {"species": observation.species, "primary_color": observation.primary_color, "size": observation.size}}
     if owner_type == "lost_case":
         case = db.get(LostCase, owner_id)
         if case is None:
@@ -50,7 +50,7 @@ def photo_snapshot(photo: Photo) -> dict:
 
 
 def is_current(db: Session, job: AnalysisJob) -> bool:
-    if job.source_type == "image":
+    if job.source_type in {"image", "embedding"}:
         photo = db.get(Photo, job.photo_id) if job.photo_id else None
         if photo is None or photo.owner_type != job.owner_type or photo.owner_id != job.owner_id:
             return False
@@ -100,6 +100,8 @@ def schedule_text(db: Session, owner_type: str, owner_id: UUID) -> AnalysisJob |
 
 
 def schedule_photo(db: Session, photo: Photo) -> AnalysisJob | None:
+    from app.embeddings.service import schedule_embedding
+    schedule_embedding(db, photo)
     if not settings.ai_enabled:
         return None
     return _schedule(db, photo.owner_type, photo.owner_id, "image", photo_snapshot(photo), photo.id)
@@ -107,7 +109,7 @@ def schedule_photo(db: Session, photo: Photo) -> AnalysisJob | None:
 
 def schedule_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
     schedule_text(db, owner_type, owner_id)
-    if settings.ai_enabled:
+    if settings.ai_enabled or settings.embeddings_enabled:
         for photo in db.scalars(select(Photo).where(Photo.owner_type == owner_type, Photo.owner_id == owner_id)):
             schedule_photo(db, photo)
 
@@ -115,15 +117,19 @@ def schedule_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
 def purge_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
     if owner_type == "lost_case":
         db.execute(delete(Notification).where(Notification.lost_case_id == owner_id))
+        db.execute(delete(Match).where(Match.lost_case_id == owner_id))
         db.execute(update(Observation).where(Observation.linked_case_id == owner_id).values(linked_case_id=None, matching_status="INACTIVE"))
     elif owner_type == "observation":
         db.execute(delete(Notification).where(Notification.observation_id == owner_id))
+        db.execute(delete(Match).where(Match.observation_id == owner_id))
     ids = select(AnalysisJob.id).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id)
+    db.execute(delete(Embedding).where(Embedding.analysis_job_id.in_(ids)))
     db.execute(delete(FeatureSet).where(FeatureSet.analysis_job_id.in_(ids)))
     db.execute(delete(AnalysisJob).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id))
 
 
 def purge_photo(db: Session, photo_id: UUID) -> None:
     ids = select(AnalysisJob.id).where(AnalysisJob.photo_id == photo_id)
+    db.execute(delete(Embedding).where(Embedding.analysis_job_id.in_(ids)))
     db.execute(delete(FeatureSet).where(FeatureSet.analysis_job_id.in_(ids)))
     db.execute(delete(AnalysisJob).where(AnalysisJob.photo_id == photo_id))

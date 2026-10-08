@@ -38,6 +38,30 @@ class Settings(BaseSettings):
     smtp_from: str = "MascoMatch <avisos@mascomatch.local>"
     smtp_tls_mode: Literal["none", "starttls", "ssl"] = "starttls"
     public_site_url: str = "http://localhost:3000"
+    embeddings_enabled: bool = False
+    embedding_model: Literal["ViT-B-32"] = "ViT-B-32"
+    embedding_pretrained: Literal["openai"] = "openai"
+    embedding_cache_dir: str = "/models/clip"
+    embedding_cpu_threads: int = Field(default=2, ge=1, le=8)
+    matching_candidate_threshold: float = Field(default=0.55, ge=0, le=1)
+    matching_notify_threshold: float = Field(default=0.82, ge=0.5, le=1)
+    matching_max_radius_meters: int = Field(default=50000, ge=1000, le=300000)
+    matching_temporal_days: int = Field(default=30, ge=1, le=365)
+    matching_visual_floor: float = Field(default=0.55, ge=0, le=0.9)
+    matching_visual_ceiling: float = Field(default=0.95, ge=0.6, le=1)
+    mail_group_seconds: int = Field(default=15, ge=0, le=300)
+    rate_limit_enabled: bool = True
+    rate_limit_auth: int = Field(default=30,ge=1,le=10000)
+    rate_limit_publish: int = Field(default=60,ge=1,le=10000)
+    rate_limit_read: int = Field(default=300,ge=1,le=10000)
+
+    @model_validator(mode="after")
+    def matching_configuration(self):
+        if self.matching_visual_floor >= self.matching_visual_ceiling:
+            raise ValueError("Visual floor must be below ceiling")
+        if self.matching_candidate_threshold > self.matching_notify_threshold:
+            raise ValueError("Candidate threshold must not exceed notification threshold")
+        return self
 
     @model_validator(mode="after")
     def mail_configuration(self):

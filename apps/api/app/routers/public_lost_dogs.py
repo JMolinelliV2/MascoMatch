@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.image_storage import load_analysis_image
 from app.db.session import get_db
-from app.models import LostCase, Pet, Photo
+from app.models import LostCase, Pet, Photo, User
 from app.schemas import PublicLostDogList, PublicLostDogRead
 
 router = APIRouter(prefix="/public/lost-animals", tags=["public-lost-animals"])
@@ -15,7 +15,7 @@ legacy_router = APIRouter(prefix="/public/lost-dogs", include_in_schema=False)
 
 
 def active_dogs():
-    return select(LostCase, Pet).join(Pet).where(LostCase.status == "ACTIVE")
+    return select(LostCase, Pet).join(Pet).join(User,Pet.owner_id==User.id).where(LostCase.status == "ACTIVE",LostCase.moderation_status=="VISIBLE",User.status=="ACTIVE")
 
 
 def photo_scope(case: LostCase):

@@ -17,7 +17,7 @@ from app.matching.linked import aware
 from app.models import LostCase, Notification, Observation, User
 
 
-def build_message(notification, owner, observation=None):
+def build_message(notification, owner, observation=None, related=None):
     message = EmailMessage()
     message["From"] = settings.smtp_from
     message["To"] = owner.email
@@ -35,6 +35,10 @@ def build_message(notification, owner, observation=None):
         if observation.public_location:
             context += f"\nZona: {observation.public_location}"
     message.set_content(f"{notification.title}\n\n{notification.body}{context}\n\nRevisá el lugar y las fotos en MascoMatch:\n{settings.public_site_url.rstrip('/')}/notificaciones?aviso={notification.id}\n\nSe trata de una posible coincidencia, que necesita revisión.\nPodés cambiar tus preferencias de correo en Notificaciones.")
+    if related and len(related)>1:
+        message.replace_header("Subject", f"{len(related)} reportes nuevos: {notification.title}")
+        links="\n".join(f"{settings.public_site_url.rstrip('/')}/notificaciones?aviso={item.id}" for item in related)
+        message.set_content(f"Recibimos {len(related)} avistamientos potencialmente relacionados con el mismo aviso.\n\nRevisá los lugares, fotos y motivos de cada reporte:\n{links}\n\nLa identidad de los animales necesita confirmación.\nPodés cambiar tus preferencias de correo en Notificaciones.")
     return message
 
 
@@ -61,25 +65,35 @@ def deliver_pending(session_factory=None):
     sent = 0
     for identity in identities:
         with factory() as db:
-            notification = db.scalar(select(Notification).where(Notification.id == identity).with_for_update(skip_locked=True))
+            notification = db.get(Notification, identity)
             if notification is None or not notification.is_active or notification.email_status != "PENDING" or aware(notification.email_available_at) > utcnow():
                 continue
+            # Match evaluators and delivery both lock the case before related records.
+            case = db.scalar(select(LostCase).where(LostCase.id==notification.lost_case_id).with_for_update(skip_locked=True))
+            if case is None:
+                continue
+            group=list(db.scalars(select(Notification).where(Notification.lost_case_id==case.id,Notification.owner_id==notification.owner_id,
+                Notification.is_active.is_(True),Notification.email_status=="PENDING",Notification.email_available_at<=utcnow()).order_by(Notification.created_at,Notification.id).limit(100).with_for_update()))
+            if not group:
+                continue
+            notification=group[0]
             owner = db.get(User, notification.owner_id)
-            case = db.get(LostCase, notification.lost_case_id)
             if not owner or owner.status != "ACTIVE" or not case or case.status != "ACTIVE":
-                notification.email_status = "CANCELLED"
+                for item in group:item.email_status = "CANCELLED"
             elif owner.notification_preferences.get("email", True) is False:
-                notification.email_status = "SKIPPED"
+                for item in group:item.email_status = "SKIPPED"
             else:
-                notification.email_attempts += 1
+                for item in group:item.email_attempts += 1
                 try:
-                    send_message(build_message(notification, owner, db.get(Observation, notification.observation_id)))
-                    notification.email_status = "PREVIEWED" if settings.mail_delivery_mode == "preview" else "SENT"
-                    notification.email_sent_at = utcnow()
+                    send_message(build_message(notification, owner, db.get(Observation, notification.observation_id), group))
+                    for item in group:
+                        item.email_status = "PREVIEWED" if settings.mail_delivery_mode == "preview" else "SENT"
+                        item.email_sent_at = utcnow()
                     sent += 1
                 except (OSError, smtplib.SMTPException, ValueError):
-                    notification.email_status = "FAILED" if notification.email_attempts >= 5 else "PENDING"
-                    notification.email_available_at = utcnow() + timedelta(seconds=min(3600, 30 * 2 ** notification.email_attempts))
+                    for item in group:
+                        item.email_status = "FAILED" if item.email_attempts >= 5 else "PENDING"
+                        item.email_available_at = utcnow() + timedelta(seconds=min(3600, 30 * 2 ** item.email_attempts))
                     log_event("notification_email_failed", level=logging.WARNING, notification_id=str(identity), attempts=notification.email_attempts)
             db.commit()
     return sent

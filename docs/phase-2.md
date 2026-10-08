@@ -1,5 +1,7 @@
 # Fase 2: extracción de características con IA local
 
+> Documento de una etapa anterior. Ver el [estado actual del MVP](mvp-phase-3-8.md), que incorpora comparación visual local, matching general, mapa y paneles.
+
 Entrega del 7 de octubre de 2026.
 
 ## Implementación

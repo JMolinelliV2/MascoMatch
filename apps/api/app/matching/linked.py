@@ -12,7 +12,7 @@ from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
 from app.analysis.service import is_current, utcnow
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.models import AnalysisJob, FeatureSet, LostCase, Notification, Observation, Pet, Photo
+from app.models import AnalysisJob, FeatureSet, LostCase, Match, Notification, Observation, Pet, Photo
 
 UNKNOWN = {"unknown", "uncertain", "not_visible", ""}
 WEIGHTS = {"species": .35, "primary_color": .3, "size": .1, "coat_length": .1, "coat_pattern": .1, "breed_type": .05}
@@ -81,11 +81,27 @@ def compare_traits(target: dict, observed: dict):
 
 
 def set_result(db, observation, case, pet, status, reasons, score=None):
+    match=db.scalar(select(Match).where(Match.observation_id==observation.id,Match.lost_case_id==case.id))
+    if status in {"UNVERIFIED","POSSIBLE_MATCH"}:
+        if match is None:
+            match=Match(observation_id=observation.id,lost_case_id=case.id)
+            db.add(match)
+        match.feature_score=score or 0
+        match.visual_score=match.visual_similarity=None
+        match.geo_score=match.temporal_score=1
+        match.final_score=score or 0
+        match.evidence_coverage=.5 if score is not None else 0
+        match.distance_meters=distance_meters(case.latitude,case.longitude,observation.latitude,observation.longitude)
+        match.explanation=reasons
+        match.is_active=True
+        db.flush()
+    elif match:
+        match.is_active=False
     observation.matching_status = status
     observation.matching_score = score
     observation.matching_reasons = reasons
     notification = db.scalar(select(Notification).where(Notification.observation_id == observation.id))
-    notify = status in {"UNVERIFIED", "POSSIBLE_MATCH"} and observation.author_id != pet.owner_id
+    notify = status in {"UNVERIFIED", "POSSIBLE_MATCH"} and observation.author_id != pet.owner_id and (not match or match.status not in {"FALSE_MATCH","RESOLVED"})
     if not notify:
         if notification:
             notification.is_active = False
@@ -98,10 +114,11 @@ def set_result(db, observation, case, pet, status, reasons, score=None):
     else:
         body = "Las características de la foto son compatibles con tu aviso, junto con la ubicación y la fecha. Podría tratarse de tu animal; revisá el avistamiento."
     if notification is None:
-        notification = Notification(owner_id=pet.owner_id, lost_case_id=case.id, observation_id=observation.id, kind=kind, title=title, body=body)
+        notification = Notification(owner_id=pet.owner_id, lost_case_id=case.id, observation_id=observation.id, match_id=match.id if match else None, kind=kind, title=title, body=body, email_available_at=utcnow()+timedelta(seconds=settings.mail_group_seconds))
         db.add(notification)
     else:
         notification.kind, notification.title, notification.body, notification.is_active = kind, title, body, True
+        notification.match_id=match.id if match else None
     return status
 
 
@@ -115,7 +132,7 @@ def evaluate_sighting(db: Session, observation_id: UUID) -> str:
     if case is None or observation is None:
         return "INACTIVE"
     pet = db.get(Pet, case.pet_id)
-    if case.status != "ACTIVE":
+    if case.status != "ACTIVE" or case.moderation_status!="VISIBLE" or observation.moderation_status!="VISIBLE":
         return set_result(db, observation, case, pet, "INACTIVE", ["El aviso ya no está activo"])
     if aware(observation.observed_at) < aware(case.lost_at) or aware(observation.observed_at) > utcnow() + timedelta(minutes=1):
         return set_result(db, observation, case, pet, "NOT_COMPATIBLE", ["La fecha no es compatible con el aviso"])
@@ -164,6 +181,8 @@ def related_ids(db, owner_type, owner_id):
 
 
 def mark_related_pending(db, owner_type, owner_id):
+    from app.matching.engine import request_matching
+    request_matching(db, owner_type, owner_id)
     identities = related_ids(db, owner_type, owner_id)
     if identities:
         db.execute(update(Observation).where(Observation.id.in_(identities), Observation.linked_case_id.is_not(None)).values(matching_status="PENDING"))

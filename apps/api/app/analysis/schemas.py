@@ -123,7 +123,7 @@ class AnalysisJobRead(BaseModel):
     owner_type: str
     owner_id: UUID
     photo_id: UUID | None
-    source_type: Source
+    source_type: Literal["text", "image", "embedding"]
     provider: str
     model: str
     prompt_version: str

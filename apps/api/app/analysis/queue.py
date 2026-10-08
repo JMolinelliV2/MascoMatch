@@ -22,10 +22,11 @@ def get_queue() -> Queue:
 
 
 def dispatch_pending() -> int:
-    if not settings.ai_enabled:
+    if not (settings.ai_enabled or settings.embeddings_enabled):
         return 0
     queue = get_queue()
     now = utcnow()
+    enabled_source = True if settings.ai_enabled and settings.embeddings_enabled else AnalysisJob.source_type != "embedding" if settings.ai_enabled else AnalysisJob.source_type == "embedding"
     with SessionLocal() as db:
         # Recover requests or workers interrupted between database and queue writes.
         expired = db.scalars(select(AnalysisJob).where(
@@ -41,7 +42,7 @@ def dispatch_pending() -> int:
                 job.status, job.available_at = "PENDING", now
         db.commit()
         ids = list(db.scalars(select(AnalysisJob.id).where(
-            AnalysisJob.status == "PENDING", AnalysisJob.available_at <= now,
+            AnalysisJob.status == "PENDING", AnalysisJob.available_at <= now, enabled_source,
         ).order_by(AnalysisJob.created_at).limit(20)))
 
     dispatched = 0

@@ -19,7 +19,15 @@ CORE_TABLE_NAMES = ("users", "pets", "lost_cases", "observations", "photos")
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
-    Base.metadata.create_all(bind=op.get_bind(), tables=[Base.metadata.tables[name] for name in CORE_TABLE_NAMES if name not in {"lost_cases", "observations"}])
+    op.create_table("users",
+        sa.Column("id",sa.Uuid(),primary_key=True),sa.Column("email",sa.String(320),nullable=False),
+        sa.Column("password_hash",sa.String(255),nullable=False),sa.Column("phone",sa.String(32)),
+        sa.Column("name",sa.String(120),nullable=False),sa.Column("notification_preferences",sa.JSON(),nullable=False),
+        sa.Column("status",sa.String(24),nullable=False),
+        sa.Column("created_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()),
+        sa.Column("updated_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()))
+    op.create_index("ix_users_email","users",["email"],unique=True)
+    Base.metadata.create_all(bind=op.get_bind(), tables=[Base.metadata.tables[name] for name in ("pets","photos")])
     # Keep initial evidence tables fixed as later migrations add columns to the current ORM model.
     op.create_table(
         "lost_cases",

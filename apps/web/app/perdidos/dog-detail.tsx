@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { dogTraits, lostDate, lostDogsEndpoint, sexLabel, speciesLabel } from "@/lib/lost-dogs";
 import type { LostDogNotice } from "@/lib/lost-dogs";
 import { DogPhoto } from "./dog-photo";
+import { ReportPublication } from "../report-publication";
 
 export function DogDetail({ id }: { id: string }) {
   const [dog, setDog] = useState<LostDogNotice | null>(null);
@@ -41,6 +42,7 @@ export function DogDetail({ id }: { id: string }) {
           </dl>
           <h2>Descripción</h2><p className="dog-full-description">{dog.description || "Sin descripción adicional."}</p>
           <div className="dog-help"><h2>¿Lo viste?</h2><p>Compartí el lugar y fotos si tenés. El avistamiento quedará vinculado a este aviso.</p><Link href={`/avistamiento?aviso=${dog.id}`} className="button button-primary">Publicar un avistamiento</Link></div>
+          <ReportPublication id={dog.id}/>
         </div>
       </article>}
   </main>;

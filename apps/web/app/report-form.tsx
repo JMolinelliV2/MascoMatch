@@ -6,6 +6,7 @@ import type { FormEvent, ReactNode } from "react";
 import type { Place } from "@/lib/places";
 import { LocationPicker } from "./location-picker";
 import { ReportAnalysis } from "./report-analysis";
+import { ReportMatches } from "./report-matches";
 
 type ReportKind = "lost" | "sighting" | "found";
 type AccountMode = "register" | "login";
@@ -235,7 +236,8 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         ownerType = "lost_case";
       } else {
         report = await send("/observations", {
-          species, sex, description, observed_at: when.toISOString(), ...locationData,
+          species, sex, primary_color: color, size, public_location: location?.locality ?? null, description, observed_at: when.toISOString(), ...locationData,
+          share_contact: form.get("shareContact") === "on",
           source_type: kind === "found" ? "FOUND_ANIMAL" : "USER_SIGHTING",
         }, token);
         ownerType = "observation";
@@ -265,6 +267,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         <p role="status" className="page-intro">{success}</p>
         {photoWarning && <p role="alert" className="notice notice-warning">{photoWarning}</p>}
         {savedReport && <ReportAnalysis {...savedReport} />}
+        {savedReport?.ownerType === "observation" && <ReportMatches observationId={savedReport.ownerId} />}
         <div className="success-actions">
           {kind === "lost" && <Link href="/perdidos" className="button button-primary">Ver animales perdidos</Link>}
           <Link href="/" className="button button-primary">Volver al inicio</Link>
@@ -404,6 +407,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
                 {accountMode === "register" && <span className="field-help">Mínimo 10 caracteres.</span>}
               </label>
             </div>
+            {kind !== "lost" && <label className="sighting-recent"><input name="shareContact" type="checkbox"/>Compartir mi correo de forma privada con los dueños que reciban una posible coincidencia de este reporte.</label>}
           </Section>
 
           <div className="form-footer">

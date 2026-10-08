@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+.match-card { display: grid; grid-template-columns: 110px 1fr; gap: 1rem; padding: 1rem; border: 1px solid #e5e1eb; border-radius: 12px; margin-block: 1rem; text-align: left; }
+.match-card img, .match-card .dog-photo { width: 110px; height: 110px; object-fit: cover; border-radius: 8px; }
+.match-card ul { margin: .5rem 0; padding-left: 1.2rem; font-size: .9rem; }
+.community-map { height: min(65vh, 560px); min-height: 320px; width: 100%; border-radius: 12px; border: 1px solid #e5e1eb; margin-block: 1rem; }
+.map-filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 1rem; padding: .8rem 0; border: 0; }
+.photo-add-form { margin-top: 1rem; }
+@media (max-width: 520px) { .match-card { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .map-filters { grid-template-columns: 1fr; } }
+
 :root {
   color-scheme: light;
   --ink: #16243a;

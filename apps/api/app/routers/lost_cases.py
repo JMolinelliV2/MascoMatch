@@ -30,6 +30,7 @@ def create_lost_case(payload: LostCaseCreate, db: Session = Depends(get_db), use
     db.add(case)
     db.flush()
     schedule_text(db, "lost_case", case.id)
+    mark_related_pending(db, "lost_case", case.id)
     db.commit()
     db.refresh(case)
     return case

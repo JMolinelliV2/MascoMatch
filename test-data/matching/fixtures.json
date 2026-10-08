@@ -1,0 +1,24 @@
+{
+  "synthetic": true,
+  "description": "Regression fixtures with declared traits and simulated visual similarities. These are not an evaluation of real animal identification.",
+  "candidates": [
+    {"id":"luna","features":{"species":"dog","primary_color":"brown","size":"medium","distinctive_features":["white chest"],"accessories":["red collar"]}},
+    {"id":"toby","features":{"species":"dog","primary_color":"brown","size":"medium","distinctive_features":["black muzzle"],"accessories":["blue collar"]}},
+    {"id":"milo","features":{"species":"cat","primary_color":"black","size":"small","distinctive_features":["white paws"]}},
+    {"id":"nube","features":{"species":"rabbit","primary_color":"white","size":"small"}}
+  ],
+  "observations": [
+    {"name":"same dog, text only","features":{"species":"dog","primary_color":"brown","size":"medium","distinctive_features":["white chest"],"accessories":["red collar"]},"expected":["luna"]},
+    {"name":"same dog, photo signal","features":{"species":"dog","primary_color":"brown","size":"medium","distinctive_features":["white chest"]},"visual":{"luna":0.96,"toby":0.55},"expected":["luna"]},
+    {"name":"different dogs, same breed and color","features":{"species":"dog","primary_color":"brown","size":"medium","distinctive_features":["black muzzle"],"accessories":["blue collar"]},"expected":["toby"]},
+    {"name":"cat with distinctive paws","features":{"species":"cat","primary_color":"black","size":"small","distinctive_features":["white paws"]},"expected":["milo"]},
+    {"name":"rabbit without photo","features":{"species":"rabbit","primary_color":"white","size":"small"},"expected":["nube"]},
+    {"name":"unsupported species","features":{"species":"bird","primary_color":"brown","size":"medium"},"expected":[]},
+    {"name":"different traits","features":{"species":"dog","primary_color":"white","size":"large"},"expected":[]},
+    {"name":"too far away","features":{"species":"dog","primary_color":"brown","size":"medium"},"distance_meters":80000,"expected":[]},
+    {"name":"before disappearance","features":{"species":"cat","primary_color":"black","size":"small"},"hours_after_loss":-2,"expected":[]},
+    {"name":"insufficient information","features":{"species":"dog"},"expected":[]},
+    {"name":"no photo, two plausible candidates","features":{"species":"dog","primary_color":"brown","size":"medium"},"expected":["luna","toby"]},
+    {"name":"same cat, simulated lighting change","features":{"species":"cat","primary_color":"black","size":"small"},"visual":{"milo":0.89},"expected":["milo"]}
+  ]
+}

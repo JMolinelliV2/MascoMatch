@@ -31,6 +31,7 @@ class UserRead(ORMModel):
     phone: str | None
     notification_preferences: dict
     status: str
+    role: str
     created_at: datetime
 
 
@@ -116,6 +117,7 @@ class LostCaseCreate(BaseModel):
 
 class LostCaseUpdate(BaseModel):
     status: Literal["ACTIVE", "FOUND", "CLOSED", "CANCELLED"] | None = None
+    lost_at: datetime | None = None
     last_seen_at: datetime | None = None
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
@@ -129,6 +131,7 @@ class LostCaseRead(ORMModel):
     id: UUID
     pet_id: UUID
     status: str
+    moderation_status: str
     lost_at: datetime
     last_seen_at: datetime | None
     latitude: float | None
@@ -165,6 +168,10 @@ class PublicLostDogList(BaseModel):
 class ObservationCreate(BaseModel):
     species: Species
     sex: Sex = "unknown"
+    primary_color: str = Field(default="unknown",max_length=40)
+    size: str = Field(default="unknown",max_length=24)
+    public_location: str | None = Field(default=None,max_length=350)
+    share_contact: bool = False
     description: str = Field(min_length=1, max_length=4000)
     observed_at: datetime
     latitude: float | None = Field(default=None, ge=-90, le=90)
@@ -183,6 +190,10 @@ class ObservationCreate(BaseModel):
 class ObservationUpdate(BaseModel):
     species: Species | None = None
     sex: Sex | None = None
+    primary_color: str | None = Field(default=None,max_length=40)
+    size: str | None = Field(default=None,max_length=24)
+    public_location: str | None = Field(default=None,max_length=350)
+    share_contact: bool | None = None
     description: str | None = Field(default=None, min_length=1, max_length=4000)
     observed_at: datetime | None = None
     latitude: float | None = Field(default=None, ge=-90, le=90)
@@ -190,7 +201,13 @@ class ObservationUpdate(BaseModel):
     location_accuracy_meters: int | None = Field(default=None, ge=0)
     confidence: float | None = Field(default=None, ge=0, le=1)
 
-    @field_validator("sex")
+    @field_validator("share_contact")
+    @classmethod
+    def contact_cannot_be_null(cls,value):
+        if value is None:raise ValueError("Choose true or false for contact sharing")
+        return value
+
+    @field_validator("sex", "primary_color", "size")
     @classmethod
     def sex_cannot_be_null(cls, value):
         if value is None:
@@ -202,6 +219,9 @@ class ObservationRead(ORMModel):
     id: UUID
     species: str
     sex: str
+    primary_color: str
+    size: str
+    public_location: str | None
     description: str
     observed_at: datetime
     latitude: float | None
@@ -274,6 +294,36 @@ class NotificationRead(BaseModel):
     reasons: list[str]
     photo_ids: list[UUID]
     email_status: str
+    match_id: UUID | None = None
+    match_status: str | None = None
+    reporter_contact: str | None = None
+
+
+class MatchRead(ORMModel):
+    id: UUID
+    lost_case_id: UUID
+    observation_id: UUID
+    feature_score: float
+    visual_score: float | None
+    geo_score: float
+    temporal_score: float
+    final_score: float
+    evidence_coverage: float
+    distance_meters: float
+    explanation: list[str]
+    status: str
+    created_at: datetime
+
+
+class MatchFeedback(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    status: Literal["CONFIRMED_RELEVANT", "FALSE_MATCH", "RESOLVED"]
+
+
+class CaseEdit(BaseModel):
+    model_config=ConfigDict(extra="forbid")
+    pet: PetUpdate
+    case: LostCaseUpdate
 
 
 class NotificationList(BaseModel):

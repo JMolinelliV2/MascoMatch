@@ -4,7 +4,7 @@ Repositorio: [JMolinelliV2/MascoMatch](https://github.com/JMolinelliV2/MascoMatc
 
 La marca también identifica la API, los correos, el paquete web, las sesiones y la cola de IA. Los nombres locales por defecto son `mascomatch` para PostgreSQL y MinIO, `mascomatch-analysis` para la cola y `mascomatch_session` para la cookie de sesión. Al actualizar una instalación con datos, cambiar las variables de Compose no renombra la base ni el usuario de PostgreSQL: hay que migrar sus nombres conservando el volumen, ajustar `.env` y reiniciar los servicios. El cambio de cookie requiere iniciar sesión nuevamente.
 
-Plataforma web y API mobile-first para relacionar mascotas perdidas con observaciones de la comunidad. Incluye el CRUD de cuentas, mascotas, casos, observaciones y fotos, y la fase de extracción de características de textos y fotos con IA local. Los embeddings, las coincidencias, las alertas y el mapa son las siguientes fases.
+Plataforma web y API mobile-first para relacionar mascotas perdidas con observaciones de la comunidad. Incluye publicaciones, extracción de características con IA local, embeddings visuales, ranking de posibles coincidencias, alertas privadas, correo SMTP agrupado, mapa, panel del dueño, feedback y moderación básica. [Estado del MVP, decisiones, pruebas y configuración](docs/mvp-phase-3-8.md).
 
 ## Requisitos
 
@@ -52,7 +52,7 @@ Rutas bajo `/api/v1`:
 - `POST /photos/upload` (valida, limpia EXIF, reduce y almacena una imagen privada; máximo 10 MB)
 - `GET|POST /photos`, `GET /photos/{id}/url`, `PATCH|DELETE /photos/{id}`
 
-Las rutas de escritura, las fotos, los análisis y los datos privados de mascotas/casos requieren bearer token. Las observaciones son visibles públicamente sin datos de contacto y con coordenadas redondeadas; las coordenadas precisas se conservan en la base para uso interno futuro. Las fotos se guardan privadas en MinIO y se entregan con URL firmada de 15 minutos. Moderación, vectorización, matching, mapa y avisos quedan para las siguientes fases. PostGIS y pgvector están habilitados en PostgreSQL.
+Las rutas de escritura, las fotos, los análisis y los datos privados de mascotas/casos requieren bearer token. Los avistamientos vinculados a un aviso admiten visitantes. Las observaciones públicas omiten contactos y redondean coordenadas; las precisas se usan internamente para matching y en alertas privadas del dueño. Las fotos se guardan privadas en MinIO. PostGIS y pgvector están habilitados, y hay límites básicos de solicitudes por proceso.
 
 ## IA local: fase 2
 
@@ -195,7 +195,7 @@ Desde una ficha, **Publicar un avistamiento** abre un formulario vinculado que p
 
 En **Animales perdidos** (`/perdidos`), disponible desde la navegación y la portada, cualquier visitante puede consultar los animales de cualquier especie con aviso `ACTIVE`, buscar por nombre, zona o descripción y abrir una ficha individual. Se muestran hasta 24 avisos por página. Las fotos son opcionales; si no hay foto o no se puede cargar, se muestra un marcador de ausencia.
 
-Los avisos incluyen nombre del perro, características declaradas, descripción, fecha y localidad. La API pública usa una lista explícita de campos; omite datos de cuenta, microchip y coordenadas exactas. Las fotos siguen en el bucket privado y se sirven mediante una ruta que comprueba que el aviso continúa activo. Al marcar el aviso `FOUND`, `CLOSED` o `CANCELLED`, o eliminarlo, deja de estar disponible en el listado, la ficha y la ruta de imagen. No se agrega contacto público ni matching automático.
+Los avisos incluyen nombre del animal, características declaradas, descripción, fecha y localidad. La API pública usa una lista explícita de campos; omite datos de cuenta, microchip y coordenadas exactas. Las fotos siguen en el bucket privado y se sirven mediante una ruta que comprueba que el aviso continúa activo y visible. Al marcarlo `FOUND`, `CLOSED` o `CANCELLED`, eliminarlo u ocultarlo por moderación, deja de estar disponible públicamente. El matching general y las alertas se documentan en la entrega de fases 3–8.
 
 Rutas sin autenticación:
 

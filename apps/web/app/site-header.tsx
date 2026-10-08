@@ -10,6 +10,8 @@ export function SiteHeader() {
         <nav aria-label="Navegación principal">
           <Link href="/">Inicio</Link>
           <Link href="/perdidos">Animales perdidos</Link>
+          <Link href="/mis-avisos">Mis avisos</Link>
+          <Link href="/mapa">Mapa</Link>
           <NotificationsLink />
           <Link href="/#como-funciona">Cómo funciona</Link>
         </nav>

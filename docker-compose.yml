@@ -76,10 +76,25 @@ services:
       SMTP_FROM: ${SMTP_FROM:-MascoMatch <avisos@mascomatch.local>}
       SMTP_TLS_MODE: ${SMTP_TLS_MODE:-starttls}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
+      EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
+      EMBEDDING_CACHE_DIR: /models/clip
+      EMBEDDING_CPU_THREADS: ${EMBEDDING_CPU_THREADS:-2}
+      MATCHING_CANDIDATE_THRESHOLD: ${MATCHING_CANDIDATE_THRESHOLD:-0.55}
+      MATCHING_NOTIFY_THRESHOLD: ${MATCHING_NOTIFY_THRESHOLD:-0.82}
+      MATCHING_MAX_RADIUS_METERS: ${MATCHING_MAX_RADIUS_METERS:-50000}
+      MATCHING_TEMPORAL_DAYS: ${MATCHING_TEMPORAL_DAYS:-30}
+      MATCHING_VISUAL_FLOOR: ${MATCHING_VISUAL_FLOOR:-0.55}
+      MATCHING_VISUAL_CEILING: ${MATCHING_VISUAL_CEILING:-0.95}
+      MAIL_GROUP_SECONDS: ${MAIL_GROUP_SECONDS:-15}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_AUTH: ${RATE_LIMIT_AUTH:-30}
+      RATE_LIMIT_PUBLISH: ${RATE_LIMIT_PUBLISH:-60}
+      RATE_LIMIT_READ: ${RATE_LIMIT_READ:-300}
     ports:
       - "8000:8000"
     volumes:
       - ./apps/api:/app
+      - ./test-data:/app/test-data:ro
     depends_on:
       db:
         condition: service_healthy
@@ -103,6 +118,7 @@ services:
   worker:
     build:
       context: ./apps/api
+      dockerfile: Dockerfile.worker
     profiles: [ai-local]
     working_dir: /app
     command: python -m app.analysis.worker
@@ -110,6 +126,8 @@ services:
     environment: *backend_environment
     volumes:
       - ./apps/api:/app
+      - vision_models:/models/clip
+      - ./test-data:/app/test-data:ro
     depends_on:
       api:
         condition: service_started
@@ -154,4 +172,5 @@ volumes:
   web_node_modules:
   ollama_models:
   mailpit_data:
+  vision_models:
 

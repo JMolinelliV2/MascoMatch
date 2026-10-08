@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { LocationMap } from "../location-map";
+import { MatchFeedback } from "../match-feedback";
 
 type User = { id: string; name: string; email: string; notification_preferences: { email?: boolean } };
-type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; created_at: string; lost_case_id: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string };
+type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; created_at: string; lost_case_id: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; reporter_contact:string|null };
 type Inbox = { items: Notice[]; unread_count: number; total: number };
 
 function date(value: string) { return new Intl.DateTimeFormat("es-UY", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)); }
@@ -116,16 +117,18 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
       {inbox?.total === 0 && <div className="lost-dogs-empty"><h2>Todavía no hay avistamientos relevantes</h2><p>Los nuevos avisos aparecerán acá cuando alguien reporte un avistamiento compatible con tu publicación.</p></div>}
       {inbox && <div className="notifications-list">{inbox.items.map(notice => <article key={notice.id} className={`notification-card ${notice.read_at ? "" : "notification-unread"}`}>
-        <span className="lost-status">{notice.kind === "POSSIBLE_MATCH" ? "Posible coincidencia con foto" : notice.photo_ids.length ? "Con fotos · por confirmar" : "Sin foto · por confirmar"}</span>
+        <span className="lost-status">{notice.kind === "POSSIBLE_MATCH" ? "Posible coincidencia" : notice.photo_ids.length ? "Con fotos · por confirmar" : "Sin foto · por confirmar"}</span>
         <h2>{notice.title}</h2><p>{notice.body}</p>
         <dl className="review-details"><div><dt>Cuándo lo vieron</dt><dd>{date(notice.observed_at)}</dd></div><div><dt>Zona del avistamiento</dt><dd>{notice.public_location || "Lugar indicado en el mapa"}</dd></div></dl>
         {notice.reasons.length > 0 && <ul className="notification-reasons">{notice.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul>}
+        {notice.reporter_contact&&<p>La persona autorizó compartir su contacto: <a href={`mailto:${encodeURIComponent(notice.reporter_contact)}`}>{notice.reporter_contact}</a></p>}
         {notice.photo_ids.length > 0 && <div className="notification-photos">{notice.photo_ids.map(photoId => <img key={photoId} src={`/api/notifications/${notice.id}/photos/${photoId}`} alt={`Foto del posible avistamiento de ${notice.pet_name}`} loading="lazy" />)}</div>}
         <div className="location-actions"><Link href={`/perdidos/${notice.lost_case_id}`} className="text-button">Ver mi aviso</Link>
           {notice.latitude !== null && notice.longitude !== null && <button type="button" className="text-button" aria-expanded={map === notice.id} onClick={() => setMap(current => current === notice.id ? null : notice.id)}>{map === notice.id ? "Ocultar mapa" : "Ver lugar del avistamiento"}</button>}
           {!notice.read_at && <button type="button" className="text-button" disabled={marking === notice.id} onClick={() => void read(notice.id)}>Marcar como leída</button>}
         </div>
         {map === notice.id && notice.latitude !== null && notice.longitude !== null && <LocationMap latitude={notice.latitude} longitude={notice.longitude} editable={false} />}
+        {notice.match_id && <MatchFeedback id={notice.match_id} status={notice.match_status} />}
         {notice.email_status === "SENT" && <p className="field-help">Alerta enviada también por correo.</p>}
         {notice.email_status === "PREVIEWED" && <p className="field-help">Correo generado en el servidor local de pruebas.</p>}
         {notice.email_status === "FAILED" && <p className="field-help">El correo no pudo enviarse. La notificación quedó guardada acá.</p>}

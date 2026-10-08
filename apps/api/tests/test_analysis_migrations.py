@@ -11,6 +11,11 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
     public = importlib.import_module("migrations.versions.0003_public_lost_dogs")
     sex = importlib.import_module("migrations.versions.0004_observation_sex")
     sightings = importlib.import_module("migrations.versions.0005_linked_sightings")
+    matching = importlib.import_module("migrations.versions.0006_embeddings_matching")
+    traits = importlib.import_module("migrations.versions.0007_observation_traits")
+    moderation = importlib.import_module("migrations.versions.0008_moderation")
+    corrections=importlib.import_module("migrations.versions.0009_admin_corrections")
+    contact=importlib.import_module("migrations.versions.0011_private_report_contact")
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
         operations = Operations(MigrationContext.configure(connection))
@@ -19,8 +24,14 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         monkeypatch.setattr(public, "op", operations)
         monkeypatch.setattr(sex, "op", operations)
         monkeypatch.setattr(sightings, "op", operations)
+        monkeypatch.setattr(matching, "op", operations)
+        monkeypatch.setattr(traits,"op",operations)
+        monkeypatch.setattr(moderation,"op",operations)
+        monkeypatch.setattr(corrections,"op",operations)
+        monkeypatch.setattr(contact,"op",operations)
         # SQLite cannot install PostgreSQL extensions; table migrations remain real DDL.
-        monkeypatch.setattr(operations, "execute", lambda statement: None)
+        execute = operations.execute
+        monkeypatch.setattr(operations, "execute", lambda statement: None if str(statement).startswith("CREATE EXTENSION") else execute(statement))
         core.upgrade()
         assert set(inspect(connection).get_table_names()) == set(core.CORE_TABLE_NAMES)
         extraction.upgrade()
@@ -50,4 +61,25 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         assert "notifications" not in inspect(connection).get_table_names()
         assert "linked_case_id" not in {column["name"] for column in inspect(connection).get_columns("observations")}
         sightings.upgrade()
+        matching.upgrade()
+        assert {"embeddings", "matches"} <= set(inspect(connection).get_table_names())
+        assert connection.scalar(text("SELECT matching_status FROM observations")) == "PENDING"
+        unique = inspect(connection).get_unique_constraints("notifications")
+        assert any(item["column_names"] == ["lost_case_id", "observation_id"] for item in unique)
+        matching.downgrade()
+        assert "embeddings" not in inspect(connection).get_table_names()
+        matching.upgrade()
+        traits.upgrade()
+        assert connection.scalar(text("SELECT primary_color FROM observations"))=="unknown"
+        moderation.upgrade()
+        corrections.upgrade()
+        assert "details" in {item["name"] for item in inspect(connection).get_columns("admin_audit")}
+        corrections.downgrade()
+        contact.upgrade()
+        assert connection.scalar(text("SELECT share_contact FROM observations"))==0
+        contact.downgrade()
+        assert "admin_audit" in inspect(connection).get_table_names()
+        moderation.downgrade()
+        assert "role" not in {item["name"] for item in inspect(connection).get_columns("users")}
+        moderation.upgrade()
     engine.dispose()

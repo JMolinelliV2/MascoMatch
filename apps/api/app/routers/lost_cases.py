@@ -9,6 +9,7 @@ from app.analysis.service import purge_owner, schedule_text
 from app.dependencies import current_user
 from app.models import LostCase, Pet, User
 from app.schemas import LostCaseCreate, LostCaseRead, LostCaseUpdate
+from app.matching.linked import mark_related_pending
 
 router = APIRouter(prefix="/lost-cases", tags=["lost-cases"])
 
@@ -52,6 +53,7 @@ def update_lost_case(case_id: UUID, payload: LostCaseUpdate, db: Session = Depen
         setattr(case, field, value)
     db.flush()
     schedule_text(db, "lost_case", case.id)
+    mark_related_pending(db, "lost_case", case.id)
     db.commit()
     db.refresh(case)
     return case

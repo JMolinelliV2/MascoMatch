@@ -44,8 +44,9 @@ services:
     build:
       context: ./apps/api
     working_dir: /app
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app"
     environment: &backend_environment
+      WATCHFILES_FORCE_POLLING: "true"
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://petmatch:change-me-locally@db:5432/petmatch}
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-secret}
       ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-60}
@@ -65,6 +66,16 @@ services:
       AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:-180}
       AI_MAX_ATTEMPTS: ${AI_MAX_ATTEMPTS:-3}
       AI_DISPATCH_INTERVAL_SECONDS: ${AI_DISPATCH_INTERVAL_SECONDS:-5}
+      LINKED_MATCH_THRESHOLD: ${LINKED_MATCH_THRESHOLD:-0.75}
+      LINKED_FEATURE_CONFIDENCE: ${LINKED_FEATURE_CONFIDENCE:-0.7}
+      MAIL_DELIVERY_MODE: ${MAIL_DELIVERY_MODE:-disabled}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-PetMatch <avisos@petmatch.local>}
+      SMTP_TLS_MODE: ${SMTP_TLS_MODE:-starttls}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
     ports:
       - "8000:8000"
     volumes:
@@ -114,6 +125,7 @@ services:
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8000/api/v1}
       GEOCODER_BASE_URL: ${GEOCODER_BASE_URL:-https://photon.komoot.io}
       NEXT_PUBLIC_SEARCH_COUNTRY: ${NEXT_PUBLIC_SEARCH_COUNTRY:-UY}
     ports:
@@ -124,9 +136,22 @@ services:
     depends_on:
       - api
 
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    profiles: [mail-local]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_MAX_MESSAGES: "1000"
+      MP_DATABASE: /data/mailpit.db
+    volumes:
+      - mailpit_data:/data
+
 volumes:
   postgres_data:
   minio_data:
   web_node_modules:
   ollama_models:
+  mailpit_data:
 

@@ -47,6 +47,7 @@ def process_analysis(job_id: str, generation: int) -> str:
         job.run_token = run_token = str(uuid4())
         job.lease_expires_at = now + timedelta(seconds=settings.ai_job_timeout_seconds + 30)
         source, snapshot, provider_name, model = job.source_type, job.input_snapshot, job.provider, job.model
+        owner_type, owner_id = job.owner_type, job.owner_id
         db.commit()
 
     started = monotonic()
@@ -94,4 +95,10 @@ def process_analysis(job_id: str, generation: int) -> str:
         status = job.status
     log_event("analysis_finished", job_id=job_id, provider=provider_name, model=model,
               status=status, error_code=failure.code if failure else None, latency_ms=round((monotonic() - started) * 1000))
+    try:
+        from app.matching.linked import reconcile_related
+        reconcile_related(owner_type, owner_id, session_factory=SessionLocal)
+    except Exception:
+        # The API's durable pending reconciler recovers an interruption after analysis commits.
+        log_event("linked_matching_deferred", job_id=job_id)
     return status

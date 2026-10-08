@@ -3,12 +3,12 @@ import hashlib
 import json
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
 from app.core.config import settings
-from app.models import AnalysisJob, FeatureSet, LostCase, Observation, Pet, Photo
+from app.models import AnalysisJob, FeatureSet, LostCase, Notification, Observation, Pet, Photo
 
 
 def utcnow() -> datetime:
@@ -113,6 +113,11 @@ def schedule_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
 
 
 def purge_owner(db: Session, owner_type: str, owner_id: UUID) -> None:
+    if owner_type == "lost_case":
+        db.execute(delete(Notification).where(Notification.lost_case_id == owner_id))
+        db.execute(update(Observation).where(Observation.linked_case_id == owner_id).values(linked_case_id=None, matching_status="INACTIVE"))
+    elif owner_type == "observation":
+        db.execute(delete(Notification).where(Notification.observation_id == owner_id))
     ids = select(AnalysisJob.id).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id)
     db.execute(delete(FeatureSet).where(FeatureSet.analysis_job_id.in_(ids)))
     db.execute(delete(AnalysisJob).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id))

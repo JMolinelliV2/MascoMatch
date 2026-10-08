@@ -40,7 +40,7 @@ export function DogDetail({ id }: { id: string }) {
             <div><dt>Perdido desde el</dt><dd><time dateTime={dog.lost_at}>{lostDate(dog.lost_at)}</time></dd></div>
           </dl>
           <h2>Descripción</h2><p className="dog-full-description">{dog.description || "Sin descripción adicional."}</p>
-          <div className="dog-help"><h2>¿Lo viste?</h2><p>Compartí dónde y cuándo lo viste, y sus características.</p><Link href="/avistamiento" className="button button-primary">Publicar un avistamiento</Link></div>
+          <div className="dog-help"><h2>¿Lo viste?</h2><p>Compartí el lugar y fotos si tenés. El avistamiento quedará vinculado a este aviso.</p><Link href={`/avistamiento?aviso=${dog.id}`} className="button button-primary">Publicar un avistamiento</Link></div>
         </div>
       </article>}
   </main>;

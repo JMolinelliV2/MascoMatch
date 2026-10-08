@@ -9,6 +9,7 @@ from app.analysis.service import purge_owner, schedule_text
 from app.dependencies import current_user
 from app.models import Observation, User
 from app.schemas import ObservationCreate, ObservationRead, ObservationUpdate
+from app.matching.linked import mark_related_pending
 
 router = APIRouter(prefix="/observations", tags=["observations"])
 
@@ -47,6 +48,7 @@ def update_observation(observation_id: UUID, payload: ObservationUpdate, db: Ses
         setattr(observation, field, value)
     db.flush()
     schedule_text(db, "observation", observation.id)
+    mark_related_pending(db, "observation", observation.id)
     db.commit()
     db.refresh(observation)
     return observation

@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -25,6 +26,10 @@ def db_factory():
 def client(db_factory, monkeypatch):
     # No Redis or model request is started by the test application lifespan.
     monkeypatch.setattr(settings, "ai_enabled", False)
+    async def idle_worker():
+        await asyncio.Event().wait()
+    monkeypatch.setattr("app.matching.linked.reconciliation_loop", idle_worker)
+    monkeypatch.setattr("app.notifications.email.delivery_loop", idle_worker)
 
     def override_get_db():
         db = db_factory()

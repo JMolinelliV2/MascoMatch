@@ -10,6 +10,7 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
     extraction = importlib.import_module("migrations.versions.0002_ai_extraction")
     public = importlib.import_module("migrations.versions.0003_public_lost_dogs")
     sex = importlib.import_module("migrations.versions.0004_observation_sex")
+    sightings = importlib.import_module("migrations.versions.0005_linked_sightings")
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
         operations = Operations(MigrationContext.configure(connection))
@@ -17,6 +18,7 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         monkeypatch.setattr(extraction, "op", operations)
         monkeypatch.setattr(public, "op", operations)
         monkeypatch.setattr(sex, "op", operations)
+        monkeypatch.setattr(sightings, "op", operations)
         # SQLite cannot install PostgreSQL extensions; table migrations remain real DDL.
         monkeypatch.setattr(operations, "execute", lambda statement: None)
         core.upgrade()
@@ -40,4 +42,12 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         public.downgrade()
         assert "public_location" not in {column["name"] for column in inspect(connection).get_columns("lost_cases")}
         public.upgrade()
+        sightings.upgrade()
+        assert "notifications" in inspect(connection).get_table_names()
+        assert connection.scalar(text("SELECT matching_status FROM observations")) == "NOT_REQUESTED"
+        assert connection.scalar(text("SELECT matching_reasons FROM observations")) == "[]"
+        sightings.downgrade()
+        assert "notifications" not in inspect(connection).get_table_names()
+        assert "linked_case_id" not in {column["name"] for column in inspect(connection).get_columns("observations")}
+        sightings.upgrade()
     engine.dispose()

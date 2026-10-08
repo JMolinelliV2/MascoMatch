@@ -251,3 +251,38 @@ class PhotoUploadRead(BaseModel):
     photo: PhotoRead
     signed_url: str
 
+
+class LinkedSightingRead(BaseModel):
+    id: UUID
+    status: str
+    owner_notified: bool
+
+
+class NotificationRead(BaseModel):
+    id: UUID
+    kind: str
+    title: str
+    body: str
+    read_at: datetime | None
+    created_at: datetime
+    lost_case_id: UUID
+    pet_name: str
+    observed_at: datetime
+    public_location: str | None
+    latitude: float | None
+    longitude: float | None
+    reasons: list[str]
+    photo_ids: list[UUID]
+    email_status: str
+
+
+class NotificationList(BaseModel):
+    items: list[NotificationRead]
+    unread_count: int
+    total: int
+
+
+class NotificationPreferences(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: bool
+

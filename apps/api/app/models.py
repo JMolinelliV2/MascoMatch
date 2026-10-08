@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, Uuid, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -77,6 +77,30 @@ class Observation(TimestampMixin, Base):
     location_accuracy_meters: Mapped[int | None] = mapped_column(Integer)
     source_type: Mapped[str] = mapped_column(String(24), default="USER_SIGHTING", index=True, nullable=False)
     confidence: Mapped[float] = mapped_column(Numeric(4, 3), default=0.5, nullable=False)
+    linked_case_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("lost_cases.id", ondelete="SET NULL"), index=True)
+    submission_hash: Mapped[str | None] = mapped_column(String(64))
+    public_location: Mapped[str | None] = mapped_column(String(350))
+    matching_status: Mapped[str] = mapped_column(String(32), default="NOT_REQUESTED", server_default="NOT_REQUESTED", index=True, nullable=False)
+    matching_score: Mapped[float | None] = mapped_column(Float)
+    matching_reasons: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+
+
+class Notification(TimestampMixin, Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    lost_case_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("lost_cases.id", ondelete="CASCADE"), index=True, nullable=False)
+    observation_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("observations.id", ondelete="CASCADE"), unique=True, nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    title: Mapped[str] = mapped_column(String(180), nullable=False)
+    body: Mapped[str] = mapped_column(String(1000), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    email_status: Mapped[str] = mapped_column(String(24), default="PENDING", server_default="PENDING", nullable=False)
+    email_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
+    email_available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    email_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Photo(TimestampMixin, Base):

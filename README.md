@@ -187,6 +187,8 @@ Validar frontend desde `apps/web`: `npm test`, `npm run typecheck` y `npm run bu
 
 ## Animales publicados como perdidos
 
+Desde una ficha, **Publicar un avistamiento** abre un formulario vinculado que pide ubicación y fotos opcionales, con hora actual o fecha aproximada. Se puede enviar sin crear una cuenta. El dueño recibe una alerta privada de posible avistamiento, con mapa y fotos, y puede habilitar correo SMTP. La comparación usa características de las fotos, fecha y zona; los reportes sin foto o inconclusos se identifican como por confirmar. [Implementación, pruebas y configuración de Brevo Free](docs/linked-sightings.md).
+
 En **Animales perdidos** (`/perdidos`), disponible desde la navegación y la portada, cualquier visitante puede consultar los animales de cualquier especie con aviso `ACTIVE`, buscar por nombre, zona o descripción y abrir una ficha individual. Se muestran hasta 24 avisos por página. Las fotos son opcionales; si no hay foto o no se puede cargar, se muestra un marcador de ausencia.
 
 Los avisos incluyen nombre del perro, características declaradas, descripción, fecha y localidad. La API pública usa una lista explícita de campos; omite datos de cuenta, microchip y coordenadas exactas. Las fotos siguen en el bucket privado y se sirven mediante una ruta que comprueba que el aviso continúa activo. Al marcar el aviso `FOUND`, `CLOSED` o `CANCELLED`, o eliminarlo, deja de estar disponible en el listado, la ficha y la ruta de imagen. No se agrega contacto público ni matching automático.

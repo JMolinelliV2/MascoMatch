@@ -9,6 +9,7 @@ from app.analysis.service import purge_owner, schedule_text
 from app.dependencies import current_user
 from app.models import Pet, User
 from app.schemas import PetCreate, PetRead, PetUpdate
+from app.matching.linked import mark_related_pending
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
@@ -47,6 +48,7 @@ def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), 
     db.flush()
     for case in pet.lost_cases:
         schedule_text(db, "lost_case", case.id)
+    mark_related_pending(db, "pet", pet.id)
     db.commit()
     db.refresh(pet)
     return pet

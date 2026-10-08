@@ -6,7 +6,7 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.db.session import get_db
 from app.dependencies import current_user
 from app.models import User
-from app.schemas import LoginRequest, RegisterRequest, TokenResponse, UserRead
+from app.schemas import LoginRequest, NotificationPreferences, RegisterRequest, TokenResponse, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -38,5 +38,13 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(current_user)):
+    return user
+
+
+@router.patch("/notification-preferences", response_model=UserRead)
+def notification_preferences(payload: NotificationPreferences, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    user.notification_preferences = {**user.notification_preferences, "email": payload.email}
+    db.commit()
+    db.refresh(user)
     return user
 

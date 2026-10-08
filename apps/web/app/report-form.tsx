@@ -38,12 +38,15 @@ async function readResponse<T>(response: Response): Promise<T> {
 }
 
 async function send<T>(path: string, body: object, token?: string): Promise<T> {
-  const response = await fetch(`${API}${path}`, {
+  const account = path.startsWith("/auth/");
+  const response = await fetch(account ? "/api/session" : `${API}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify(body),
+    body: JSON.stringify(account ? { ...body, mode: path.split("/").at(-1) } : body),
   });
-  return readResponse<T>(response);
+  const result = await readResponse<T>(response);
+  if (account) window.dispatchEvent(new Event("petmatch:session"));
+  return result;
 }
 
 async function sendPhoto(file: File, ownerType: string, ownerId: string, token: string) {

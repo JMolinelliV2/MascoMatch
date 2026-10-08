@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
 def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -21,5 +22,9 @@ def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
     if user is None or user.status != "ACTIVE":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is unavailable", headers={"WWW-Authenticate": "Bearer"})
     return user
+
+
+def optional_user(token: str | None = Depends(optional_oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
+    return current_user(token, db) if token else None
 
 

@@ -2,12 +2,12 @@ from typing import Literal
 from ipaddress import ip_address
 from urllib.parse import urlsplit
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
     database_url: str = "postgresql+psycopg://petmatch:petmatch@localhost:5432/petmatch"
     jwt_secret: str = "local-development-only-change-this-secret"
@@ -28,6 +28,37 @@ class Settings(BaseSettings):
     ai_request_timeout_seconds: int = Field(default=180, ge=10, le=600)
     ai_max_attempts: int = Field(default=3, ge=1, le=5)
     ai_dispatch_interval_seconds: int = Field(default=5, ge=1, le=60)
+    linked_match_threshold: float = Field(default=0.75, ge=0.5, le=1)
+    linked_feature_confidence: float = Field(default=0.7, ge=0.5, le=1)
+    mail_delivery_mode: Literal["disabled", "preview", "smtp"] = "disabled"
+    smtp_host: str = "localhost"
+    smtp_port: int = Field(default=1025, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_from: str = "PetMatch <avisos@petmatch.local>"
+    smtp_tls_mode: Literal["none", "starttls", "ssl"] = "starttls"
+    public_site_url: str = "http://localhost:3000"
+
+    @model_validator(mode="after")
+    def mail_configuration(self):
+        if any(character in self.smtp_from for character in ("\r", "\n")):
+            raise ValueError("SMTP_FROM cannot contain line breaks")
+        if self.mail_delivery_mode == "smtp" and self.smtp_tls_mode == "none":
+            raise ValueError("Real SMTP delivery requires SSL or STARTTLS")
+        if self.mail_delivery_mode == "preview":
+            host = self.smtp_host.lower()
+            private = host in {"mailpit", "localhost", "host.docker.internal"}
+            try:
+                address = ip_address(host)
+                private = address.is_private or address.is_loopback
+            except ValueError:
+                pass
+            if not private:
+                raise ValueError("Mail previews must use a local/private SMTP server")
+        parsed = urlsplit(self.public_site_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise ValueError("PUBLIC_SITE_URL must be an HTTP(S) site URL without credentials")
+        return self
 
     @field_validator("ai_text_model", "ai_vision_model")
     @classmethod

@@ -186,6 +186,34 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
   .dog-help { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
   .dog-help h2 { margin-top: 0; }
   .dog-help p { color: var(--muted); font-size: 14px; }
+  .sighting-target { display: flex; align-items: center; gap: 16px; margin: 24px 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: #faf8fc; }
+  .sighting-target .dog-photo { width: 76px; height: 76px; flex-shrink: 0; border-radius: 8px; }
+  .sighting-target p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+  .linked-sighting-form h2 { margin: 0 0 16px; font-size: 21px; font-weight: 600; }
+  .sighting-recent { display: flex; align-items: center; gap: 10px; font-size: 14px; margin: 12px 0; }
+  .sighting-recent input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .sighting-previews { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+  .sighting-previews > div { max-width: 120px; }
+  .sighting-previews img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; display: block; }
+  .sighting-result { margin-top: 24px; }
+  .notification-count { display: inline-flex; justify-content: center; align-items: center; min-width: 22px; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; margin-left: 4px; }
+  .notifications-page { max-width: 860px; }
+  .notification-login { margin-top: 28px; max-width: 480px; }
+  .notification-login h2 { font-size: 21px; font-weight: 600; margin-bottom: 6px; }
+  .notification-login fieldset { margin-top: 24px; }
+  .notifications-account, .notifications-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; }
+  .notifications-account { margin-top: 16px; }
+  .notifications-toolbar { margin-top: 24px; border-top: 1px solid var(--line); font-size: 14px; }
+  .notifications-list { display: grid; gap: 20px; }
+  .notification-card { border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+  .notification-unread { border-color: #b7a2ca; background: #fcfaff; }
+  .notification-card h2 { font-size: 22px; font-weight: 600; margin: 12px 0; overflow-wrap: anywhere; }
+  .notification-card > p { font-size: 14px; }
+  .notification-reasons { padding-left: 20px; font-size: 13px; color: var(--muted); }
+  .notification-photos { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+  .notification-photos img { width: 160px; max-width: 100%; height: 160px; object-fit: contain; background: #f3eef8; border-radius: 8px; }
+  .notification-card .location-map-section { margin-top: 12px; }
+  .notifications-page > .notice { margin-top: 20px; }
 
   @media (min-width: 1440px) {
     .hero-content { padding-left: 152px; }

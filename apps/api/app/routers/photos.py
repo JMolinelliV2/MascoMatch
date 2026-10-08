@@ -12,6 +12,7 @@ from app.analysis.service import purge_photo, schedule_photo
 from app.models import Photo, User
 from app.schemas import PhotoCreate, PhotoRead, PhotoUpdate, PhotoUploadRead
 from app.services.access import owner_has_access
+from app.matching.linked import mark_related_pending
 
 router = APIRouter(prefix="/photos", tags=["photos"])
 
@@ -34,6 +35,7 @@ def create_photo_metadata(payload: PhotoCreate, db: Session = Depends(get_db), u
     db.add(photo)
     db.flush()
     schedule_photo(db, photo)
+    mark_related_pending(db, photo.owner_type, photo.owner_id)
     db.commit()
     db.refresh(photo)
     return photo
@@ -72,6 +74,7 @@ def upload_photo(
         db.add(photo)
         db.flush()
         schedule_photo(db, photo)
+        mark_related_pending(db, photo.owner_type, photo.owner_id)
         db.commit()
         db.refresh(photo)
     except Exception:
@@ -115,6 +118,7 @@ def delete_photo_metadata(photo_id: UUID, db: Session = Depends(get_db), user: U
     photo = owned_photo(db, photo_id, user)
     delete_private_image(photo.storage_key)
     purge_photo(db, photo_id)
+    mark_related_pending(db, photo.owner_type, photo.owner_id)
     db.delete(photo)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

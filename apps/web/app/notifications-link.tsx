@@ -24,11 +24,11 @@ export function NotificationsLink() {
     void load();
     const timer = setInterval(load, 20000);
     window.addEventListener("focus", load);
-    window.addEventListener("petmatch:session", load);
-    window.addEventListener("petmatch:notifications", load);
+    window.addEventListener("mascomatch:session", load);
+    window.addEventListener("mascomatch:notifications", load);
     return () => {
       disposed = true; controller?.abort(); clearInterval(timer);
-      window.removeEventListener("focus", load); window.removeEventListener("petmatch:session", load); window.removeEventListener("petmatch:notifications", load);
+      window.removeEventListener("focus", load); window.removeEventListener("mascomatch:session", load); window.removeEventListener("mascomatch:notifications", load);
     };
   }, []);
   return <Link href="/notificaciones" aria-label={count ? `Notificaciones, ${count} sin leer` : "Notificaciones"}>Notificaciones {count > 0 && <span className="notification-count">{count > 99 ? "99+" : count}</span>}</Link>;

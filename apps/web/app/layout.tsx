@@ -4,7 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "./site-header";
 
 export const metadata: Metadata = {
-  title: "PetMatch — Mascotas perdidas",
+  title: "MascoMatch — Mascotas perdidas",
   description: "Registrá una mascota perdida, un avistamiento o un animal encontrado.",
 };
 

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         }
       }
       const response = await fetch(url, {
-        headers: { Accept: "application/json", "Accept-Language": "es", "User-Agent": "PetMatch/0.1" },
+        headers: { Accept: "application/json", "Accept-Language": "es", "User-Agent": "MascoMatch/0.1" },
         signal: AbortSignal.any([request.signal, AbortSignal.timeout(8000)]),
         cache: "no-store",
       });

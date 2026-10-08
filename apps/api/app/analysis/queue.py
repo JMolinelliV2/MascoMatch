@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.models import AnalysisJob
 
-QUEUE_NAME = "petmatch-analysis"
+QUEUE_NAME = "mascomatch-analysis"
 
 
 def get_queue() -> Queue:

@@ -65,7 +65,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       const data = await response.json();
       if (!response.ok) throw new Error(response.status === 401 ? "El correo o la contraseña no son correctos." : "No pudimos iniciar sesión. Intentá de nuevo.");
       formElement.reset(); setUser(data.user); setOffset(0);
-      window.dispatchEvent(new Event("petmatch:session"));
+      window.dispatchEvent(new Event("mascomatch:session"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos iniciar sesión."); }
     finally { setBusy(false); }
   }
@@ -73,7 +73,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
   async function logout() {
     const response = await fetch("/api/session", { method: "DELETE" });
     if (!response.ok) { setError("No pudimos cerrar la sesión. Intentá de nuevo."); return; }
-    setUser(null); setInbox(null); window.dispatchEvent(new Event("petmatch:session"));
+    setUser(null); setInbox(null); window.dispatchEvent(new Event("mascomatch:session"));
   }
 
   async function preference(email: boolean) {
@@ -93,7 +93,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       if (!response.ok) throw new Error("No pudimos marcar la notificación como leída.");
       const notice = await response.json();
       setInbox(current => current ? { ...current, unread_count: Math.max(0, current.unread_count - 1), items: current.items.map(item => item.id === id ? notice : item) } : current);
-      window.dispatchEvent(new Event("petmatch:notifications"));
+      window.dispatchEvent(new Event("mascomatch:notifications"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos actualizar la notificación."); }
     finally { setMarking(null); }
   }
@@ -111,7 +111,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
     </form> : <>
       <div className="notifications-account"><span>{user.name}</span><button type="button" className="text-button" onClick={() => void logout()}>Cerrar sesión</button></div>
       <label className="sighting-recent"><input type="checkbox" checked={user.notification_preferences.email !== false} disabled={busy} onChange={event => void preference(event.target.checked)} />Recibir también alertas por correo</label>
-      <p className="field-help">Los correos se envían cuando hay un servidor de correo configurado. Podés abrirlos sin estar conectado a PetMatch.</p>
+      <p className="field-help">Los correos se envían cuando hay un servidor de correo configurado. Podés abrirlos sin estar conectado a MascoMatch.</p>
       {selectedId && <Link href="/notificaciones" className="text-button">Ver todas las notificaciones</Link>}
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
       {inbox?.total === 0 && <div className="lost-dogs-empty"><h2>Todavía no hay avistamientos relevantes</h2><p>Los nuevos avisos aparecerán acá cuando alguien reporte un avistamiento compatible con tu publicación.</p></div>}

@@ -45,7 +45,7 @@ export default function Home() {
         </ol>
       </section>
       <footer className="home-footer">
-        <span>PetMatch · Información que ayuda a volver a casa.</span>
+        <span>MascoMatch · Información que ayuda a volver a casa.</span>
         <a href="https://unsplash.com/photos/golden-retriever-x5oPmHmY3kQ" target="_blank" rel="noopener noreferrer">Foto: Victor G / Unsplash</a>
       </footer>
     </main>

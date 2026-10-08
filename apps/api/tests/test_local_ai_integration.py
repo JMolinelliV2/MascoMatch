@@ -31,7 +31,7 @@ def test_real_queue_worker_and_local_model(tmp_path, monkeypatch):
     monkeypatch.setattr(tasks, "SessionLocal", factory)
     real_queue = get_queue()
     from rq import Queue
-    isolated_queue = Queue(f"petmatch-check-{uuid4().hex}", connection=real_queue.connection, serializer=JSONSerializer)
+    isolated_queue = Queue(f"mascomatch-check-{uuid4().hex}", connection=real_queue.connection, serializer=JSONSerializer)
     monkeypatch.setattr(queue, "get_queue", lambda: isolated_queue)
     storage_key = None
     try:

@@ -1,4 +1,8 @@
-# PetMatch
+# MascoMatch
+
+Repositorio: [JMolinelliV2/MascoMatch](https://github.com/JMolinelliV2/MascoMatch).
+
+La marca también identifica la API, los correos, el paquete web, las sesiones y la cola de IA. Los nombres locales por defecto son `mascomatch` para PostgreSQL y MinIO, `mascomatch-analysis` para la cola y `mascomatch_session` para la cookie de sesión. Al actualizar una instalación con datos, cambiar las variables de Compose no renombra la base ni el usuario de PostgreSQL: hay que migrar sus nombres conservando el volumen, ajustar `.env` y reiniciar los servicios. El cambio de cookie requiere iniciar sesión nuevamente.
 
 Plataforma web y API mobile-first para relacionar mascotas perdidas con observaciones de la comunidad. Incluye el CRUD de cuentas, mascotas, casos, observaciones y fotos, y la fase de extracción de características de textos y fotos con IA local. Los embeddings, las coincidencias, las alertas y el mapa son las siguientes fases.
 
@@ -157,8 +161,8 @@ docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true api python -m pyt
 Para incluir la fotografía de ejemplo de la portada:
 
 ```powershell
-docker compose cp ./apps/web/public/images/dog-hero.jpg api:/tmp/petmatch-check-dog.jpg
-docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true -e AI_SMOKE_IMAGE_PATH=/tmp/petmatch-check-dog.jpg api python -m pytest tests/test_local_ai_integration.py -q
+docker compose cp ./apps/web/public/images/dog-hero.jpg api:/tmp/mascomatch-check-dog.jpg
+docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true -e AI_SMOKE_IMAGE_PATH=/tmp/mascomatch-check-dog.jpg api python -m pytest tests/test_local_ai_integration.py -q
 ```
 
 Estas comprobaciones validan el recorrido y dos ejemplos de extracción; no son una evaluación de precisión del matching.

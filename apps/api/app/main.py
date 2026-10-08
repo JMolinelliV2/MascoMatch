@@ -25,7 +25,7 @@ async def lifespan(application: FastAPI):
                 await task
 
 app = FastAPI(
-    title="PetMatch API",
+    title="MascoMatch API",
     description="Mascotas, reportes y extracción de características de textos y fotos.",
     version="0.2.0",
     lifespan=lifespan,

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { LostDogs } from "./lost-dogs";
 
-export const metadata: Metadata = { title: "Animales perdidos — PetMatch" };
+export const metadata: Metadata = { title: "Animales perdidos — MascoMatch" };
 
 export default function LostDogsPage() {
   return <main id="main-content" className="page lost-dogs-page">

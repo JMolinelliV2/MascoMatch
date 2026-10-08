@@ -46,7 +46,7 @@ def test_linked_photo_notification_and_mailpit(client, tmp_path, monkeypatch):
     monkeypatch.setattr(queue, "SessionLocal", factory)
     monkeypatch.setattr(tasks, "SessionLocal", factory)
     real_queue = get_queue()
-    isolated = Queue(f"petmatch-linked-check-{uuid4().hex}", connection=real_queue.connection, serializer=JSONSerializer)
+    isolated = Queue(f"mascomatch-linked-check-{uuid4().hex}", connection=real_queue.connection, serializer=JSONSerializer)
     monkeypatch.setattr(queue, "get_queue", lambda: isolated)
     recipient = f"linked-check-{uuid4().hex}@example.test"
     stored_keys = []

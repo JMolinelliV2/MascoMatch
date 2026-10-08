@@ -23,7 +23,7 @@ def build_message(notification, owner, observation=None):
     message["To"] = owner.email
     message["Subject"] = " ".join(notification.title.splitlines())
     message["Date"] = format_datetime(utcnow())
-    message["Message-ID"] = f"<petmatch-{notification.id}@petmatch.local>"
+    message["Message-ID"] = f"<mascomatch-{notification.id}@mascomatch.local>"
     context = ""
     if observation:
         try:
@@ -34,7 +34,7 @@ def build_message(notification, owner, observation=None):
         context = f"\n\nFecha del avistamiento: {when} ({label})."
         if observation.public_location:
             context += f"\nZona: {observation.public_location}"
-    message.set_content(f"{notification.title}\n\n{notification.body}{context}\n\nRevisá el lugar y las fotos en PetMatch:\n{settings.public_site_url.rstrip('/')}/notificaciones?aviso={notification.id}\n\nSe trata de una posible coincidencia, que necesita revisión.\nPodés cambiar tus preferencias de correo en Notificaciones.")
+    message.set_content(f"{notification.title}\n\n{notification.body}{context}\n\nRevisá el lugar y las fotos en MascoMatch:\n{settings.public_site_url.rstrip('/')}/notificaciones?aviso={notification.id}\n\nSe trata de una posible coincidencia, que necesita revisión.\nPodés cambiar tus preferencias de correo en Notificaciones.")
     return message
 
 

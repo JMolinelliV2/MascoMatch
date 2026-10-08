@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-export const SESSION_COOKIE = "petmatch_session";
+export const SESSION_COOKIE = "mascomatch_session";
 export const serverApi = (process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
 
 export function sameOrigin(request: NextRequest): boolean {

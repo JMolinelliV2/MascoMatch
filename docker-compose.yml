@@ -3,8 +3,8 @@ services:
     build:
       context: ./infrastructure/docker/postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-petmatch}
-      POSTGRES_USER: ${POSTGRES_USER:-petmatch}
+      POSTGRES_DB: ${POSTGRES_DB:-mascomatch}
+      POSTGRES_USER: ${POSTGRES_USER:-mascomatch}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
     ports:
       - "5432:5432"
@@ -32,7 +32,7 @@ services:
       context: ./infrastructure/docker/minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-petmatch}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mascomatch}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-this-minio-password}
     ports:
       - "9000:9000"
@@ -47,14 +47,14 @@ services:
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app"
     environment: &backend_environment
       WATCHFILES_FORCE_POLLING: "true"
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://petmatch:change-me-locally@db:5432/petmatch}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://mascomatch:change-me-locally@db:5432/mascomatch}
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-secret}
       ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-60}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
       S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       S3_BUCKET: ${S3_BUCKET:-pet-photos}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-petmatch}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-mascomatch}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-change-this-minio-password}
       MAX_PHOTO_SIZE_BYTES: ${MAX_PHOTO_SIZE_BYTES:-10485760}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
@@ -73,7 +73,7 @@ services:
       SMTP_PORT: ${SMTP_PORT:-1025}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_FROM: ${SMTP_FROM:-PetMatch <avisos@petmatch.local>}
+      SMTP_FROM: ${SMTP_FROM:-MascoMatch <avisos@mascomatch.local>}
       SMTP_TLS_MODE: ${SMTP_TLS_MODE:-starttls}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
     ports:

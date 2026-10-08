@@ -9,14 +9,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
-    database_url: str = "postgresql+psycopg://petmatch:petmatch@localhost:5432/petmatch"
+    database_url: str = "postgresql+psycopg://mascomatch:mascomatch@localhost:5432/mascomatch"
     jwt_secret: str = "local-development-only-change-this-secret"
     access_token_minutes: int = 60
     web_origin: str = "http://localhost:3000"
     s3_endpoint: str = "http://localhost:9000"
     s3_public_endpoint: str = "http://localhost:9000"
     s3_bucket: str = "pet-photos"
-    s3_access_key: str = "petmatch"
+    s3_access_key: str = "mascomatch"
     s3_secret_key: str = "change-this-minio-password"
     max_photo_size_bytes: int = 10 * 1024 * 1024
     redis_url: str = "redis://localhost:6379/0"
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     smtp_port: int = Field(default=1025, ge=1, le=65535)
     smtp_username: str = ""
     smtp_password: SecretStr = SecretStr("")
-    smtp_from: str = "PetMatch <avisos@petmatch.local>"
+    smtp_from: str = "MascoMatch <avisos@mascomatch.local>"
     smtp_tls_mode: Literal["none", "starttls", "ssl"] = "starttls"
     public_site_url: str = "http://localhost:3000"
 

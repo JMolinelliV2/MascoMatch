@@ -50,7 +50,7 @@ SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_USERNAME=TU_LOGIN_SMTP_DE_BREVO
 SMTP_PASSWORD=TU_CLAVE_SMTP_DE_BREVO
-SMTP_FROM=PetMatch <avisos@tu-dominio.example>
+SMTP_FROM=MascoMatch <avisos@tu-dominio.example>
 SMTP_TLS_MODE=starttls
 PUBLIC_SITE_URL=https://tu-sitio.example
 ```

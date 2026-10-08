@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import json
 import logging
 
-logger = logging.getLogger("petmatch.analysis")
+logger = logging.getLogger("mascomatch.analysis")
 if not logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("%(message)s"))

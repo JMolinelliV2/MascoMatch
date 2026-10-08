@@ -45,7 +45,7 @@ async function send<T>(path: string, body: object, token?: string): Promise<T> {
     body: JSON.stringify(account ? { ...body, mode: path.split("/").at(-1) } : body),
   });
   const result = await readResponse<T>(response);
-  if (account) window.dispatchEvent(new Event("petmatch:session"));
+  if (account) window.dispatchEvent(new Event("mascomatch:session"));
   return result;
 }
 

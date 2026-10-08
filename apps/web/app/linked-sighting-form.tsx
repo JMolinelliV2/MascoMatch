@@ -96,7 +96,7 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "No pudimos guardar el avistamiento. Intentá de nuevo.");
       setResult(data);
-      window.dispatchEvent(new Event("petmatch:notifications"));
+      window.dispatchEvent(new Event("mascomatch:notifications"));
       requestAnimationFrame(() => heading.current?.focus());
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos guardar el avistamiento. Intentá de nuevo."); }
     finally { setBusy(false); }

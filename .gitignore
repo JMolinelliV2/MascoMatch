@@ -1,4 +1,9 @@
 .env
+.env.production
+.secrets/
+backups/
+*.mbak
+real-data/
 .venv/
 .pip-cache/
 __pycache__/

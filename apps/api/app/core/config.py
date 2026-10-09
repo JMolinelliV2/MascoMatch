@@ -1,5 +1,6 @@
 from typing import Literal
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, field_validator, model_validator
@@ -9,17 +10,26 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
-    database_url: str = "postgresql+psycopg://mascomatch:mascomatch@localhost:5432/mascomatch"
-    jwt_secret: str = "local-development-only-change-this-secret"
-    access_token_minutes: int = 60
+    app_env: Literal["development", "production", "test"] = "development"
+    runtime_role: Literal["api", "worker", "ops", "migrate"] = "api"
+    database_url: str = Field(default="postgresql+psycopg://mascomatch:mascomatch@localhost:5432/mascomatch", repr=False)
+    jwt_secret: str = Field(default="local-development-only-change-this-secret", repr=False)
+    database_url_file: str | None = None
+    jwt_secret_file: str | None = None
+    s3_secret_key_file: str | None = None
+    smtp_password_file: str | None = None
+    redis_url_file: str | None = None
+    backup_key_file: str | None = None
+    backup_key: SecretStr = SecretStr("")
+    access_token_minutes: int = Field(default=60, ge=5, le=1440)
     web_origin: str = "http://localhost:3000"
     s3_endpoint: str = "http://localhost:9000"
     s3_public_endpoint: str = "http://localhost:9000"
     s3_bucket: str = "pet-photos"
     s3_access_key: str = "mascomatch"
-    s3_secret_key: str = "change-this-minio-password"
+    s3_secret_key: str = Field(default="change-this-minio-password", repr=False)
     max_photo_size_bytes: int = 10 * 1024 * 1024
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = Field(default="redis://localhost:6379/0", repr=False)
     ai_enabled: bool = False
     ai_provider: Literal["ollama"] = "ollama"
     ai_text_model: str = "gemma3:4b"
@@ -54,6 +64,61 @@ class Settings(BaseSettings):
     rate_limit_auth: int = Field(default=30,ge=1,le=10000)
     rate_limit_publish: int = Field(default=60,ge=1,le=10000)
     rate_limit_read: int = Field(default=300,ge=1,le=10000)
+    rate_limit_backend: Literal["memory", "redis"] = "memory"
+    trusted_proxy_ips: str = ""
+    allowed_hosts: str = "localhost,127.0.0.1,testserver,api"
+    metrics_token: SecretStr = SecretStr("")
+    metrics_token_file: str | None = None
+    upload_slots: int = Field(default=3, ge=1, le=10)
+
+    @model_validator(mode="before")
+    @classmethod
+    def secret_files(cls, values):
+        values = dict(values)
+        for name in ("database_url", "jwt_secret", "s3_secret_key", "smtp_password", "redis_url", "backup_key", "metrics_token"):
+            filename = values.get(f"{name}_file")
+            if not filename:
+                continue
+            if values.get(name):
+                raise ValueError(f"Configure {name.upper()} or its file, not both")
+            try:
+                with Path(filename).open("rb") as stream:
+                    payload = stream.read(16385)
+                if len(payload) > 16384:
+                    raise ValueError("Secret file exceeds limit")
+                values[name] = payload.decode("utf-8").strip()
+            except (OSError, UnicodeError) as exc:
+                raise ValueError(f"Cannot read {name.upper()} secret file") from exc
+        return values
+
+    @model_validator(mode="after")
+    def production_configuration(self):
+        for value in self.trusted_proxy_ips.split(","):
+            if value.strip():
+                network = ip_network(value.strip(), strict=False)
+                if network.prefixlen == 0:
+                    raise ValueError("Do not trust every address as a proxy")
+        if self.app_env != "production":
+            return self
+        required = [self.jwt_secret, self.s3_secret_key] if self.runtime_role=="api" else [self.s3_secret_key] if self.runtime_role!="migrate" else []
+        for value in required:
+            if len(value) < 32 or any(marker in value.lower() for marker in ("change-this", "replace-with", "development-only")):
+                raise ValueError("Production requires generated JWT and S3 secrets")
+        if not self.database_url.startswith("postgresql"):
+            raise ValueError("Production requires PostgreSQL")
+        if self.runtime_role=="api" and (not self.rate_limit_enabled or self.rate_limit_backend != "redis"):
+            raise ValueError("Production requires shared request limits")
+        if "*" in self.allowed_hosts or not self.allowed_hosts.strip():
+            raise ValueError("Production requires explicit allowed hosts")
+        if self.runtime_role=="api" and len(self.metrics_token.get_secret_value()) < 32:
+            raise ValueError("Production requires a private monitoring token")
+        for value in self.cors_origins + [self.public_site_url]:
+            parsed = urlsplit(value)
+            if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+                raise ValueError("Production site URLs must use HTTPS")
+        if self.mail_delivery_mode == "preview":
+            raise ValueError("Production cannot use a preview mail server")
+        return self
 
     @model_validator(mode="after")
     def matching_configuration(self):

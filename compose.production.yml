@@ -1,0 +1,261 @@
+# Standalone definition: never merge development's public service ports or source mounts.
+x-backend: &backend
+  APP_ENV: production
+  DATABASE_URL_FILE: /run/secrets/database_url
+  JWT_SECRET_FILE: /run/secrets/jwt_secret
+  REDIS_URL_FILE: /run/secrets/redis_url
+  S3_SECRET_KEY_FILE: /run/secrets/s3_secret_key
+  SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+  METRICS_TOKEN_FILE: /run/secrets/metrics_token
+  WEB_ORIGIN: ${WEB_ORIGIN:?Run tools/production_init.py first}
+  PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?Set the public HTTPS URL}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Set explicit allowed hosts}
+  TRUSTED_PROXY_IPS: 172.30.50.2,172.30.50.3
+  RATE_LIMIT_BACKEND: redis
+  RATE_LIMIT_ENABLED: "true"
+  S3_ENDPOINT: http://photos:8333
+  S3_PUBLIC_ENDPOINT: http://photos:8333
+  S3_BUCKET: pet-photos
+  S3_ACCESS_KEY: mascomatch_app
+  OLLAMA_BASE_URL: http://ollama:11434
+  AI_ENABLED: ${AI_ENABLED:-false}
+  EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
+  EMBEDDING_CACHE_DIR: /models/clip
+  MAIL_DELIVERY_MODE: ${MAIL_DELIVERY_MODE:-disabled}
+  SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_FROM: ${SMTP_FROM:-MascoMatch <avisos@mascomatch.com>}
+  SMTP_TLS_MODE: ${SMTP_TLS_MODE:-starttls}
+
+x-backend-secrets: &backend-secrets
+  [database_url, jwt_secret, redis_url, s3_secret_key, smtp_password, metrics_token]
+
+x-safety: &safety
+  restart: unless-stopped
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+
+services:
+  db:
+    build: {context: ./infrastructure/docker/postgres}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mascomatch
+      POSTGRES_USER: mascomatch_owner
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_owner_password
+    secrets: [db_owner_password]
+    volumes: [postgres_data:/var/lib/postgresql/data, ./infrastructure/docker/postgres/init:/docker-entrypoint-initdb.d:ro]
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U mascomatch_owner -d mascomatch"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: {driver: json-file, options: {max-size: "10m", max-file: "3"}}
+
+  redis:
+    <<: *safety
+    image: redis:7-alpine
+    user: redis
+    command: [redis-server, /run/secrets/redis_config]
+    secrets: [redis_config, redis_password]
+    volumes: [redis_data:/data]
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH=$$(tr -d "\r\n" </run/secrets/redis_password) redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  photos:
+    <<: *safety
+    image: chrislusf/seaweedfs:4.48
+    cap_add: [CHOWN, SETUID, SETGID]
+    command: server -dir=/data -ip=photos -ip.bind=0.0.0.0 -master.volumeSizeLimitMB=1024 -volume.max=16 -s3 -s3.port=8333 -s3.config=/run/secrets/photos_config -s3.concurrentUploadLimitMB=128
+    secrets: [photos_config]
+    volumes: [photos_data:/data]
+    networks: [backend]
+
+  photos-init:
+    build: {context: ./apps/api}
+    environment:
+      <<: *backend
+      RUNTIME_ROLE: ops
+      JWT_SECRET_FILE: ""
+      METRICS_TOKEN_FILE: ""
+      SMTP_PASSWORD_FILE: ""
+      MAIL_DELIVERY_MODE: disabled
+      S3_ACCESS_KEY: mascomatch_admin
+      S3_SECRET_KEY_FILE: /run/secrets/photos_admin_secret
+    secrets: [database_url, redis_url, photos_admin_secret]
+    command: python -m app.ops.photos
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    depends_on: {photos: {condition: service_started}}
+
+  migrate:
+    build: {context: ./apps/api}
+    environment:
+      <<: *backend
+      DATABASE_URL_FILE: /run/secrets/migrator_database_url
+      RUNTIME_ROLE: migrate
+      JWT_SECRET_FILE: ""
+      S3_SECRET_KEY_FILE: ""
+      SMTP_PASSWORD_FILE: ""
+      METRICS_TOKEN_FILE: ""
+      MAIL_DELIVERY_MODE: disabled
+    secrets: [migrator_database_url, app_db_password, redis_url]
+    command: sh -c "python -m app.ops.database prepare && alembic upgrade head && python -m app.ops.database permissions"
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}
+
+  api:
+    <<: *safety
+    build: {context: ./apps/api}
+    environment: *backend
+    secrets: *backend-secrets
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --no-proxy-headers --no-access-log
+    read_only: true
+    tmpfs: ["/tmp:size=268435456,mode=1777"]
+    volumes: [vision_models:/models/clip:ro]
+    networks: [backend, edge]
+    mem_limit: 768m
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready',timeout=6)"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 30s
+    depends_on: {migrate: {condition: service_completed_successfully}, photos-init: {condition: service_completed_successfully}}
+
+  web:
+    <<: *safety
+    build: {context: ./apps/web, args: {NEXT_PUBLIC_SEARCH_COUNTRY: "${NEXT_PUBLIC_SEARCH_COUNTRY:-UY}"}}
+    environment:
+      API_INTERNAL_URL: http://api:8000/api/v1
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL}
+      TRUST_PROXY_HEADERS: "true"
+      GEOCODER_BASE_URL: ${GEOCODER_BASE_URL:-https://photon.komoot.io}
+    read_only: true
+    tmpfs: [/tmp]
+    networks:
+      edge: {ipv4_address: 172.30.50.3}
+    mem_limit: 512m
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on: {api: {condition: service_healthy}}
+
+  caddy:
+    <<: *safety
+    image: caddy:2.11.7-alpine
+    cap_add: [NET_BIND_SERVICE]
+    environment: {SITE_DOMAIN: "${SITE_DOMAIN:?Set the purchased domain}"}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes: [./infrastructure/production/Caddyfile:/etc/caddy/Caddyfile:ro, caddy_data:/data, caddy_config:/config]
+    networks:
+      edge: {ipv4_address: 172.30.50.2}
+    depends_on: {web: {condition: service_healthy}}
+
+  ollama:
+    <<: *safety
+    image: ollama/ollama:0.35.1
+    profiles: [ai-local]
+    environment: {OLLAMA_NO_CLOUD: "1", OLLAMA_NUM_PARALLEL: "1", OLLAMA_MAX_LOADED_MODELS: "1"}
+    volumes: [ollama_models:/root/.ollama]
+    networks: [backend]
+    mem_limit: 6g
+    cpus: 4
+
+  worker:
+    <<: *safety
+    build: {context: ./apps/api, dockerfile: Dockerfile.worker}
+    profiles: [ai-local]
+    environment:
+      <<: *backend
+      RUNTIME_ROLE: worker
+      JWT_SECRET_FILE: ""
+      METRICS_TOKEN_FILE: ""
+      SMTP_PASSWORD_FILE: ""
+      MAIL_DELIVERY_MODE: disabled
+      S3_ACCESS_KEY: mascomatch_vision
+      S3_SECRET_KEY_FILE: /run/secrets/vision_s3_secret
+    secrets: [database_url, redis_url, vision_s3_secret]
+    read_only: true
+    tmpfs: ["/tmp:size=536870912,mode=1777"]
+    volumes: [vision_models:/models/clip:ro]
+    networks: [backend]
+    mem_limit: 2g
+    cpus: 2
+    depends_on: {api: {condition: service_healthy}, ollama: {condition: service_started}}
+
+  backup:
+    <<: *safety
+    build: {context: ./apps/api, dockerfile: Dockerfile.ops}
+    environment:
+      <<: *backend
+      BACKUP_KEY_FILE: /run/secrets/backup_key
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      RUNTIME_ROLE: ops
+      JWT_SECRET_FILE: ""
+      SMTP_PASSWORD_FILE: ""
+      METRICS_TOKEN_FILE: ""
+      MAIL_DELIVERY_MODE: disabled
+    secrets: [database_url, redis_url, s3_secret_key, backup_key]
+    volumes: [backups:/backups]
+    networks: [backend]
+    read_only: true
+    tmpfs: ["/tmp:size=2147483648,mode=1777"]
+    command: python -m app.ops.backup serve /backups
+    depends_on: {api: {condition: service_healthy}}
+
+  prometheus:
+    <<: *safety
+    image: prom/prometheus:v3.15.0
+    profiles: [monitoring]
+    secrets: [metrics_token]
+    volumes: [./infrastructure/production/prometheus.yml:/etc/prometheus/prometheus.yml:ro, ./infrastructure/production/alerts.yml:/etc/prometheus/alerts.yml:ro, prometheus_data:/prometheus]
+    ports: ["127.0.0.1:9090:9090"]
+    networks: [backend]
+
+networks:
+  backend:
+  edge:
+    ipam: {config: [{subnet: 172.30.50.0/24, ip_range: 172.30.50.128/25}]}
+
+volumes:
+  postgres_data:
+  redis_data:
+  photos_data:
+  vision_models:
+  ollama_models:
+  caddy_data:
+  caddy_config:
+  backups:
+  prometheus_data:
+
+secrets:
+  database_url: {file: "${SECRETS_DIR:-./.secrets}/database_url"}
+  migrator_database_url: {file: "${SECRETS_DIR:-./.secrets}/migrator_database_url"}
+  db_owner_password: {file: "${SECRETS_DIR:-./.secrets}/db_owner_password"}
+  app_db_password: {file: "${SECRETS_DIR:-./.secrets}/app_db_password"}
+  jwt_secret: {file: "${SECRETS_DIR:-./.secrets}/jwt_secret"}
+  redis_url: {file: "${SECRETS_DIR:-./.secrets}/redis_url"}
+  redis_password: {file: "${SECRETS_DIR:-./.secrets}/redis_password"}
+  redis_config: {file: "${SECRETS_DIR:-./.secrets}/redis_config"}
+  photos_admin_secret: {file: "${SECRETS_DIR:-./.secrets}/photos_admin_secret"}
+  photos_config: {file: "${SECRETS_DIR:-./.secrets}/photos_config"}
+  vision_s3_secret: {file: "${SECRETS_DIR:-./.secrets}/vision_s3_secret"}
+  s3_secret_key: {file: "${SECRETS_DIR:-./.secrets}/s3_secret_key"}
+  smtp_password: {file: "${SECRETS_DIR:-./.secrets}/smtp_password"}
+  metrics_token: {file: "${SECRETS_DIR:-./.secrets}/metrics_token"}
+  backup_key: {file: "${SECRETS_DIR:-./.secrets}/backup_key"}

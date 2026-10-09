@@ -13,7 +13,6 @@ type AccountMode = "register" | "login";
 type Step = 1 | 2 | 3;
 type Review = { animal: string; description: string; when: string; note: string };
 type FormControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 const inputClass = "form-input";
 const labels: Record<ReportKind, { title: string; intro: string; submit: string; event: string }> = {
   lost: { title: "Perdí una mascota", intro: "Completá sus datos y el último lugar donde la viste.", submit: "Publicar mascota perdida", event: "Dónde y cuándo se perdió" },
@@ -38,11 +37,11 @@ async function readResponse<T>(response: Response): Promise<T> {
   return data as T;
 }
 
-async function send<T>(path: string, body: object, token?: string): Promise<T> {
+async function send<T>(path: string, body: object): Promise<T> {
   const account = path.startsWith("/auth/");
-  const response = await fetch(account ? "/api/session" : `${API}${path}`, {
+  const response = await fetch(account ? "/api/session" : `/api/backend${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(account ? { ...body, mode: path.split("/").at(-1) } : body),
   });
   const result = await readResponse<T>(response);
@@ -50,12 +49,12 @@ async function send<T>(path: string, body: object, token?: string): Promise<T> {
   return result;
 }
 
-async function sendPhoto(file: File, ownerType: string, ownerId: string, token: string) {
+async function sendPhoto(file: File, ownerType: string, ownerId: string) {
   const form = new FormData();
   form.append("owner_type", ownerType);
   form.append("owner_id", ownerId);
   form.append("file", file);
-  const response = await fetch(`${API}/photos/upload`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form });
+  const response = await fetch("/api/backend/photos/upload", { method: "POST", body: form });
   await readResponse(response);
 }
 
@@ -74,7 +73,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const pendingFocus = useRef<{ name: string; native: boolean } | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [review, setReview] = useState<Review | null>(null);
-  const [savedReport, setSavedReport] = useState<{ ownerType: "lost_case" | "observation"; ownerId: string; token: string } | null>(null);
+  const [savedReport, setSavedReport] = useState<{ ownerType: "lost_case" | "observation"; ownerId: string } | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [photoWarning, setPhotoWarning] = useState("");
@@ -197,12 +196,11 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     const when = new Date(text("observedAt"));
     setBusy(true);
     try {
-      const session = await send<{ access_token: string }>(`/auth/${accountMode}`, {
+      await send(`/auth/${accountMode}`, {
         email: text("email").toLowerCase(),
         password: String(form.get("password") ?? ""),
         ...(accountMode === "register" ? { name: text("name") } : {}),
       });
-      const token = session.access_token;
       const species = text("species");
       const sex = text("sex");
       const color = text("color");
@@ -227,27 +225,27 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       if (kind === "lost") {
         const pet = await send<{ id: string }>("/pets", {
           name: text("petName"), species, sex, primary_color: color, size, breed: "unknown",
-        }, token);
+        });
         report = await send("/lost-cases", {
           pet_id: pet.id, lost_at: when.toISOString(), last_seen_at: when.toISOString(),
           ...locationData, description,
           public_location: location?.locality ?? null,
-        }, token);
+        });
         ownerType = "lost_case";
       } else {
         report = await send("/observations", {
           species, sex, primary_color: color, size, public_location: location?.locality ?? null, description, observed_at: when.toISOString(), ...locationData,
           share_contact: form.get("shareContact") === "on",
           source_type: kind === "found" ? "FOUND_ANIMAL" : "USER_SIGHTING",
-        }, token);
+        });
         ownerType = "observation";
       }
       if (photo) {
-        try { await sendPhoto(photo, ownerType, report.id, token); }
+        try { await sendPhoto(photo, ownerType, report.id); }
         catch { setPhotoWarning("El reporte se guardó, pero la foto no pudo subirse. La información que compartiste quedó registrada."); }
       }
       setSuccess(kind === "lost" ? `El aviso de ${text("petName")} quedó guardado.` : "Gracias por ayudar. Tu reporte quedó guardado.");
-      setSavedReport({ ownerType, ownerId: report.id, token });
+      setSavedReport({ ownerType, ownerId: report.id });
       formElement.reset();
       setLocation(null);
       setPhoto(null);
@@ -403,8 +401,8 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
                 <input name="email" type="email" required maxLength={320} autoComplete="email" className={inputClass} />
               </label>
               <label className="field-label">Contraseña
-                <input name="password" type="password" required minLength={accountMode === "register" ? 10 : 1} maxLength={128} autoComplete={accountMode === "register" ? "new-password" : "current-password"} className={inputClass} />
-                {accountMode === "register" && <span className="field-help">Mínimo 10 caracteres.</span>}
+                <input name="password" type="password" required minLength={accountMode === "register" ? 12 : 1} maxLength={128} autoComplete={accountMode === "register" ? "new-password" : "current-password"} className={inputClass} />
+                {accountMode === "register" && <span className="field-help">Mínimo 12 caracteres.</span>}
               </label>
             </div>
             {kind !== "lost" && <label className="sighting-recent"><input name="shareContact" type="checkbox"/>Compartir mi correo de forma privada con los dueños que reciban una posible coincidencia de este reporte.</label>}

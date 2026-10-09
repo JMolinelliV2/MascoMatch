@@ -1,18 +1,29 @@
 import type { NextRequest } from "next/server";
+import { isIP } from "node:net";
 
-export const SESSION_COOKIE = "mascomatch_session";
+export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-mascomatch_session" : "mascomatch_session";
 export const serverApi = (process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
 
 export function sameOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
   if (request.headers.get("sec-fetch-site") === "cross-site") return false;
-  if (!origin) return true;
-  try { return new URL(origin).host === request.headers.get("host"); } catch { return false; }
+  if (!origin) return process.env.NODE_ENV !== "production";
+  try {
+    const expected = process.env.PUBLIC_SITE_URL;
+    if (expected) return new URL(origin).origin === new URL(expected).origin;
+    return new URL(origin).host === request.headers.get("host");
+  } catch { return false; }
+}
+
+export function proxyHeaders(request: NextRequest): Record<string, string> {
+  const address = request.headers?.get("x-mascomatch-client-ip");
+  return process.env.TRUST_PROXY_HEADERS === "true" && address && isIP(address)
+    ? { "X-MascoMatch-Client-IP": address } : {};
 }
 
 export function authorization(request: NextRequest): Record<string, string> {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return { ...proxyHeaders(request), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 }
 
 export async function boundedBody(request: NextRequest, limit: number): Promise<Uint8Array> {

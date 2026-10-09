@@ -82,6 +82,8 @@ def deliver_pending(session_factory=None):
                 for item in group:item.email_status = "CANCELLED"
             elif owner.notification_preferences.get("email", True) is False:
                 for item in group:item.email_status = "SKIPPED"
+            elif settings.app_env == "production" and not owner.email_verified:
+                for item in group:item.email_available_at=utcnow()+timedelta(minutes=5)
             else:
                 for item in group:item.email_attempts += 1
                 try:

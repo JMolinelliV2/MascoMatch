@@ -1,7 +1,9 @@
 "use client";
 import {useEffect,useState} from "react";
+import Link from "next/link";
+import {VerifyEmailNotice} from "./verify-email-notice";
 import type {FormEvent,ReactNode} from "react";
-export type SessionUser={id:string;name:string;role?:string};
+export type SessionUser={id:string;name:string;role?:string;email_verified?:boolean;email_verification_required?:boolean};
 export function AccountSession({children}:{children:(user:SessionUser)=>ReactNode}) {
   const [user,setUser]=useState<SessionUser|null>(null);
   const [checking,setChecking]=useState(true);
@@ -15,5 +17,5 @@ export function AccountSession({children}:{children:(user:SessionUser)=>ReactNod
   }
   async function logout(){const response=await fetch("/api/session",{method:"DELETE"});if(response.ok){setUser(null);window.dispatchEvent(new Event("mascomatch:session"));}else setError("No pudimos cerrar tu sesión.");}
   if(checking)return <p role="status">Consultando tu sesión…</p>;
-  return <>{user?<><div className="notifications-account"><span>{user.name}</span><button className="text-button" type="button" onClick={()=>void logout()}>Cerrar sesión</button></div>{children(user)}</>:<form onSubmit={login} className="notification-login"><h2>Ingresá con tu cuenta</h2><fieldset disabled={busy} className="section-fields"><label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required autoComplete="email"/></label><label className="field-label">Contraseña<input className="form-input" name="password" type="password" required autoComplete="current-password"/></label><button className="button button-primary" type="submit">{busy?"Ingresando…":"Ingresar"}</button></fieldset></form>}{error&&<p className="notice notice-warning" role="alert">{error}</p>}</>;
+  return <>{user?<><div className="notifications-account"><span>{user.name}</span><button className="text-button" type="button" onClick={()=>void logout()}>Cerrar sesión</button></div>{user.email_verification_required&&!user.email_verified&&<VerifyEmailNotice/>}{children(user)}</>:<form onSubmit={login} className="notification-login"><h2>Ingresá con tu cuenta</h2><fieldset disabled={busy} className="section-fields"><label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required autoComplete="email"/></label><label className="field-label">Contraseña<input className="form-input" name="password" type="password" required autoComplete="current-password"/></label><button className="button button-primary" type="submit">{busy?"Ingresando…":"Ingresar"}</button></fieldset><p><Link className="text-button" href="/recuperar">Olvidé mi contraseña</Link></p></form>}{error&&<p className="notice notice-warning" role="alert">{error}</p>}</>;
 }

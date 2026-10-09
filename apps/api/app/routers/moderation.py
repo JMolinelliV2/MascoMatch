@@ -74,6 +74,7 @@ def review(report_id:UUID,payload:ReviewInput,db=Depends(get_db),user=Depends(ad
     if payload.action=="DISMISS":report.status="DISMISSED"
     else:
         target.moderation_status="VISIBLE" if payload.action=="RESTORE" else "HIDDEN"
+        db.flush()
         mark_related_pending(db,report.target_type,target.id)
         if payload.action=="BLOCK_AUTHOR":
             author_id=db.get(Pet,target.pet_id).owner_id if isinstance(target,LostCase) else target.author_id
@@ -81,9 +82,9 @@ def review(report_id:UUID,payload:ReviewInput,db=Depends(get_db),user=Depends(ad
             if author_id:
                 author=db.get(User,author_id);author.status="BLOCKED"
                 for case in db.scalars(select(LostCase).join(Pet).where(Pet.owner_id==author_id)):
-                    case.moderation_status="HIDDEN";mark_related_pending(db,"lost_case",case.id)
+                    case.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"lost_case",case.id)
                 for obs in db.scalars(select(Observation).where(Observation.author_id==author_id)):
-                    obs.moderation_status="HIDDEN";mark_related_pending(db,"observation",obs.id)
+                    obs.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"observation",obs.id)
         report.status="ACTION_TAKEN"
     db.add(AdminAudit(actor_id=user.id,action=payload.action,target_type=report.target_type,target_id=report.target_id,report_id=report.id))
     db.commit()
@@ -130,9 +131,9 @@ def user_status(identity:UUID,payload:UserStatusInput,db=Depends(get_db),user=De
     target.status=payload.status
     if payload.status=="BLOCKED":
         for case in db.scalars(select(LostCase).join(Pet).where(Pet.owner_id==identity)):
-            case.moderation_status="HIDDEN";mark_related_pending(db,"lost_case",case.id)
+            case.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"lost_case",case.id)
         for obs in db.scalars(select(Observation).where(Observation.author_id==identity)):
-            obs.moderation_status="HIDDEN";mark_related_pending(db,"observation",obs.id)
+            obs.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"observation",obs.id)
     db.add(AdminAudit(actor_id=user.id,action="BLOCK_USER" if payload.status=="BLOCKED" else "UNBLOCK_USER",target_type="user",target_id=identity))
     db.commit();return {"id":target.id,"status":target.status}
 

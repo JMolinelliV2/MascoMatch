@@ -16,6 +16,8 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
     moderation = importlib.import_module("migrations.versions.0008_moderation")
     corrections=importlib.import_module("migrations.versions.0009_admin_corrections")
     contact=importlib.import_module("migrations.versions.0011_private_report_contact")
+    sessions=importlib.import_module("migrations.versions.0012_auth_sessions")
+    recovery=importlib.import_module("migrations.versions.0013_account_recovery")
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
         operations = Operations(MigrationContext.configure(connection))
@@ -29,6 +31,8 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         monkeypatch.setattr(moderation,"op",operations)
         monkeypatch.setattr(corrections,"op",operations)
         monkeypatch.setattr(contact,"op",operations)
+        monkeypatch.setattr(sessions,"op",operations)
+        monkeypatch.setattr(recovery,"op",operations)
         # SQLite cannot install PostgreSQL extensions; table migrations remain real DDL.
         execute = operations.execute
         monkeypatch.setattr(operations, "execute", lambda statement: None if str(statement).startswith("CREATE EXTENSION") else execute(statement))
@@ -77,6 +81,13 @@ def test_fresh_and_existing_core_database_migrations(monkeypatch):
         corrections.downgrade()
         contact.upgrade()
         assert connection.scalar(text("SELECT share_contact FROM observations"))==0
+        sessions.upgrade()
+        assert "auth_sessions" in inspect(connection).get_table_names()
+        recovery.upgrade()
+        assert "account_tokens" in inspect(connection).get_table_names()
+        recovery.downgrade()
+        sessions.downgrade()
+        assert "auth_sessions" not in inspect(connection).get_table_names()
         contact.downgrade()
         assert "admin_audit" in inspect(connection).get_table_names()
         moderation.downgrade()

@@ -1,5 +1,7 @@
 # MVP: embeddings, matching, alertas, mapa, feedback y moderación
 
+Este documento conserva la entrega funcional original. Las sesiones, el correo confirmado, los límites compartidos y el despliegue actual se describen en [la preparación para producción](production.md).
+
 Entrega del 8 de octubre de 2026. El dominio `mascomatch.com` fue adquirido por el usuario; DNS, correo externo, despliegue y refuerzo de producción se configuran después del plan funcional.
 
 ## Funciones
@@ -27,7 +29,7 @@ La representación de una foto entera puede reflejar el fondo, iluminación o po
 
 ```powershell
 docker compose --profile ai-local up --build -d
-docker compose exec -T worker python -m app.embeddings.setup
+docker compose exec -T --user 0 worker python -m app.embeddings.setup
 ```
 
 Después configurar `EMBEDDINGS_ENABLED=true` en `.env`:

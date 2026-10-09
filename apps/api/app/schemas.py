@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 Species = Literal["dog", "cat", "rabbit", "bird", "other", "unknown"]
 Sex = Literal["male", "female", "unknown"]
@@ -14,7 +14,7 @@ class ORMModel(BaseModel):
 
 class RegisterRequest(BaseModel):
     email: str = Field(min_length=5, max_length=320)
-    password: str = Field(min_length=10, max_length=128)
+    password: str = Field(min_length=12, max_length=128)
     name: str = Field(min_length=1, max_length=120)
     phone: str | None = Field(default=None, max_length=32)
 
@@ -32,12 +32,20 @@ class UserRead(ORMModel):
     notification_preferences: dict
     status: str
     role: str
+    email_verified: bool
     created_at: datetime
+
+    @computed_field
+    @property
+    def email_verification_required(self) -> bool:
+        from app.core.config import settings
+        return settings.app_env == "production"
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    expires_in: int = 3600
     user: UserRead
 
 

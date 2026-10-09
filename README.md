@@ -2,9 +2,15 @@
 
 Repositorio: [JMolinelliV2/MascoMatch](https://github.com/JMolinelliV2/MascoMatch).
 
+Para entender el proyecto: [qué hace cada tecnología y cómo funciona un aviso](docs/architecture.md).
+
 La marca también identifica la API, los correos, el paquete web, las sesiones y la cola de IA. Los nombres locales por defecto son `mascomatch` para PostgreSQL y MinIO, `mascomatch-analysis` para la cola y `mascomatch_session` para la cookie de sesión. Al actualizar una instalación con datos, cambiar las variables de Compose no renombra la base ni el usuario de PostgreSQL: hay que migrar sus nombres conservando el volumen, ajustar `.env` y reiniciar los servicios. El cambio de cookie requiere iniciar sesión nuevamente.
 
 Plataforma web y API mobile-first para relacionar mascotas perdidas con observaciones de la comunidad. Incluye publicaciones, extracción de características con IA local, embeddings visuales, ranking de posibles coincidencias, alertas privadas, correo SMTP agrupado, mapa, panel del dueño, feedback y moderación básica. [Estado del MVP, decisiones, pruebas y configuración](docs/mvp-phase-3-8.md).
+
+## Preparación para producción
+
+Ver [despliegue, sesiones, correo, respaldos y monitoreo](docs/production.md). La configuración de servidor es independiente de la instalación local y no publica el dominio automáticamente.
 
 ## Requisitos
 
@@ -146,7 +152,7 @@ Con Python 3.12 o superior:
 cd apps/api
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r requirements.lock
 pytest
 ```
 

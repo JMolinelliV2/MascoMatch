@@ -1,0 +1,28 @@
+groups:
+  - name: mascomatch
+    rules:
+      - alert: MascoMatchUnavailable
+        expr: up{job="mascomatch"} == 0 or mascomatch_ready == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "MascoMatch o una dependencia no están disponibles"}
+      - alert: MascoMatchAnalysisDelayed
+        expr: mascomatch_analysis_oldest_seconds > 900
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "La cola de análisis supera 15 minutos"}
+      - alert: MascoMatchEmailFailures
+        expr: mascomatch_email_failed > 0 or mascomatch_account_email_failed > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Hay alertas que agotaron sus reintentos de correo"}
+      - alert: MascoMatchBackupOverdue
+        expr: time() - mascomatch_backup_last_success_unixtime > 93600
+        for: 15m
+        labels: {severity: critical}
+        annotations: {summary: "No se completó una copia de respaldo en 26 horas"}
+      - alert: MascoMatchServerErrors
+        expr: rate(mascomatch_http_requests_total{status_class="5xx"}[5m]) > 0.1
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Aumentaron los errores de la API"}

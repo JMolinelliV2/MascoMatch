@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "dataset_source": "unverified",
+  "candidates": [
+    {"id": "animal-a", "features": {"species": "dog", "primary_color": "brown", "size": "medium"}, "photos": ["photos/animal-a-reference.jpg"]},
+    {"id": "animal-b", "features": {"species": "dog", "primary_color": "brown", "size": "medium"}, "photos": ["photos/animal-b-reference.jpg"]}
+  ],
+  "queries": [
+    {"id": "query-1", "split": "calibration", "expected_ids": ["animal-a"], "features": {"species": "dog", "primary_color": "brown", "size": "medium"}, "photos": ["photos/animal-a-new-view.jpg"]},
+    {"id": "query-2", "split": "holdout", "expected_ids": [], "features": {"species": "dog", "primary_color": "brown", "size": "medium"}, "photos": ["photos/other-animal-new-view.jpg"]}
+  ]
+}

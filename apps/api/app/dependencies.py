@@ -5,9 +5,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
-from app.core.security import decode_access_token
+from app.core.security import decode_token_claims
+from app.analysis.service import utcnow
+from app.matching.linked import aware
 from app.db.session import get_db
-from app.models import User
+from app.models import User, AuthSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
@@ -15,7 +17,11 @@ optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", aut
 
 def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     try:
-        user_id: UUID = decode_access_token(token)
+        claims = decode_token_claims(token)
+        user_id = UUID(claims["sub"])
+        session = db.get(AuthSession, UUID(claims["jti"]))
+        if session is None or session.user_id != user_id or session.revoked_at is not None or aware(session.expires_at) <= utcnow():
+            raise jwt.InvalidTokenError("Session unavailable")
     except (jwt.InvalidTokenError, ValueError, KeyError):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token", headers={"WWW-Authenticate": "Bearer"})
     user = db.get(User, user_id)

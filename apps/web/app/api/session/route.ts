@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorization, boundedBody, sameOrigin, serverApi, SESSION_COOKIE } from "@/lib/server-api";
+import { authorization, boundedBody, proxyHeaders, sameOrigin, serverApi, SESSION_COOKIE } from "@/lib/server-api";
 
 export async function GET(request: NextRequest) {
   if (!request.cookies.has(SESSION_COOKIE)) return NextResponse.json({ user: null }, { headers: { "Cache-Control": "no-store" } });
@@ -18,13 +18,15 @@ export async function POST(request: NextRequest) {
     const { mode, ...credentials } = body;
     if (mode !== "register" && mode !== "login") return NextResponse.json({ detail: "Modo de cuenta no válido." }, { status: 400 });
     const upstream = await fetch(`${serverApi}/auth/${mode}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(credentials),
+      method: "POST", headers: { ...proxyHeaders(request), "Content-Type": "application/json" }, body: JSON.stringify(credentials),
       cache: "no-store", signal: AbortSignal.timeout(15000),
     });
     const data = await upstream.json();
-    const response = NextResponse.json(data, { status: upstream.status, headers: { "Cache-Control": "no-store" } });
+    const { access_token, token_type, ...publicData } = data;
+    const response = NextResponse.json(publicData, { status: upstream.status, headers: { "Cache-Control": "no-store" } });
     if (upstream.ok && typeof data.access_token === "string") {
-      response.cookies.set(SESSION_COOKIE, data.access_token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 3600 });
+      const expires = Number.isInteger(data.expires_in) ? Math.min(86400, Math.max(300, data.expires_in)) : 3600;
+      response.cookies.set(SESSION_COOKIE, data.access_token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: expires });
     }
     return response;
   } catch { return NextResponse.json({ detail: "No pudimos iniciar sesión. Intentá de nuevo." }, { status: 503 }); }
@@ -32,6 +34,12 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   if (!sameOrigin(request)) return NextResponse.json({ detail: "Solicitud no permitida." }, { status: 403 });
+  if (request.cookies.has(SESSION_COOKIE)) {
+    try {
+      const upstream = await fetch(`${serverApi}/auth/logout`, { method: "POST", headers: authorization(request), cache: "no-store", signal: AbortSignal.timeout(10000) });
+      if (!upstream.ok && upstream.status !== 401) throw new Error("LOGOUT_UNAVAILABLE");
+    } catch { return NextResponse.json({ detail: "No pudimos cerrar la sesión. Intentá de nuevo." }, { status: 503 }); }
+  }
   const response = NextResponse.json({ ok: true });
   response.cookies.delete(SESSION_COOKIE);
   return response;

@@ -34,6 +34,7 @@ def client(db_factory, monkeypatch):
     monkeypatch.setattr("app.matching.linked.reconciliation_loop", idle_worker)
     monkeypatch.setattr("app.notifications.email.delivery_loop", idle_worker)
     monkeypatch.setattr("app.matching.engine.general_matching_loop", idle_worker)
+    monkeypatch.setattr("app.account_mail.delivery_loop", idle_worker)
 
     def override_get_db():
         db = db_factory()

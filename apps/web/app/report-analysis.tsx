@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 type Attribute = { value: string | string[]; confidence: number; source: "text" | "image" };
 type Job = {
   id: string;
@@ -34,7 +33,7 @@ function visibleFeatures(features: Record<string, Attribute>) {
     && (Array.isArray(attribute.value) ? attribute.value.length > 0 : !unknownValues.has(attribute.value)));
 }
 
-export function ReportAnalysis({ ownerType, ownerId, token }: { ownerType: "lost_case" | "observation"; ownerId: string; token: string }) {
+export function ReportAnalysis({ ownerType, ownerId }: { ownerType: "lost_case" | "observation"; ownerId: string }) {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [message, setMessage] = useState("");
   const [refresh, setRefresh] = useState(0);
@@ -48,8 +47,8 @@ export function ReportAnalysis({ ownerType, ownerId, token }: { ownerType: "lost
     setPaused(false);
     async function load() {
       try {
-        const response = await fetch(`${API}/analysis/${ownerType}/${ownerId}`, {
-          headers: { Authorization: `Bearer ${token}` }, signal: controller.signal,
+        const response = await fetch(`/api/backend/analysis/${ownerType}/${ownerId}`, {
+          signal: controller.signal,
         });
         if (!response.ok) throw new Error("No pudimos consultar el análisis. Tu reporte sigue guardado.");
         const data: Analysis = await response.json();
@@ -65,13 +64,13 @@ export function ReportAnalysis({ ownerType, ownerId, token }: { ownerType: "lost
     }
     void load();
     return () => { controller.abort(); if (timer) clearTimeout(timer); };
-  }, [ownerType, ownerId, token, refresh]);
+  }, [ownerType, ownerId, refresh]);
 
   async function retry(id: string) {
     setRetrying(id);
     setMessage("");
     try {
-      const response = await fetch(`${API}/analysis/jobs/${id}/retry`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(`/api/backend/analysis/jobs/${id}/retry`, { method: "POST" });
       if (response.status === 429) throw new Error("Esperá un minuto antes de volver a intentar el análisis.");
       if (!response.ok) throw new Error("El análisis no pudo reiniciarse. Tu reporte sigue guardado.");
       setRefresh(count => count + 1);

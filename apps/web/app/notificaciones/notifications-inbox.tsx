@@ -6,7 +6,8 @@ import type { FormEvent } from "react";
 import { LocationMap } from "../location-map";
 import { MatchFeedback } from "../match-feedback";
 
-type User = { id: string; name: string; email: string; notification_preferences: { email?: boolean } };
+import { VerifyEmailNotice } from "../verify-email-notice";
+type User = { email_verified?: boolean; email_verification_required?: boolean; id: string; name: string; email: string; notification_preferences: { email?: boolean } };
 type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; created_at: string; lost_case_id: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; reporter_contact:string|null };
 type Inbox = { items: Notice[]; unread_count: number; total: number };
 
@@ -110,6 +111,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
         <button type="submit" className="button button-primary">{busy ? "Ingresando…" : "Ingresar"}</button>
       </fieldset>
     </form> : <>
+      {user.email_verification_required && !user.email_verified && <VerifyEmailNotice />}
       <div className="notifications-account"><span>{user.name}</span><button type="button" className="text-button" onClick={() => void logout()}>Cerrar sesión</button></div>
       <label className="sighting-recent"><input type="checkbox" checked={user.notification_preferences.email !== false} disabled={busy} onChange={event => void preference(event.target.checked)} />Recibir también alertas por correo</label>
       <p className="field-help">Los correos se envían cuando hay un servidor de correo configurado. Podés abrirlos sin estar conectado a MascoMatch.</p>

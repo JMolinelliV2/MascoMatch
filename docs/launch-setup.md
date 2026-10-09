@@ -14,11 +14,21 @@ El despliegue actual ejecuta Next.js, FastAPI, PostgreSQL con PostGIS/pgvector, 
 
 Hostinger indica que sus planes VPS se pagan por adelantado y que el precio mensual es el total dividido por el plazo. La elección debe comparar el desembolso completo. [Condiciones y precios](https://www.hostinger.com/vps-hosting).
 
-El presupuesto indicado es **US$30 mensuales para todos los servicios**. Conviene reservar aproximadamente US$5 para respaldos externos e impuestos, dejando hasta US$20–25 para el VPS. KVM 4 entra durante la promoción; su renovación anunciada de US$28,99 puede superar el total al sumar extras. Contabo tiene una oferta efectiva para 24 meses y la moneda mostrada es EUR: confirmar el costo real en USD y el precio del período elegido. OVHcloud deja un margen menor. El dominio adquirido es un costo aparte que debe contemplarse al renovar.
+El presupuesto inicial indicado fue **US$30 mensuales para todos los servicios**. Conviene reservar aproximadamente US$5 para respaldos externos e impuestos, dejando hasta US$20–25 para el VPS. KVM 4 entra durante la promoción; su renovación anunciada de US$28,99 puede superar el total al sumar extras. Contabo tiene una oferta efectiva para 24 meses y la moneda mostrada es EUR: confirmar el costo real en USD y el precio del período elegido. OVHcloud deja un margen menor. El dominio adquirido es un costo aparte que debe contemplarse al renovar.
 
 Para un público inicial en Uruguay, elegir Brasil si aparece disponible. Hostinger ofrece esa región para VPS, sujeta a capacidad, y fija la ubicación durante la configuración inicial. [Ubicaciones](https://www.hostinger.com/support/1583267-where-are-hostinger-servers-located/).
 
 Seleccionar **Ubuntu 24.04 LTS, x86-64**, con Docker Compose. El proyecto ya tiene un archivo de despliegue propio; alcanza con un sistema limpio. Un plan web para WordPress o un constructor de páginas no ejecuta este despliegue completo. El dominio puede seguir registrado y administrado en Hostinger aunque el servidor sea de otro proveedor.
+
+### Escenario con US$80 mensuales
+
+Con ese margen conviene priorizar CPU dedicada para el procesamiento local. Hostinger publica un sistema de créditos que permite ráfagas de CPU y reduce la capacidad cuando se agota el saldo; por eso, su cantidad de vCPU no equivale a capacidad completa de uso continuo. Esto importa si la cola de IA mantiene al procesador ocupado. [Funcionamiento oficial de los créditos](https://www.hostinger.com/support/how-cpu-credits-work-on-hostinger-vps/).
+
+Una primera opción es **Contabo Max Performance / Cloud VDS S**: 6 núcleos virtuales dedicados, 24 GB de RAM y 180 GB NVMe. El catálogo consultado anuncia €39,20/mes efectivo para un plazo de 24 meses. Cotizar un período corto y confirmar moneda, región, alta, impuestos y renovación antes de elegir el contrato. Para el piloto se propone un costo final de servidor de hasta US$60 mensuales. [Recursos dedicados](https://contabo.com/en-us/vps-dedicated/) y [precios](https://contabo.com/en-us/pricing/).
+
+Distribución objetivo del tope: hasta US$60 para el servidor, US$8 para la copia externa y US$12 de reserva, sumando US$80. Brevo, Geoapify y monitoreo externo pueden iniciar en sus planes gratuitos dentro de sus condiciones y cuotas; la reserva permite revisar correo pago si hace falta. Brevo Free tiene 300 envíos diarios y puede demorar correos transaccionales al agotar la cuota, de modo que hay que contar confirmaciones, recuperaciones, alertas de animales y avisos operativos juntos. [Límites de Brevo](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan).
+
+Los 24 GB son una propuesta para ejecutar el stack y los modelos actuales con más margen de memoria. La inferencia sigue siendo en CPU: medir tiempo por trabajo y demoras con fotos representativas. Más recursos no validan por sí solos la precisión del reconocimiento. Estos VPS/VDS requieren mantenimiento de la aplicación y del sistema; el precio del servidor no incluye un servicio de administración de MascoMatch.
 
 ## 2. Dominio y HTTPS
 

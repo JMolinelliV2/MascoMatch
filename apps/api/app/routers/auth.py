@@ -84,10 +84,16 @@ class ResetPassword(VerificationCode):
     password:str=Field(min_length=12,max_length=128)
 
 
+def require_account_mail():
+    if settings.mail_delivery_mode == "disabled":
+        raise HTTPException(status_code=503, detail="El envío de correos está desactivado. La recuperación y la confirmación de cuentas no están disponibles por el momento.")
+
+
 @router.post("/request-verification")
 def request_verification(db=Depends(get_db),user=Depends(current_user)):
     from app.account_mail import issue_token
     if not user.email_verified:
+        require_account_mail()
         issue_token(db,user,"VERIFY_EMAIL")
         db.commit()
     return {"ok":True}
@@ -108,13 +114,14 @@ def verify_email(payload:VerificationCode,db=Depends(get_db)):
 @router.post("/password-reset")
 def password_reset(payload:AccountEmail,db=Depends(get_db)):
     from app.account_mail import issue_token
+    require_account_mail()
     email=payload.email.strip().lower()
     user=db.scalar(select(User).where(User.email==email,User.status=="ACTIVE"))
     if user:
         issue_token(db,user,"RESET_PASSWORD")
         db.commit()
     # Do not disclose whether the address belongs to a registered account.
-    return {"ok":True}
+    return {"ok":True, **({"delivery_mode":"preview"} if settings.mail_delivery_mode == "preview" else {})}
 
 
 @router.post("/reset-password")

@@ -51,6 +51,7 @@ Herramienta clara y cercana, con fotografías como principal elemento emocional.
 - El avistamiento vinculado conserva ubicación, hora y fotos opcionales, envío sin cuenta, identificador de solicitud y consulta posterior del estado.
 - Mis avisos conserva edición, fotos, coincidencias, feedback, encontrado, cierre y reapertura. El mapa de última ubicación usa los datos privados del caso propio.
 - La navegación conserva catálogo, mapa, notificaciones, recuperación, confirmación y administración mediante sus rutas existentes.
+- Los avisos abiertos desde los puntos o la lista del mapa incluyen `origen=mapa` y muestran **Volver al mapa**. Los avisos abiertos desde el catálogo conservan **Volver a animales perdidos**. Solo se admite ese origen conocido, sin aceptar direcciones de regreso arbitrarias.
 
 ## Verificación
 

@@ -7,7 +7,7 @@ import type { LostDogNotice } from "@/lib/lost-dogs";
 import { DogPhoto } from "./dog-photo";
 import { ReportPublication } from "../report-publication";
 
-export function DogDetail({ id }: { id: string }) {
+export function DogDetail({ id, fromMap = false }: { id: string; fromMap?: boolean }) {
   const [dog, setDog] = useState<LostDogNotice | null>(null);
   const [error, setError] = useState("");
   const [missing, setMissing] = useState(false);
@@ -25,7 +25,7 @@ export function DogDetail({ id }: { id: string }) {
   }, [id, refresh]);
 
   return <main id="main-content" className="page dog-detail-page">
-    <Link href="/perdidos" className="back-link"><span aria-hidden="true">←</span> Volver a animales perdidos</Link>
+    <Link href={fromMap ? "/mapa" : "/perdidos"} className="back-link"><span aria-hidden="true">←</span> {fromMap ? "Volver al mapa" : "Volver a animales perdidos"}</Link>
     {missing ? <><h1>Este aviso ya no está disponible</h1><p className="page-intro">Puede que el animal haya sido encontrado o que su dueño haya cerrado el aviso.</p></>
       : error ? <div className="notice notice-warning" role="alert">{error} <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>
       : !dog ? <p role="status" className="page-intro">Cargando aviso…</p>

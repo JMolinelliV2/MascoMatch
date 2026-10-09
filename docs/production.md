@@ -71,6 +71,28 @@ Para la instalación local, los valores se configuran en `.env` como antes. Para
 
 Los mensajes de confirmación, recuperación y avistamientos utilizan el mismo SMTP. Las preferencias de alertas no desactivan un correo solicitado para recuperar la cuenta. Solicitar recuperación devuelve la misma respuesta exista o no el usuario. Cada cuenta tiene un máximo de tres enlaces nuevos por hora y una separación mínima de un minuto.
 
+Cuando `MAIL_DELIVERY_MODE=disabled`, solicitar recuperación o un nuevo correo de confirmación devuelve HTTP 503: no se anuncia un envío que no puede ocurrir. Los enlaces ya emitidos siguen pudiendo consumirse hasta su vencimiento. El modo `preview`, exclusivo del desarrollo, indica en el formulario que el enlace está en Mailpit y no en la casilla real.
+
+### Recuperación en desarrollo local
+
+Configurar estas variables en `.env` (archivo privado excluido de Git):
+
+```dotenv
+MAIL_DELIVERY_MODE=preview
+SMTP_HOST=mailpit
+SMTP_PORT=1025
+SMTP_TLS_MODE=none
+PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Aplicar la configuración a la API y levantar el buzón local:
+
+```powershell
+docker compose --profile mail-local up -d --no-deps mailpit api
+```
+
+Solicitar el enlace en `http://localhost:3000/recuperar` y abrir el correo en `http://localhost:8025`. El envío se procesa cada diez segundos. El enlace de recuperación vence a los treinta minutos y sirve una sola vez. Mailpit captura los correos localmente; para recibirlos en una casilla real hay que configurar SMTP con el servicio externo. Esta configuración local no se utiliza en producción.
+
 ```sh
 docker compose -p mascomatch --env-file .env.production -f compose.production.yml up -d --force-recreate api
 ```

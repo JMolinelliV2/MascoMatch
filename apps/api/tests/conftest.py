@@ -28,6 +28,8 @@ def client(db_factory, monkeypatch):
     monkeypatch.setattr(settings, "ai_enabled", False)
     monkeypatch.setattr(settings, "embeddings_enabled", False)
     monkeypatch.setattr(settings, "mail_group_seconds", 0)
+    # Account recovery requires delivery enabled; delivery loops remain idle here.
+    monkeypatch.setattr(settings, "mail_delivery_mode", "smtp")
     monkeypatch.setattr(settings, "rate_limit_enabled", False)
     async def idle_worker():
         await asyncio.Event().wait()

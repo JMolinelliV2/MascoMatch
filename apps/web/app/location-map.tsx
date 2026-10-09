@@ -3,9 +3,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker, TileLayer } from "leaflet";
 
-type Props = { latitude: number; longitude: number; onMove?: (latitude: number, longitude: number) => void; editable?: boolean };
+type Props = { latitude: number; longitude: number; onMove?: (latitude: number, longitude: number) => void; editable?: boolean; label?: string };
 
-export function LocationMap({ latitude, longitude, onMove, editable = true }: Props) {
+export function LocationMap({ latitude, longitude, onMove, editable = true, label }: Props) {
   const id = useId();
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -32,9 +32,9 @@ export function LocationMap({ latitude, longitude, onMove, editable = true }: Pr
       tiles.on("tileerror", () => { if (!disposed) setError("No pudimos cargar el mapa. Podés conservar el lugar elegido o intentar de nuevo."); });
       const marker = L.marker(point, {
         draggable: editable, autoPan: editable,
-        title: editable ? "Ubicación elegida. Usá las flechas del teclado para mover el pin." : "Lugar del avistamiento",
-        alt: editable ? "Ubicación elegida. Usá las flechas del teclado para mover el pin." : "Lugar del avistamiento",
-        icon: L.divIcon({ className: "location-pin", html: '<span class="location-pin-shape"></span>', iconSize: [36, 44], iconAnchor: [18, 42] }),
+        title: editable ? "Ubicación elegida. Usá las flechas del teclado para mover el pin." : label || "Lugar del avistamiento",
+        alt: editable ? "Ubicación elegida. Usá las flechas del teclado para mover el pin." : label || "Lugar del avistamiento",
+        icon: L.divIcon({ className: "location-pin", html: '<span class="location-pin-shape"></span>', iconSize: [44, 44], iconAnchor: [22, 42] }),
       }).addTo(map);
       markerRef.current = marker;
       function move(lat: number, lon: number) {
@@ -69,7 +69,7 @@ export function LocationMap({ latitude, longitude, onMove, editable = true }: Pr
       disposed = true; observer?.disconnect(); mapRef.current?.remove();
       mapRef.current = null; markerRef.current = null; tilesRef.current = null;
     };
-  }, [id, editable]);
+  }, [id, editable, label]);
 
   useEffect(() => {
     const marker = markerRef.current;
@@ -82,8 +82,8 @@ export function LocationMap({ latitude, longitude, onMove, editable = true }: Pr
   }, [latitude, longitude]);
 
   return <div className="location-map-section">
-    <p id={`${id}-help`} className="field-help">{editable ? "Arrastrá el pin o tocá el mapa para elegir otro punto. También podés mover el pin con las flechas del teclado." : "Lugar indicado por la persona que envió el avistamiento."}</p>
-    <div ref={container} className="location-map" role="region" aria-label={editable ? "Mapa para ajustar la ubicación" : "Mapa del avistamiento"} aria-describedby={`${id}-help`} />
+    <p id={`${id}-help`} className="field-help">{editable ? "Arrastrá el pin o tocá el mapa para elegir otro punto. También podés mover el pin con las flechas del teclado." : label || "Lugar indicado por la persona que envió el avistamiento."}</p>
+    <div ref={container} className="location-map" role="region" aria-label={label || (editable ? "Mapa para ajustar la ubicación" : "Mapa del avistamiento")} aria-describedby={`${id}-help`} />
     {!ready && !error && <p role="status" className="status-text">Cargando mapa…</p>}
     {error && <div className="notice notice-warning" role="alert">{error} {ready && <button type="button" className="text-button" onClick={() => { setError(""); tilesRef.current?.redraw(); }}>Reintentar</button>}</div>}
   </div>;

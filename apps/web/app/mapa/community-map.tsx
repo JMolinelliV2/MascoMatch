@@ -4,7 +4,8 @@ import {useEffect,useRef,useState} from "react";
 import type {Map as LeafletMap,LayerGroup} from "leaflet";
 type Point={id:string;layer:"lost"|"sighting"|"found";title:string;species:string;latitude:number;longitude:number;area:string|null;when:string;url:string|null};
 const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:8000/api/v1").replace(/\/$/,"");
-const colors={lost:"#704094",sighting:"#b76b00",found:"#168268"};
+const colors={lost:"var(--text-primary)",sighting:"var(--primary)",found:"var(--success)"};
+const layerClasses={lost:"map-layer-lost",sighting:"map-layer-sighting",found:"map-layer-found"};
 const labels={lost:"Perdidos",sighting:"Avistamientos",found:"Encontrados"};
 export function CommunityMap(){
   const container=useRef<HTMLDivElement>(null);const map=useRef<LeafletMap|null>(null);const group=useRef<LayerGroup|null>(null);
@@ -17,7 +18,7 @@ export function CommunityMap(){
   return <><div className="map-filters"><label className="field-label">Animal<select className="form-input" value={species} onChange={event=>setSpecies(event.target.value)}><option value="">Todos</option>{[["dog","Perros"],["cat","Gatos"],["rabbit","Conejos"],["bird","Aves"],["other","Otros"]].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label className="field-label">Fecha<select className="form-input" value={days} onChange={event=>setDays(event.target.value)}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="0">Todas las fechas</option></select></label><label className="field-label">Radio cerca de mí<select className="form-input" value={radius} onChange={event=>setRadius(event.target.value)}><option value="5">5 km</option><option value="15">15 km</option><option value="30">30 km</option></select></label></div>
     <div className="location-actions"><button className="text-button" type="button" onClick={nearby}>Buscar cerca de mí</button>{center&&<button type="button" className="text-button" onClick={()=>setCenter(null)}>Ver todas las zonas</button>}<button className="text-button" type="button" onClick={()=>setRefresh(value=>value+1)}>Actualizar</button></div>
     <p className="field-help">El radio se aplica después de elegir “Buscar cerca de mí”. Los puntos aproximados no indican una dirección exacta.</p>
-    <fieldset className="map-legend"><legend>Mostrar capas</legend>{(["lost","sighting","found"] as const).map(layer=><label key={layer}><input type="checkbox" checked={layers.includes(layer)} onChange={event=>setLayers(current=>event.target.checked?[...current,layer]:current.filter(item=>item!==layer))}/><span style={{color:colors[layer]}}>●</span> {labels[layer]}</label>)}</fieldset>
+    <fieldset className="map-legend"><legend>Mostrar capas</legend>{(["lost","sighting","found"] as const).map(layer=><label key={layer}><input type="checkbox" checked={layers.includes(layer)} onChange={event=>setLayers(current=>event.target.checked?[...current,layer]:current.filter(item=>item!==layer))}/><span aria-hidden="true" className={`map-legend-dot ${layerClasses[layer]}`} /> {labels[layer]}</label>)}</fieldset>
     <label className="sighting-recent"><input type="checkbox" checked={compatible} onChange={event=>setCompatible(event.target.checked)}/>Solo avistamientos con posibles coincidencias</label>
     {error&&<p className="notice notice-warning" role="alert">{error}</p>}<p role="status">{busy?"Cargando puntos…":`${visible.length} reportes en las capas seleccionadas`}</p>
     <div ref={container} className="community-map" role="region" aria-label="Mapa de ubicaciones aproximadas"/>

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { dogTraits, lostDate, lostDogsEndpoint, speciesLabel } from "@/lib/lost-dogs";
+import { lostDogsEndpoint } from "@/lib/lost-dogs";
 import type { LostDogList } from "@/lib/lost-dogs";
-import { DogPhoto } from "./dog-photo";
+import { PetCard } from "../ui/pet-card";
 
 const pageSize = 24;
 
@@ -67,18 +67,7 @@ export function LostDogs() {
       </div>}
       {!loading && !error && Boolean(result?.items.length) && <>
         <div className="lost-dogs-grid">
-          {result!.items.map(dog => <article key={dog.id} className="lost-dog-card">
-            <Link href={`/perdidos/${dog.id}`} className="dog-photo-link" aria-label={`Ver el aviso de ${dog.name}`}><DogPhoto dog={dog} /></Link>
-            <div className="lost-dog-content">
-              <span className="lost-status">Sigue perdido</span>
-              <h3><Link href={`/perdidos/${dog.id}`}>{dog.name}</Link></h3>
-              <p className="dog-traits">{[speciesLabel(dog.species), ...dogTraits(dog)].join(" · ")}</p>
-              <p className="dog-area">{dog.public_location || "Zona no indicada"}</p>
-              <p className="dog-date">Perdido desde el <time dateTime={dog.lost_at}>{lostDate(dog.lost_at)}</time></p>
-              {dog.description && <p className="dog-description">{dog.description}</p>}
-              <Link href={`/perdidos/${dog.id}`} className="text-button">Ver aviso <span aria-hidden="true">→</span></Link>
-            </div>
-          </article>)}
+          {result!.items.map(dog => <PetCard key={dog.id} animal={dog} />)}
         </div>
         <nav className="lost-dogs-pagination" aria-label="Páginas de animales perdidos">
           <button type="button" className="button button-secondary" disabled={offset === 0} onClick={() => changePage(Math.max(0, offset - pageSize))}>Anterior</button>

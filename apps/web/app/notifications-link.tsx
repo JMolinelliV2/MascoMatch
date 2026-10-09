@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Icon } from "./ui/pictogram";
 
 export function NotificationsLink() {
+  const pathname = usePathname();
   const [count, setCount] = useState(0);
   useEffect(() => {
     let disposed = false;
@@ -31,5 +34,5 @@ export function NotificationsLink() {
       window.removeEventListener("focus", load); window.removeEventListener("mascomatch:session", load); window.removeEventListener("mascomatch:notifications", load);
     };
   }, []);
-  return <Link href="/notificaciones" aria-label={count ? `Notificaciones, ${count} sin leer` : "Notificaciones"}>Notificaciones {count > 0 && <span className="notification-count">{count > 99 ? "99+" : count}</span>}</Link>;
+  return <Link className="notifications-link" href="/notificaciones" aria-current={pathname === "/notificaciones" ? "page" : undefined} aria-label={count ? `Notificaciones, ${count} sin leer` : "Notificaciones"}><Icon name="bell" /><span className="notification-label">Notificaciones</span>{count > 0 && <span className="notification-count">{count > 99 ? "99+" : count}</span>}</Link>;
 }

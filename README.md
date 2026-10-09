@@ -195,6 +195,10 @@ La consulta al proveedor usa `countrycode` y sesgo geográfico; el servidor vuel
 
 Validar frontend desde `apps/web`: `npm test`, `npm run typecheck` y `npm run build`.
 
+## Diseño del frontend
+
+La portada, los formularios, el catálogo y Mis avisos comparten la paleta de MascoMatch, controles accesibles y componentes de fotos, etapas y compatibilidad. El diseño conserva los tres pasos generales y el avistamiento breve sin cuenta desde una ficha. [Decisiones de diseño y verificación de los flujos](docs/frontend-redesign.md).
+
 ## Animales publicados como perdidos
 
 Desde una ficha, **Publicar un avistamiento** abre un formulario vinculado que pide ubicación y fotos opcionales, con hora actual o fecha aproximada. Se puede enviar sin crear una cuenta. El dueño recibe una alerta privada de posible avistamiento, con mapa y fotos, y puede habilitar correo SMTP. La comparación usa características de las fotos, fecha y zona; los reportes sin foto o inconclusos se identifican como por confirmar. [Implementación, pruebas y configuración de Brevo Free](docs/linked-sightings.md).

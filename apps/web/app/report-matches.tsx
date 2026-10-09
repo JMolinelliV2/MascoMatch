@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DogPhoto } from "./perdidos/dog-photo";
 import type { LostDogNotice } from "@/lib/lost-dogs";
+import { MatchScore } from "./ui/match-score";
 type Result = { status: string; items: { animal: LostDogNotice; match: { id: string; explanation: string[]; final_score: number } }[] };
 export function ReportMatches({ observationId }: { observationId: string }) {
   const [result, setResult] = useState<Result | null>(null);
@@ -30,7 +31,7 @@ export function ReportMatches({ observationId }: { observationId: string }) {
     {(!result || ["PENDING", "WAITING_ANALYSIS"].includes(result.status)) && !error && <p role="status">Estamos buscando avisos compatibles con tu reporte…</p>}
     {result && !result.items.length && !["PENDING", "WAITING_ANALYSIS"].includes(result.status) && <p>No encontramos avisos con suficiente información compatible por ahora. Conservamos tu reporte para compararlo con nuevos avisos.</p>}
     {result?.items.map(item => <article className="match-card" key={item.match.id}><DogPhoto dog={item.animal} /><div><h3>{item.animal.name}</h3>
-      <p>Posible coincidencia · {item.match.final_score >= .82 ? "Compatibilidad alta" : "Para revisar"}</p>
+      <MatchScore score={item.match.final_score} />
       <ul>{item.match.explanation.map(reason => <li key={reason}>{reason}</li>)}</ul>
       <Link href={`/perdidos/${item.animal.id}`} className="text-button">Ver aviso</Link></div></article>)}
     {error && <p role="alert" className="notice notice-warning">{error}</p>}

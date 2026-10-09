@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import type { Place } from "@/lib/places";
 import { LocationPicker } from "./location-picker";
 import { ReportAnalysis } from "./report-analysis";
 import { ReportMatches } from "./report-matches";
+import { Stepper } from "./ui/stepper";
+import { PhotoUploader } from "./ui/photo-uploader";
+import { SexSelector } from "./ui/sex-selector";
+import { Icon } from "./ui/pictogram";
 
 type ReportKind = "lost" | "sighting" | "found";
 type AccountMode = "register" | "login";
@@ -68,6 +72,7 @@ function Section({ title, number, active, children }: { title: string; number: S
 }
 
 export function ReportForm({ kind }: { kind: ReportKind }) {
+  const feedbackId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingFocus = useRef<{ name: string; native: boolean } | null>(null);
@@ -75,6 +80,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const [review, setReview] = useState<Review | null>(null);
   const [savedReport, setSavedReport] = useState<{ ownerType: "lost_case" | "observation"; ownerId: string } | null>(null);
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState("");
   const [success, setSuccess] = useState("");
   const [photoWarning, setPhotoWarning] = useState("");
   const [busy, setBusy] = useState(false);
@@ -84,6 +90,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const [resetCount, setResetCount] = useState(0);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const photoFiles = useMemo(() => photo ? [photo] : [], [photo]);
   const copy = labels[kind];
   const stepTitles = [kind === "lost" ? "Contanos sobre tu mascota" : "Contanos sobre el animal", copy.event, "Revisá el reporte y dejá tu contacto"];
   const stepIntros = ["Empezá por sus características. Los campos opcionales pueden quedar vacíos.", "La fecha y la hora pueden ser aproximadas. Elegí el lugar por su nombre o dirección.", "Podés editar los datos antes de publicar. Tu contacto se guarda con tu cuenta."];
@@ -107,12 +114,14 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
 
   function goToStep(next: Step) {
     setError("");
+    setErrorField("");
     pendingFocus.current = { name: "heading", native: false };
     setStep(next);
   }
 
   function invalid(formElement: HTMLFormElement, target: Step, name: string, message: string, native = false) {
     setError(message);
+    setErrorField(name);
     if (target !== step) {
       pendingFocus.current = { name, native };
       setStep(target);
@@ -122,6 +131,16 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       if (native) control?.reportValidity();
     }
     return false;
+  }
+
+  function fieldAttributes(name: string, help?: string) {
+    return {
+      "aria-invalid": errorField === name || undefined,
+      "aria-describedby": [help, errorField === name ? `${feedbackId}-${name}` : ""].filter(Boolean).join(" ") || undefined,
+    };
+  }
+  function fieldFeedback(name: string) {
+    return errorField === name && <span id={`${feedbackId}-${name}`} role="alert" className="field-error">{error}</span>;
   }
 
   function validateStage(formElement: HTMLFormElement, target: Step) {
@@ -179,6 +198,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     if (busy) return;
     const formElement = event.currentTarget;
     setError("");
+    setErrorField("");
     setSuccess("");
     setPhotoWarning("");
     setLocationError("");
@@ -280,20 +300,13 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   return (
     <main id="main-content" className="page report-page">
       <Link href="/" className="back-link"><span aria-hidden="true">←</span> Volver al inicio</Link>
-      <h1>{copy.title}</h1>
+      <h1>{kind === "lost" ? <>Perdí una <span className="title-accent">mascota</span></> : kind === "sighting" ? <>Reportar un <span className="title-accent">avistamiento</span></> : <>Encontré una <span className="title-accent">mascota</span></>}</h1>
       <p className="page-intro">{copy.intro}</p>
-
-      <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy} className="report-form">
-        <ol className="step-list" aria-label="Etapas del reporte">
-          {["Mascota", "Fecha y lugar", "Contacto y revisión"].map((title, index) => (
-            <li key={title} aria-current={step === index + 1 ? "step" : undefined}
-              className={`step-item ${step === index + 1 ? "step-current" : step > index + 1 ? "step-complete" : ""}`}>
-              <span className="step-number" aria-hidden="true">{step > index + 1 ? "✓" : index + 1}</span>
-              <span>{title}<span className="sr-only">{step > index + 1 ? ", completado" : ""}</span></span>
-            </li>
-          ))}
-        </ol>
-        <div className="step-track" aria-hidden="true"><span style={{ width: `${step / 3 * 100}%` }} /></div>
+      {kind !== "lost" && <p className="report-kind"><Icon name={kind === "sighting" ? "eye" : "heart"} /><strong>{kind === "sighting" ? "Avistamiento" : "Animal encontrado"}</strong><span>{kind === "sighting" ? "Lo vi, pero no está conmigo" : "Está conmigo o está a salvo"}</span><Link href={kind === "sighting" ? "/encontre" : "/avistamiento"} className="text-button">{kind === "sighting" ? "¿Está con vos?" : "¿Solo lo viste?"}</Link></p>}
+      <div className="report-layout">
+      <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy} className="report-form" onChange={event => { const control = event.target; if ((control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement) && control.name === errorField) { setErrorField(""); setError(""); } }}>
+        <Stepper steps={["Mascota", "Fecha y lugar", "Contacto y revisión"]} current={step} />
+        <div className="form-card">
         <p className="step-count">Paso {step} de 3</p>
         <h2 ref={stepHeadingRef} tabIndex={-1} className="step-heading">{stepTitles[step - 1]}</h2>
         <p className="step-intro">{stepIntros[step - 1]}</p>
@@ -301,22 +314,19 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
           <Section title={kind === "lost" ? "Mascota" : "Datos del animal"} number={1} active={step}>
             <div className="form-grid">
               <label className="field-label">Animal
-                <select name="species" required defaultValue="" className={inputClass}>
+                <select name="species" required defaultValue="" className={inputClass} {...fieldAttributes("species")}>
                   <option value="" disabled>Seleccioná una opción</option>
                   <option value="dog">Perro</option><option value="cat">Gato</option>
                   <option value="rabbit">Conejo</option><option value="bird">Ave</option><option value="other">Otro</option>
                   {kind !== "lost" && <option value="unknown">No lo sé</option>}
                 </select>
+                {fieldFeedback("species")}
               </label>
               {kind === "lost" && <label className="field-label">Nombre
-                <input name="petName" required minLength={1} maxLength={120} autoComplete="off" placeholder="Nombre de tu mascota" className={inputClass} />
+                <input name="petName" required minLength={1} maxLength={120} autoComplete="off" placeholder="Nombre de tu mascota" className={inputClass} {...fieldAttributes("petName")} />
+                {fieldFeedback("petName")}
               </label>}
-              <label className="field-label">Sexo <span className="optional">(opcional)</span>
-                <select name="sex" defaultValue="unknown" className={inputClass}>
-                  <option value="unknown">No lo sé</option>
-                  <option value="male">Macho</option><option value="female">Hembra</option>
-                </select>
-              </label>
+              <SexSelector />
               <label className="field-label">Color <span className="optional">(opcional)</span>
                 <select name="color" defaultValue="unknown" className={inputClass}>
                   <option value="unknown">No lo sé</option><option value="brown">Marrón</option>
@@ -333,27 +343,18 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
               </label>
             </div>
             <label className="field-label">Descripción
-              <textarea name="description" required minLength={1} maxLength={2500} rows={3} aria-describedby="description-help" className={inputClass} />
+              <textarea name="description" required minLength={1} maxLength={2500} rows={3} className={inputClass} {...fieldAttributes("description", "description-help")} />
               <span id="description-help" className="field-help">Contanos sobre sus colores, manchas, collar u otras características.</span>
+              {fieldFeedback("description")}
             </label>
-            <label className="field-label">Foto <span className="optional">(opcional)</span>
-              <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => setPhoto(event.target.files?.[0] ?? null)} className="file-input" />
-              <span className="field-help">JPEG, PNG o WebP. Máximo 10 MB.</span>
-            </label>
-            {preview && photo?.type.startsWith("image/") && <div className="photo-info">
-              <img src={preview} alt="Foto seleccionada" className="photo-preview" />
-              <div><span>{photo.name}</span><br /><button type="button" className="text-button" onClick={() => {
-                setPhoto(null);
-                const input = formRef.current?.elements.namedItem("photo") as HTMLInputElement | null;
-                if (input) input.value = "";
-              }}>Quitar foto</button></div>
-            </div>}
+            <PhotoUploader name="photo" files={photoFiles} onFilesChange={files => setPhoto(files[0] ?? null)} />
           </Section>
 
           <Section title={copy.event} number={2} active={step}>
             <label className="field-label">{kind === "lost" ? "Última vez que la viste" : "Fecha y hora"}
-              <input name="observedAt" type="datetime-local" required className={inputClass} />
+              <input name="observedAt" type="datetime-local" required className={inputClass} {...fieldAttributes("observedAt")} />
               <span className="field-help">La hora puede ser aproximada.</span>
+              {fieldFeedback("observedAt")}
             </label>
             <div>
               <LocationPicker key={resetCount} lost={kind === "lost"} required={kind === "lost"} value={location} onChange={place => { setLocation(place); setLocationError(""); }} />
@@ -395,21 +396,24 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
             </div>
             <div className="form-grid">
               {accountMode === "register" && <label className="field-label span-full">Tu nombre
-                <input name="name" required minLength={1} maxLength={120} autoComplete="name" className={inputClass} />
+                <input name="name" required minLength={1} maxLength={120} autoComplete="name" className={inputClass} {...fieldAttributes("name")} />
+                {fieldFeedback("name")}
               </label>}
               <label className="field-label">Correo electrónico
-                <input name="email" type="email" required maxLength={320} autoComplete="email" className={inputClass} />
+                <input name="email" type="email" required maxLength={320} autoComplete="email" className={inputClass} {...fieldAttributes("email")} />
+                {fieldFeedback("email")}
               </label>
               <label className="field-label">Contraseña
-                <input name="password" type="password" required minLength={accountMode === "register" ? 12 : 1} maxLength={128} autoComplete={accountMode === "register" ? "new-password" : "current-password"} className={inputClass} />
+                <input name="password" type="password" required minLength={accountMode === "register" ? 12 : 1} maxLength={128} autoComplete={accountMode === "register" ? "new-password" : "current-password"} className={inputClass} {...fieldAttributes("password")} />
                 {accountMode === "register" && <span className="field-help">Mínimo 12 caracteres.</span>}
+                {fieldFeedback("password")}
               </label>
             </div>
             {kind !== "lost" && <label className="sighting-recent"><input name="shareContact" type="checkbox"/>Compartir mi correo de forma privada con los dueños que reciban una posible coincidencia de este reporte.</label>}
           </Section>
 
           <div className="form-footer">
-            {error && <p role="alert" className="notice notice-error">{error}</p>}
+            {error && (!errorField || errorField === "photo") && <p role="alert" className="notice notice-error">{error}</p>}
             <div className="form-navigation">
               {step > 1 && <button type="button" className="button button-secondary" onClick={() => goToStep((step - 1) as Step)}>Atrás</button>}
               <button type="submit" disabled={busy} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? "Continuar →" : copy.submit}</button>
@@ -417,7 +421,18 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
             <p className="form-privacy">{step === 3 ? "Tu correo y la ubicación exacta no se muestran públicamente." : "Todavía no se publica nada. Podés revisar los datos al final."}</p>
           </div>
         </fieldset>
+        </div>
       </form>
+      <aside className="report-sidebar" aria-label="Ayuda para publicar">
+        <div className="help-card help-card-blue"><span className="help-icon"><Icon name="shield" /></span><div><h2>{step === 3 ? "Revisá antes de publicar" : "Cada dato puede ayudar"}</h2><p>{step === 3 ? "Comprobá la descripción y el lugar. Podés volver a editarlos antes de enviar." : "Las fotos son opcionales. Compartí los datos que conozcas y elegí el lugar en el mapa."}</p></div></div>
+        <div className="help-card help-steps"><h2>¿Qué sigue?</h2><ol>
+          <li><span className="help-icon help-icon-coral"><Icon name="camera" /></span><div><h3>Datos y foto</h3><p>Describí al animal y agregá una foto si tenés.</p></div></li>
+          <li><span className="help-icon help-icon-green"><Icon name="pin" /></span><div><h3>Fecha y lugar</h3><p>Buscá una dirección o ajustá el pin en la misma página.</p></div></li>
+          <li><span className="help-icon"><Icon name="check" /></span><div><h3>Revisión y publicación</h3><p>{kind === "lost" ? "Tu aviso aparecerá en Animales perdidos. Las alertas estarán en tu cuenta." : "Una vez guardado, compararemos tu reporte con los avisos activos."}</p></div></li>
+        </ol></div>
+        <p className="sidebar-note"><Icon name="shield" />Tu correo y la ubicación exacta no se muestran públicamente.</p>
+      </aside>
+      </div>
     </main>
   );
 }

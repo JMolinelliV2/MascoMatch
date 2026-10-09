@@ -10,6 +10,7 @@ import { localDateTime, sightingMessage } from "@/lib/linked-sightings";
 import type { SightingResult } from "@/lib/linked-sightings";
 import { LocationPicker } from "./location-picker";
 import { DogPhoto } from "./perdidos/dog-photo";
+import { PhotoUploader } from "./ui/photo-uploader";
 
 export function LinkedSightingForm({ caseId }: { caseId: string }) {
   const [target, setTarget] = useState<LostDogNotice | null>(null);
@@ -19,7 +20,6 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
   const [locationError, setLocationError] = useState("");
   const [location, setLocation] = useState<Place | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
   const [recent, setRecent] = useState(true);
   const [when, setWhen] = useState(() => localDateTime());
   const [busy, setBusy] = useState(false);
@@ -44,11 +44,6 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
     return () => controller.abort();
   }, [caseId]);
 
-  useEffect(() => {
-    const urls = photos.map(photo => URL.createObjectURL(photo));
-    setPreviews(urls);
-    return () => urls.forEach(url => URL.revokeObjectURL(url));
-  }, [photos]);
 
   useEffect(() => {
     if (!resultId) return;
@@ -122,11 +117,7 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
           <fieldset disabled={busy} className="form-controls section-fields">
             <div><h2>¿Dónde lo viste?</h2><LocationPicker value={location} required onChange={place => { changed(); setLocation(place); setLocationError(""); }} />{locationError && <p role="alert" className="notice notice-error">{locationError}</p>}</div>
             <div>
-              <label className="field-label">Fotos <span className="optional">(opcional)</span>
-                <input ref={fileInput} type="file" name="photos" multiple accept="image/jpeg,image/png,image/webp" className="file-input" onChange={event => { changed(); setPhotos(Array.from(event.target.files || [])); }} />
-                <span className="field-help">Hasta 4 fotos. JPEG, PNG o WebP, de hasta 10 MB cada una.</span>
-              </label>
-              {photos.length > 0 && <div className="sighting-previews">{photos.map((photo, index) => <div key={`${photo.name}-${index}`}><img src={previews[index]} alt={`Foto adjunta ${index + 1}`} /><button type="button" className="text-button" aria-label={`Quitar la foto ${index + 1}`} onClick={() => { changed(); setPhotos(items => items.filter((_, position) => position !== index)); if (fileInput.current) fileInput.current.value = ""; }}>Quitar foto</button></div>)}</div>}
+              <PhotoUploader name="photos" label="Fotos" maxFiles={4} inputRef={fileInput} files={photos} onFilesChange={next => { changed(); setPhotos(next); }} />
             </div>
             <label className="sighting-recent"><input type="checkbox" checked={recent} onChange={event => { changed(); setRecent(event.target.checked); }} />Lo vi recién</label>
             {!recent && <label className="field-label">¿Cuándo lo viste?<input type="datetime-local" value={when} required className="form-input" onChange={event => { changed(); setWhen(event.target.value); }} /><span className="field-help">La fecha y la hora pueden ser aproximadas.</span></label>}

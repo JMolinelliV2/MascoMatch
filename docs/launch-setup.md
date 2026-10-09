@@ -2,6 +2,14 @@
 
 Guía del 9 de octubre de 2026. La elección del servidor y la configuración en las cuentas externas siguen pendientes. Los precios son los anunciados en las páginas enlazadas; confirmar plazo, total anticipado, impuestos y renovación en el checkout.
 
+## Condición del despliegue: producción fuera de la PC
+
+La producción debe funcionar con la PC del operador apagada o sin conexión. Web, API, PostgreSQL, Redis, fotos, workers, Ollama y OpenCLIP se ejecutarán y almacenarán sus datos en el servidor contratado. En este contexto, “IA local” significa inferencia dentro de ese servidor, sin una API de IA de pago.
+
+Las copias cifradas se exportarán a otro almacenamiento externo. La clave de recuperación se conservará en una bóveda cifrada externa separada del VPS y del destino de las copias. El correo, la búsqueda de direcciones y el monitor externo utilizarán sus respectivos servicios. Los secretos de producción se generarán y configurarán en el servidor; la PC no será un destino de respaldo ni un nodo de procesamiento.
+
+El equipo personal podrá usarse para acceder al sitio o administrar los servicios, sin depender de él para la disponibilidad de producción. La instalación de desarrollo existente es independiente del despliegue público.
+
 ## 1. Elegir el servidor
 
 El despliegue actual ejecuta Next.js, FastAPI, PostgreSQL con PostGIS/pgvector, Redis, almacenamiento de fotos y procesamiento local con Ollama/OpenCLIP. Se recomienda un VPS Linux x86-64 con al menos 16 GB de RAM para el piloto que incluya todos los modelos. Esta es una estimación para empezar: todavía hay que medir memoria, duración de inferencia y cola en el servidor elegido. Un VPS con CPU no ofrece la velocidad de una GPU.
@@ -117,9 +125,9 @@ Un monitor que corre dentro del mismo VPS no puede avisar por sí mismo cuando s
 
 ### Copia fuera del servidor
 
-Elegir un almacenamiento de respaldo con costo acotado, por ejemplo un [Storage Box](https://www.hetzner.com/storage/storage-box/) con SFTP, o para un ensayo manual descargar una copia cifrada al equipo del operador. El Storage Box tiene que contratarse y configurarse aparte; el precio depende del checkout/región. Preparar una transferencia diaria de las copias ya cifradas, con credencial dedicada, y avisar si no se exporta la copia esperada. No borrar el destino durante la sincronización.
+Elegir un almacenamiento de respaldo con costo acotado, por ejemplo un [Storage Box](https://www.hetzner.com/storage/storage-box/) con SFTP. El Storage Box tiene que contratarse y configurarse aparte; el precio depende del checkout/región. Preparar una transferencia diaria entre el VPS y ese almacenamiento de las copias ya cifradas, con credencial dedicada, y avisar si no se exporta la copia esperada. No borrar el destino durante la sincronización. La PC personal no participa en esta transferencia; el ensayo de recuperación se realiza en otro entorno remoto aislado.
 
-Guardar una copia de `backup_key` fuera del VPS y fuera del mismo almacenamiento de respaldos. La copia cifrada necesita esa clave para recuperarse. Un snapshot del proveedor o un respaldo en el disco del VPS no sustituye esta exportación.
+Guardar una copia de `backup_key` en una bóveda cifrada externa, fuera del VPS y fuera del mismo almacenamiento de respaldos, y comprobar su recuperación. La copia cifrada necesita esa clave para recuperarse. Un snapshot del proveedor o un respaldo en el disco del VPS no sustituye esta exportación.
 
 El límite inicial del sistema de respaldo es 1 GB por archivo descifrado y 20.000 fotos; ampliar esa capacidad antes de superarla. El ensayo de restauración debe comprobar cuentas, avisos, fotos y acceso sin sobrescribir la instalación vigente.
 

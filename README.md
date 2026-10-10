@@ -189,7 +189,7 @@ La portada presenta una fotografía y tres acciones: mascota perdida, avistamien
 
 **Ingresar** abre `/login`, una página independiente que comparte el diseño y la disposición del registro. Pide correo y contraseña, ofrece enlaces para crear una cuenta o recuperar el acceso y, al ingresar correctamente, abre Mis avisos si el correo está confirmado o `/confirmar-correo` si está pendiente. Los enlaces de ingreso desde el registro y la recuperación también llevan a esta página. Cuando ya hay una sesión iniciada, el encabezado muestra **Mi cuenta** y lleva directamente a Mis avisos.
 
-La opción **Mis avisos** solo aparece en la navegación de escritorio y en el menú móvil cuando hay una sesión iniciada. Se actualiza al ingresar, crear una cuenta o cerrar la sesión.
+Las opciones **Mis avisos** en la navegación y **Notificaciones** en el encabezado solo aparecen cuando hay una sesión iniciada, tanto en escritorio como en móvil. Se actualizan al ingresar, crear una cuenta o cerrar la sesión.
 
 El primer paso incluye **Sexo**: Macho, Hembra o No lo sé (valor predeterminado). Se guarda como dato declarado en mascotas, avistamientos y animales encontrados, aparece en la revisión y, si es conocido, en las tarjetas de animales perdidos. La ficha individual muestra también cuando no está indicado. La migración `0004_observation_sex` conserva los avistamientos existentes con valor `unknown`. La IA no infiere el sexo a partir de fotografías.
 

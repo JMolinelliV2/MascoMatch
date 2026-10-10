@@ -71,6 +71,8 @@ Para la instalación local, los valores se configuran en `.env` como antes. Para
 
 Los mensajes de confirmación, recuperación y avistamientos utilizan el mismo SMTP. Las preferencias de alertas no desactivan un correo solicitado para recuperar la cuenta. Solicitar recuperación devuelve la misma respuesta exista o no el usuario. Cada cuenta tiene un máximo de tres enlaces nuevos por hora y una separación mínima de un minuto.
 
+El correo de recuperación incluye una versión HTML con el logo y los colores de MascoMatch, un botón para elegir una contraseña y el enlace completo como alternativa. El logo viaja incorporado en el mensaje mediante CID, sin depender de una URL pública de imágenes. Se mantiene una versión de texto para lectores que no muestran HTML. Ambas versiones indican el vencimiento de 30 minutos y el uso único del enlace.
+
 Cuando `MAIL_DELIVERY_MODE=disabled`, solicitar recuperación o un nuevo correo de confirmación devuelve HTTP 503: no se anuncia un envío que no puede ocurrir. Los enlaces ya emitidos siguen pudiendo consumirse hasta su vencimiento. El modo `preview`, exclusivo del desarrollo, indica en el formulario que el enlace está en Mailpit y no en la casilla real.
 
 ### Recuperación en desarrollo local

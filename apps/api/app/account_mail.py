@@ -12,6 +12,7 @@ from app.analysis.service import utcnow
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.matching.linked import aware
+from app.mail_templates import add_password_reset_content
 from app.models import AccountToken, AuthSession, Notification, User
 from app.notifications.email import send_message
 
@@ -85,7 +86,11 @@ def deliver_pending(factory=None):
                     message["From"],message["To"]=settings.smtp_from,user.email
                     message["Subject"]="Confirmá tu correo en MascoMatch" if ticket.kind=="VERIFY_EMAIL" else "Recuperá tu cuenta de MascoMatch"
                     message["Message-ID"]=f"<mascomatch-account-{ticket.id}@mascomatch.local>"
-                    message.set_content(f"Abrí este enlace para {'confirmar tu correo y recibir alertas' if path=='confirmar-correo' else 'elegir una nueva contraseña'}:\n\n{settings.public_site_url.rstrip('/')}/{path}?codigo={token}\n\nEl enlace es de un solo uso y tiene vencimiento. Si no pediste esto, podés ignorar este mensaje.")
+                    url=f"{settings.public_site_url.rstrip('/')}/{path}?codigo={token}"
+                    if ticket.kind=="RESET_PASSWORD":
+                        add_password_reset_content(message,url)
+                    else:
+                        message.set_content(f"Abrí este enlace para confirmar tu correo y recibir alertas:\n\n{url}\n\nEl enlace es de un solo uso y tiene vencimiento. Si no pediste esto, podés ignorar este mensaje.")
                     send_message(message)
                     ticket.email_status="PREVIEWED" if settings.mail_delivery_mode=="preview" else "SENT"
                     sent+=1

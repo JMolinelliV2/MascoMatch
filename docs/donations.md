@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-La página pública `/apoyanos` adapta la idea de niveles de apoyo de [PetRadar](https://www.petradar.org/es/apoyanos) a la identidad de MascoMatch. Está disponible sin cuenta desde el menú Explorar, la navegación móvil y el bloque de apoyo al final de la portada.
+La página pública `/apoyanos` adapta la idea de niveles de apoyo de [PetRadar](https://www.petradar.org/es/apoyanos) a la identidad de MascoMatch. Está disponible sin cuenta desde el botón Apoyanos visible en el encabezado, tanto en escritorio como en móvil, y desde el bloque de apoyo al final de la portada. El botón está fuera de los menús desplegables.
 
 Los niveles se definen en `apps/web/app/apoyanos/support-levels.ts`:
 

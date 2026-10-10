@@ -22,7 +22,7 @@ La portada incorpora las reseñas después de los avisos y el acceso al mapa, an
 
 ## Navigation
 
-Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`, y agrega Apoyanos. La ruta activa usa subrayado coral y `aria-current`. En pantallas pequeñas hay un menú nativo desplegable y enlaces de cuenta y notificaciones con nombres accesibles.
+Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; botón Apoyanos, notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`. Apoyanos tiene un botón propio con corazón, borde y fondo coral suave; está fuera de los desplegables y disponible sin sesión. La ruta activa usa subrayado coral y `aria-current`. Bajo 1100 px la navegación se reúne en un menú nativo para dejar lugar a los accesos visibles. Bajo 640 px Apoyanos ocupa una segunda fila del encabezado, sin esconderse dentro del menú.
 
 La reseña se escribe dentro de Mis avisos o de la pantalla de la notificación de recuperación, sin cambiar de página. El autor vuelve a ella desde Mis avisos para retirarla; administración agrega la categoría Reseñas a los registros existentes.
 

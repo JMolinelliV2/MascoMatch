@@ -209,7 +209,7 @@ La portada, los formularios, el catálogo y Mis avisos comparten la paleta de Ma
 
 ## Apoyanos: aportes voluntarios
 
-La página pública `/apoyanos` se abre desde **Explorar → Apoyanos** y desde un bloque de la portada. Presenta cuatro niveles de patrocinio en pesos uruguayos: Amigo ($U 100), Colaborador ($U 300), Patrocinador ($U 600) e Impulsor ($U 1.200), con elección puntual o mensual y monto personalizado.
+La página pública `/apoyanos` se abre desde el botón **Apoyanos**, siempre visible en el encabezado, y desde un bloque de la portada. Presenta cuatro niveles de patrocinio en pesos uruguayos: Amigo ($U 100), Colaborador ($U 300), Patrocinador ($U 600) e Impulsor ($U 1.200), con elección puntual o mensual y monto personalizado.
 
 La selección es una vista previa en el navegador; no se guarda como donación ni inicia un cobro. El botón **Donaciones próximamente** permanece deshabilitado hasta integrar los pagos. Publicar avisos y reportar avistamientos sigue siendo gratuito. [Alcance y configuración de los aportes](docs/donations.md).
 

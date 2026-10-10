@@ -6,7 +6,7 @@ import { NotificationsLink } from "./notifications-link";
 import { Icon } from "./ui/pictogram";
 
 const primary = [["/", "Inicio"], ["/perdi", "Perdí una mascota"], ["/avistamiento", "Vi una mascota"], ["/mis-avisos", "Mis avisos"]] as const;
-const explore = [["/perdidos", "Animales perdidos"], ["/mapa", "Mapa"], ["/encontre", "Encontré una mascota"], ["/#como-funciona", "Cómo funciona"], ["/apoyanos", "Apoyanos"]] as const;
+const explore = [["/perdidos", "Animales perdidos"], ["/mapa", "Mapa"], ["/encontre", "Encontré una mascota"], ["/#como-funciona", "Cómo funciona"]] as const;
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -36,6 +36,7 @@ export function SiteHeader() {
         </nav>
         <div className="header-tools">{signedIn && <NotificationsLink />}{!signedIn && <Link href="/crear-cuenta" className="text-button registration-link" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}<Link href={signedIn ? "/mis-avisos" : "/login"} aria-label={signedIn ? "Ir a mi cuenta" : "Ingresar a mi cuenta"} aria-current={active(signedIn ? "/mis-avisos" : "/login") ? "page" : undefined} className="button button-secondary account-link"><Icon name="user" /><span>{signedIn ? "Mi cuenta" : "Ingresar"}</span></Link></div>
         <details className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(visiblePrimary)}{links(explore)}{!signedIn && <Link href="/crear-cuenta" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}</nav></details>
+        <Link href="/apoyanos" className="button support-link" aria-current={active("/apoyanos") ? "page" : undefined}><Icon name="heart" />Apoyanos</Link>
       </div>
     </header>
   );

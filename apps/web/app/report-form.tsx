@@ -11,6 +11,7 @@ import { Stepper } from "./ui/stepper";
 import { PhotoUploader } from "./ui/photo-uploader";
 import { SexSelector } from "./ui/sex-selector";
 import { Icon } from "./ui/pictogram";
+import type { SessionUser } from "./account-session";
 
 type ReportKind = "lost" | "sighting" | "found";
 type AccountMode = "register" | "login";
@@ -85,6 +86,10 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const [photoWarning, setPhotoWarning] = useState("");
   const [busy, setBusy] = useState(false);
   const [accountMode, setAccountMode] = useState<AccountMode>("register");
+  const [sessionUser, setSessionUser] = useState<(SessionUser & { email: string }) | null>(null);
+  const [sessionChecking, setSessionChecking] = useState(true);
+  const [sessionError, setSessionError] = useState("");
+  const [sessionRefresh, setSessionRefresh] = useState(0);
   const [location, setLocation] = useState<Place | null>(null);
   const [locationError, setLocationError] = useState("");
   const [resetCount, setResetCount] = useState(0);
@@ -94,6 +99,39 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const copy = labels[kind];
   const stepTitles = [kind === "lost" ? "Contanos sobre tu mascota" : "Contanos sobre el animal", copy.event, "Revisá el reporte y dejá tu contacto"];
   const stepIntros = ["Empezá por sus características. Los campos opcionales pueden quedar vacíos.", "La fecha y la hora pueden ser aproximadas. Elegí el lugar por su nombre o dirección.", "Podés editar los datos antes de publicar. Tu contacto se guarda con tu cuenta."];
+
+  useEffect(() => {
+    let disposed = false;
+    let controller: AbortController | undefined;
+    async function load() {
+      controller?.abort(); controller = new AbortController();
+      const signal = controller.signal;
+      setSessionChecking(true);
+      try {
+        const response = await fetch("/api/session", { cache: "no-store", signal });
+        if (!response.ok) throw new Error("No pudimos consultar tu cuenta. Reintentá antes de publicar.");
+        const data = await response.json();
+        if (!disposed && !signal.aborted) { setSessionUser(data.user); setSessionError(""); }
+      } catch (cause) { if (!disposed && !signal.aborted) setSessionError(cause instanceof Error ? cause.message : "No pudimos consultar tu cuenta."); }
+      finally { if (!disposed && !signal.aborted) setSessionChecking(false); }
+    }
+    void load();
+    window.addEventListener("mascomatch:session", load);
+    window.addEventListener("focus", load);
+    return () => { disposed = true; controller?.abort(); window.removeEventListener("mascomatch:session", load); window.removeEventListener("focus", load); };
+  }, [sessionRefresh]);
+
+  async function switchAccount() {
+    if (busy || sessionChecking) return;
+    setSessionChecking(true); setSessionError("");
+    try {
+      const response = await fetch("/api/session", { method: "DELETE" });
+      if (!response.ok) throw new Error("No pudimos cerrar la sesión. Intentá de nuevo.");
+      setSessionUser(null); setAccountMode("login");
+      window.dispatchEvent(new Event("mascomatch:session"));
+    } catch (cause) { setSessionError(cause instanceof Error ? cause.message : "No pudimos cambiar de cuenta."); }
+    finally { setSessionChecking(false); }
+  }
 
   useEffect(() => {
     const target = pendingFocus.current;
@@ -210,17 +248,21 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       goToStep((step + 1) as Step);
       return;
     }
+    if (sessionChecking || sessionError) return;
     for (const target of [1, 2, 3] as const) {
       if (!validateStage(formElement, target)) return;
     }
     const when = new Date(text("observedAt"));
     setBusy(true);
     try {
-      await send(`/auth/${accountMode}`, {
-        email: text("email").toLowerCase(),
-        password: String(form.get("password") ?? ""),
-        ...(accountMode === "register" ? { name: text("name") } : {}),
-      });
+      if (!sessionUser) {
+        const account = await send<{ user: SessionUser & { email: string } }>(`/auth/${accountMode}`, {
+          email: text("email").toLowerCase(),
+          password: String(form.get("password") ?? ""),
+          ...(accountMode === "register" ? { name: text("name") } : {}),
+        });
+        setSessionUser(account.user);
+      }
       const species = text("species");
       const sex = text("sex");
       const color = text("color");
@@ -271,7 +313,11 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       setPhoto(null);
       setResetCount(count => count + 1);
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : "No pudimos conectarnos. Verificá tu conexión e intentá de nuevo.");
+      if (cause instanceof ApiError && cause.status === 401 && sessionUser) {
+        setSessionUser(null); setAccountMode("login");
+        setError("Tu sesión venció. Ingresá nuevamente para publicar; los datos del reporte siguen en el formulario.");
+        window.dispatchEvent(new Event("mascomatch:session"));
+      } else setError(cause instanceof ApiError ? cause.message : "No pudimos conectarnos. Verificá tu conexión e intentá de nuevo.");
     } finally {
       setBusy(false);
     }
@@ -390,6 +436,9 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
               </dl>
             </section>
             <h3 className="contact-heading">Tu contacto</h3>
+            {sessionChecking && <p role="status" className="field-help">Consultando tu cuenta…</p>}
+            {sessionError && <p role="alert" className="notice notice-warning">{sessionError} <button type="button" className="text-button" onClick={() => setSessionRefresh(value => value + 1)}>Reintentar</button></p>}
+            {sessionUser ? <div className="notice"><p>Vas a publicar con la cuenta de <strong>{sessionUser.name}</strong>.</p><p className="field-help">Correo de contacto: {sessionUser.email}</p><button type="button" className="text-button" disabled={busy || sessionChecking} onClick={() => void switchAccount()}>Usar otra cuenta</button></div> : <>
             <div className="account-options" role="group" aria-label="Opciones de cuenta">
               <label><input type="radio" name="accountMode" checked={accountMode === "register"} onChange={() => setAccountMode("register")} />Crear cuenta</label>
               <label><input type="radio" name="accountMode" checked={accountMode === "login"} onChange={() => setAccountMode("login")} />Ya tengo cuenta</label>
@@ -409,6 +458,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
                 {fieldFeedback("password")}
               </label>
             </div>
+            </>}
             {kind !== "lost" && <label className="sighting-recent"><input name="shareContact" type="checkbox"/>Compartir mi correo de forma privada con los dueños que reciban una posible coincidencia de este reporte.</label>}
           </Section>
 
@@ -416,7 +466,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
             {error && (!errorField || errorField === "photo") && <p role="alert" className="notice notice-error">{error}</p>}
             <div className="form-navigation">
               {step > 1 && <button type="button" className="button button-secondary" onClick={() => goToStep((step - 1) as Step)}>Atrás</button>}
-              <button type="submit" disabled={busy} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? "Continuar →" : copy.submit}</button>
+              <button type="submit" disabled={busy || (step === 3 && (sessionChecking || Boolean(sessionError)))} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? "Continuar →" : copy.submit}</button>
             </div>
             <p className="form-privacy">{step === 3 ? "Tu correo y la ubicación exacta no se muestran públicamente." : "Todavía no se publica nada. Podés revisar los datos al final."}</p>
           </div>

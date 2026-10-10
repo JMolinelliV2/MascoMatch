@@ -33,8 +33,8 @@ export function SiteHeader() {
           {links(primary)}
           <details className="explore-menu"><summary aria-label="Explorar MascoMatch">Explorar <span aria-hidden="true">⌄</span></summary><div className="explore-links" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(explore)}</div></details>
         </nav>
-        <div className="header-tools"><NotificationsLink /><Link href="/mis-avisos" aria-label={signedIn ? "Ir a mi cuenta" : "Ingresar a mi cuenta"} className="button button-secondary account-link"><Icon name="user" /><span>{signedIn ? "Mi cuenta" : "Ingresar"}</span></Link></div>
-        <details className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(primary)}{links(explore)}</nav></details>
+        <div className="header-tools"><NotificationsLink />{!signedIn && <Link href="/crear-cuenta" className="text-button registration-link" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}<Link href="/mis-avisos" aria-label={signedIn ? "Ir a mi cuenta" : "Ingresar a mi cuenta"} className="button button-secondary account-link"><Icon name="user" /><span>{signedIn ? "Mi cuenta" : "Ingresar"}</span></Link></div>
+        <details className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(primary)}{links(explore)}{!signedIn && <Link href="/crear-cuenta" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}</nav></details>
       </div>
     </header>
   );

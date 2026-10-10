@@ -67,6 +67,7 @@ h1, h2, h3 { color: var(--text-primary); }
   .explore-links a { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
   .explore-links a:hover, .explore-links a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); }
   .header-tools { display: flex; align-items: center; gap: 16px; }
+  .registration-link { white-space: nowrap; }
   .notifications-link { display: inline-flex; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; justify-content: center; font-size: 13px; }
   .notifications-link[aria-current="page"] { color: var(--primary); }
   .notification-count { display: inline-flex; justify-content: center; align-items: center; min-width: 22px; padding: 1px 6px; border-radius: 999px; background: var(--primary); color: var(--surface); font-size: 12px; }
@@ -305,6 +306,9 @@ h1, h2, h3 { color: var(--text-primary); }
   .notification-login { margin-top: 28px; max-width: 480px; padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
   .notification-login h2 { font-size: 23px; font-weight: 700; margin: 0 0 6px; }
   .notification-login fieldset { margin-top: 24px; }
+  .account-page { max-width: 640px; }
+  .account-registration { max-width: none; }
+  .account-registration fieldset { margin-top: 0; }
   .notifications-account, .notifications-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
   .notifications-account { margin-top: 16px; }
   .notifications-toolbar { margin-top: 24px; border-top: 1px solid var(--border); font-size: 14px; }
@@ -384,6 +388,7 @@ h1, h2, h3 { color: var(--text-primary); }
     .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
     .brand-mark .ui-icon { width: 22px; height: 22px; }
     .header-tools { gap: 4px; }
+    .header-tools .registration-link { display: none; }
     .notifications-link { position: relative; }
     .notifications-link .notification-count { position: absolute; top: 0; right: 0; border: 2px solid var(--surface); }
     .account-link { padding: 10px; }

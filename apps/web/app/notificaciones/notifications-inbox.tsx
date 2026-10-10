@@ -135,6 +135,8 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
         <label className="field-label">Contraseña<input name="password" type="password" required maxLength={128} autoComplete="current-password" className="form-input" /></label>
         <button type="submit" className="button button-primary">{busy ? "Ingresando…" : "Ingresar"}</button>
       </fieldset>
+      <p>¿Todavía no tenés cuenta? <Link className="text-button" href="/crear-cuenta">Crear cuenta</Link></p>
+      <Link className="text-button" href="/recuperar">Olvidé mi contraseña</Link>
     </form> : <>
       {user.email_verification_required && !user.email_verified && <VerifyEmailNotice />}
       <div className="notifications-account"><span>{user.name}</span><button type="button" className="text-button" onClick={() => void logout()}>Cerrar sesión</button></div>

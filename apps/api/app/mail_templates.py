@@ -77,7 +77,7 @@ def add_photo_reminder_content(message: EmailMessage, pet_name: str, url: str, p
         description=f"Tu aviso de {pet_name} sigue activo y todavía no tiene fotos. Una imagen clara ayuda a que otras personas la reconozcan y puede mejorar las posibilidades de encontrarla.",
         action="Agregar una foto", expiry_title="Elegí una foto clara",
         expiry_text="Que se vean la cara, el cuerpo y sus marcas distintivas. Podés agregarla desde Mis avisos.",
-        footer=f"Tu aviso sigue publicado aunque no agregues una foto. Podés cambiar tus preferencias de correo en Notificaciones: {preferences_url}")
+        footer=f"Tu aviso sigue publicado aunque no agregues una foto. Podés cambiar tus preferencias de correo en Mi cuenta: {preferences_url}")
 
 
 def _add_branded_html(message: EmailMessage, url: str, *, preheader: str, eyebrow: str,

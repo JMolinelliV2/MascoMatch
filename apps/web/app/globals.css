@@ -503,6 +503,11 @@ h1, h2, h3 { color: var(--text-primary); }
   .account-recovery > p:last-child { margin-top: 24px; text-align: center; }
   .account-settings > form { margin-top: 24px; }
   .account-settings > .text-button { display: inline-block; margin-top: 24px; }
+  .account-notification-settings { scroll-margin-top: 24px; }
+  .account-notification-settings .sighting-recent { align-items: flex-start; gap: 12px; margin: 20px 0 12px; }
+  .account-notification-settings input[type="checkbox"] { flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; accent-color: var(--primary); }
+  .account-notification-settings > p { margin: 12px 0; }
+  .account-notification-settings > .text-button { display: inline-block; margin-top: 16px; }
   .account-pending { margin-top: 24px; overflow-wrap: anywhere; }
   .account-pending h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
   .account-danger { margin-top: 32px; padding: 24px clamp(16px, 4vw, 28px); border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }

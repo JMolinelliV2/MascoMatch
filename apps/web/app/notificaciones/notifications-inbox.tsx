@@ -108,16 +108,6 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
     setUser(null); setInbox(null); window.dispatchEvent(new Event("mascomatch:session"));
   }
 
-  async function preference(email: boolean) {
-    setBusy(true); setError("");
-    try {
-      const response = await fetch("/api/session", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
-      if (!response.ok) throw new Error("No pudimos guardar la preferencia de correo.");
-      setUser(await response.json());
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos guardar la preferencia."); }
-    finally { setBusy(false); }
-  }
-
   async function read(id: string) {
     setMarking(id);
     try {
@@ -145,8 +135,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
     </form> : <>
       {user.email_verification_required && !user.email_verified && <VerifyEmailNotice email={user.email} />}
       <div className="notifications-account"><span>{user.name}</span><button type="button" className="text-button" onClick={() => void logout()}>Cerrar sesión</button></div>
-      <label className="sighting-recent"><input type="checkbox" checked={user.notification_preferences.email !== false} disabled={busy} onChange={event => void preference(event.target.checked)} />Recibir alertas y recordatorios por correo</label>
-      <p className="field-help">Incluye posibles avistamientos y recordatorios para completar tus avisos. Podés abrir los correos sin estar conectado a MascoMatch.</p>
+      <p><Link href="/mi-cuenta#notificaciones" className="text-button">Configurar notificaciones en Mi cuenta</Link></p>
       {selectedId && <Link href="/notificaciones" className="text-button">Ver todas las notificaciones</Link>}
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
       {feedbackMessage && <div className="notice" role="status"><p>{feedbackMessage}</p><Link className="text-button" href="/mis-avisos">Ver el estado en Mis avisos</Link></div>}

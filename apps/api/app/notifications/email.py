@@ -34,11 +34,12 @@ def build_message(notification, owner, observation=None, related=None):
         context = f"\n\nFecha del avistamiento: {when} ({label})."
         if observation.public_location:
             context += f"\nZona: {observation.public_location}"
-    message.set_content(f"{notification.title}\n\n{notification.body}{context}\n\nRevisá el lugar y las fotos en MascoMatch:\n{settings.public_site_url.rstrip('/')}/notificaciones?aviso={notification.id}\n\nSe trata de una posible coincidencia, que necesita revisión.\nPodés cambiar tus preferencias de correo en Notificaciones.")
+    preferences_url = f"{settings.public_site_url.rstrip('/')}/mi-cuenta#notificaciones"
+    message.set_content(f"{notification.title}\n\n{notification.body}{context}\n\nRevisá el lugar y las fotos en MascoMatch:\n{settings.public_site_url.rstrip('/')}/notificaciones?aviso={notification.id}\n\nSe trata de una posible coincidencia, que necesita revisión.\nPodés cambiar tus preferencias de correo en Mi cuenta:\n{preferences_url}")
     if related and len(related)>1:
         message.replace_header("Subject", f"{len(related)} reportes nuevos: {notification.title}")
         links="\n".join(f"{settings.public_site_url.rstrip('/')}/notificaciones?aviso={item.id}" for item in related)
-        message.set_content(f"Recibimos {len(related)} avistamientos potencialmente relacionados con el mismo aviso.\n\nRevisá los lugares, fotos y motivos de cada reporte:\n{links}\n\nLa identidad de los animales necesita confirmación.\nPodés cambiar tus preferencias de correo en Notificaciones.")
+        message.set_content(f"Recibimos {len(related)} avistamientos potencialmente relacionados con el mismo aviso.\n\nRevisá los lugares, fotos y motivos de cada reporte:\n{links}\n\nLa identidad de los animales necesita confirmación.\nPodés cambiar tus preferencias de correo en Mi cuenta:\n{preferences_url}")
     return message
 
 

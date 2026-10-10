@@ -44,7 +44,7 @@ def build_message(case, pet, owner):
     message["Date"] = format_datetime(utcnow())
     message["Message-ID"] = f"<mascomatch-photo-{case.id}@mascomatch.com>"
     url = f"{settings.public_site_url.rstrip('/')}/mis-avisos?foto={case.id}#fotos-{case.id}"
-    add_photo_reminder_content(message, pet.name, url, f"{settings.public_site_url.rstrip('/')}/notificaciones")
+    add_photo_reminder_content(message, pet.name, url, f"{settings.public_site_url.rstrip('/')}/mi-cuenta#notificaciones")
     return message
 
 

@@ -24,12 +24,33 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
   const [message, setMessage] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  const [emailNotifications, setEmailNotifications] = useState(user.notification_preferences?.email !== false);
+  const [preferencesBusy, setPreferencesBusy] = useState(false);
+  const [preferencesError, setPreferencesError] = useState("");
+  const [preferencesMessage, setPreferencesMessage] = useState("");
+  const controlsDisabled = busy || preferencesBusy;
   const changingEmail = email.trim().toLowerCase() !== user.email;
   useEffect(() => { setName(user.name); setPhone(user.phone || ""); setEmail(user.email || ""); }, [user.name, user.phone, user.email]);
+  useEffect(() => { setEmailNotifications(user.notification_preferences?.email !== false); }, [user.notification_preferences?.email]);
+  useEffect(() => { if (window.location.hash === "#notificaciones") document.getElementById("notificaciones")?.scrollIntoView({ block: "start" }); }, []);
+
+  async function saveNotificationPreference(email: boolean) {
+    if (controlsDisabled) return;
+    setPreferencesBusy(true); setPreferencesError(""); setPreferencesMessage("");
+    try {
+      const response = await fetch("/api/session", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+      const updated: SessionUser & { detail?: string } = await response.json();
+      if (!response.ok) throw new Error(response.status === 401 ? "Tu sesión venció. Ingresá nuevamente." : typeof updated.detail === "string" ? updated.detail : "No pudimos guardar la preferencia de correo.");
+      setEmailNotifications(updated.notification_preferences?.email !== false);
+      setPreferencesMessage("Tu preferencia de notificaciones quedó guardada.");
+      window.dispatchEvent(new Event("mascomatch:session"));
+    } catch (cause) { setPreferencesError(cause instanceof Error ? cause.message : "No pudimos guardar la preferencia de correo."); }
+    finally { setPreferencesBusy(false); }
+  }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
+    if (controlsDisabled) return;
     const form = event.currentTarget;
     const values = new FormData(form);
     setBusy(true); setError(""); setMessage("");
@@ -46,7 +67,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
   }
 
   async function emailAction(action: "cancel" | "resend") {
-    if (busy) return;
+    if (controlsDisabled) return;
     setBusy(true); setError(""); setMessage("");
     try {
       await requestChange("POST", undefined, action);
@@ -58,7 +79,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
 
   async function remove(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || confirmation !== "ELIMINAR") return;
+    if (controlsDisabled || confirmation !== "ELIMINAR") return;
     const values = new FormData(event.currentTarget);
     setBusy(true); setDeleteError("");
     try {
@@ -75,7 +96,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
       <h2 id="contact-title">Datos de contacto</h2>
       <p className="field-help">El correo se usa para ingresar y recibir alertas. Tu teléfono solo se comparte en los reportes donde lo hayas autorizado.</p>
       <form onSubmit={save} aria-busy={busy}>
-        <fieldset className="section-fields" disabled={busy}>
+        <fieldset className="section-fields" disabled={controlsDisabled}>
           <label className="field-label">Nombre<input className="form-input" required maxLength={120} autoComplete="name" value={name} onChange={event => setName(event.target.value)} /></label>
           <label className="field-label">Teléfono <span className="field-help">(opcional)</span><input className="form-input" type="tel" maxLength={32} autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)} /></label>
           <label className="field-label">Correo electrónico<input className="form-input" type="email" required maxLength={320} autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} /><span className="field-help">Para cambiarlo, confirmá la nueva dirección. Hasta entonces seguirá funcionando {user.email}.</span></label>
@@ -83,17 +104,26 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
           <button className="button button-primary" type="submit">{busy ? "Guardando…" : "Guardar cambios"}</button>
         </fieldset>
       </form>
-      {user.pending_email && <aside className="notice account-pending"><h3>Cambio de correo pendiente</h3><p>Confirmá el enlace enviado a <strong>{user.pending_email}</strong>. Vence a las 24 horas. Tu dirección actual todavía no cambió.</p><div className="location-actions"><button className="text-button" type="button" disabled={busy} onClick={() => void emailAction("resend")}>Reenviar confirmación</button><button className="text-button" type="button" disabled={busy} onClick={() => void emailAction("cancel")}>Cancelar cambio</button></div></aside>}
+      {user.pending_email && <aside className="notice account-pending"><h3>Cambio de correo pendiente</h3><p>Confirmá el enlace enviado a <strong>{user.pending_email}</strong>. Vence a las 24 horas. Tu dirección actual todavía no cambió.</p><div className="location-actions"><button className="text-button" type="button" disabled={controlsDisabled} onClick={() => void emailAction("resend")}>Reenviar confirmación</button><button className="text-button" type="button" disabled={controlsDisabled} onClick={() => void emailAction("cancel")}>Cancelar cambio</button></div></aside>}
       {message && <p className="notice" role="status">{message}</p>}
       {error && <p className="notice notice-warning" role="alert">{error}</p>}
-      <Link href="/notificaciones" className="text-button">Configurar notificaciones por correo</Link>
+    </section>
+    <section id="notificaciones" className="notification-login account-form account-notification-settings" aria-labelledby="notification-settings-title">
+      <h2 id="notification-settings-title">Notificaciones</h2>
+      <label className="sighting-recent"><input type="checkbox" checked={emailNotifications} disabled={controlsDisabled} onChange={event => void saveNotificationPreference(event.target.checked)} aria-describedby="notification-settings-help" />Recibir alertas y recordatorios por correo</label>
+      <p id="notification-settings-help" className="field-help">Incluye posibles avistamientos y recordatorios para completar tus avisos. Las alertas también están disponibles en Notificaciones.</p>
+      <p className="field-help">Esta preferencia no afecta los correos que solicites para confirmar tu dirección o recuperar tu cuenta.</p>
+      {preferencesBusy && <p role="status" className="field-help">Guardando preferencia…</p>}
+      {preferencesMessage && <p role="status" className="notice">{preferencesMessage}</p>}
+      {preferencesError && <p role="alert" className="notice notice-warning">{preferencesError}</p>}
+      <Link href="/notificaciones" className="text-button">Ver mis notificaciones</Link>
     </section>
     <details className="account-danger">
       <summary>Eliminar mi cuenta</summary>
       <h2>Esta acción es definitiva</h2>
       <p>Se eliminarán tu cuenta, todos tus avisos de mascotas perdidas —incluidos los cerrados—, las fotos de esos avisos y tus reseñas.</p>
       <p>Tus avistamientos y reportes de animales encontrados se conservarán para ayudar en otras búsquedas, sin vincularlos a tu cuenta ni compartir tu contacto.</p>
-      <form onSubmit={remove} aria-busy={busy}><fieldset className="section-fields" disabled={busy}>
+      <form onSubmit={remove} aria-busy={busy}><fieldset className="section-fields" disabled={controlsDisabled}>
         <label className="field-label">Contraseña actual<input className="form-input" type="password" name="password" required maxLength={128} autoComplete="current-password" /></label>
         <label className="field-label">Escribí ELIMINAR para confirmar<input className="form-input" required value={confirmation} autoComplete="off" spellCheck={false} onChange={event => setConfirmation(event.target.value)} /></label>
         <button type="submit" className="button button-primary" disabled={confirmation !== "ELIMINAR"}>{busy ? "Eliminando…" : "Eliminar cuenta definitivamente"}</button>

@@ -1,6 +1,12 @@
 # Gestión de cuenta
 
-`/mi-cuenta` permite editar nombre, teléfono opcional y correo. El acceso Mi cuenta del encabezado lleva a esta página; Mis avisos conserva sus publicaciones, edición, coincidencias y cierre.
+`/mi-cuenta` permite editar nombre, teléfono opcional y correo, y configurar las notificaciones. El acceso Mi cuenta del encabezado lleva a esta página; Mis avisos conserva sus publicaciones, edición, coincidencias y cierre.
+
+## Notificaciones
+
+Debajo del contacto, la sección Notificaciones permite activar o desactivar alertas y recordatorios por correo. El cambio se guarda al marcar o desmarcar la casilla, mediante la ruta existente `PATCH /api/session`; se muestra el resultado y la casilla conserva el último valor confirmado hasta guardar o volver a cargar los datos. Las alertas dentro de la web y los correos solicitados de confirmación o recuperación siguen disponibles.
+
+La bandeja `/notificaciones` contiene las alertas y un enlace a `/mi-cuenta#notificaciones`. Los correos de alertas y recordatorios también llevan a esa sección para cambiar la preferencia.
 
 ## Cambio de contacto
 

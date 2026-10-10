@@ -20,6 +20,8 @@ Debajo del mapa completo, la lista desplegable presenta tarjetas en dos columnas
 
 ## Section Order
 
+Mi cuenta reúne contacto, notificaciones por correo y eliminación de cuenta, en ese orden. Notificaciones mantiene la bandeja de alertas y enlaza a la configuración en Mi cuenta. La sección de preferencias tiene título, casilla, explicación, feedback de guardado y enlace para consultar las alertas.
+
 Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
 
 Apoyanos: regreso al inicio, presentación, aviso de disponibilidad próxima, frecuencia del aporte, niveles, monto personalizado, resumen, destino de los aportes, preguntas frecuentes y acción para explorar animales perdidos.
@@ -29,6 +31,8 @@ La portada incorpora las reseñas después de los avisos y el acceso al mapa, an
 El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las tarjetas de avisos activos. Muestra únicamente animales perdidos con ubicación; el enlace **Abrir mapa completo** mantiene el acceso a avistamientos, encontrados y filtros de la página `/mapa`.
 
 ## Navigation
+
+El enlace de configuración de la bandeja y de los correos abre `/mi-cuenta#notificaciones`. La sección se lleva a la vista después de cargar la sesión, incluso al entrar sin una sesión iniciada y luego ingresar desde esa página.
 
 Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; botón Apoyanos, notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`. Apoyanos tiene un botón propio con corazón, borde y fondo coral suave; está fuera de los desplegables y disponible sin sesión. La ruta activa usa subrayado coral y `aria-current`. Bajo 1100 px la navegación se reúne en un menú nativo para dejar lugar a los accesos visibles. Bajo 640 px Apoyanos ocupa una segunda fila del encabezado, sin esconderse dentro del menú.
 
@@ -180,3 +184,7 @@ TypeScript y la sintaxis de los archivos Python modificados terminaron sin error
 ### Estado de carga del 10 de octubre de 2026
 
 TypeScript terminó sin errores y la web local se actualizó. La lectura de la página Mis avisos mostró **Preparando tu cuenta** y su explicación durante la consulta inicial, seguida del formulario de ingreso de invitados. Los estados de sesión, apertura y listado reutilizan el componente de carga. No se ejecutaron pruebas automatizadas ni se iniciaron sesiones o modificaron cuentas para esta revisión.
+
+### Preferencias en Mi cuenta del 10 de octubre de 2026
+
+TypeScript y la sintaxis de las plantillas de correo terminaron sin errores. La API inició correctamente y Mi cuenta y Notificaciones respondieron en lectura. El control de correo se trasladó a Mi cuenta, reutilizando su persistencia existente, con bloqueo durante el guardado, confirmación y error propios. La bandeja y los correos apuntan a la nueva sección. No se ejecutaron pruebas automatizadas ni se modificaron preferencias reales o enviaron correos durante esta revisión.

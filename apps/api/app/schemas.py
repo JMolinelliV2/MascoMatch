@@ -300,6 +300,7 @@ class NotificationRead(BaseModel):
     title: str
     body: str
     read_at: datetime | None
+    archived_at: datetime | None = None
     created_at: datetime
     lost_case_id: UUID
     pet_name: str

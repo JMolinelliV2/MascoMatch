@@ -158,6 +158,7 @@ class Notification(TimestampMixin, Base):
     body: Mapped[str] = mapped_column(String(1000), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     email_status: Mapped[str] = mapped_column(String(24), default="PENDING", server_default="PENDING", nullable=False)
     email_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     email_available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

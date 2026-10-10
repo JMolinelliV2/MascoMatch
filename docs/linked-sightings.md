@@ -42,6 +42,8 @@ Los cambios de aviso, mascota o fotos vuelven a poner la comparación en pendien
 
 **Notificaciones** permite entrar con la cuenta del aviso, ver el lugar en un mapa, las fotos y los motivos de compatibilidad, y marcar alertas como leídas. El indicador de navegación actualiza la cantidad sin leer. El enlace del correo abre la alerta correspondiente y requiere la cuenta del dueño.
 
+La bandeja inicia en **Sin leer**; las alertas abiertas desde el detalle se marcan como leídas y permanecen en **Todas**. Se puede marcar toda la bandeja como leída, archivar una alerta y restaurarla desde **Archivadas**. Lectura y archivo persisten durante nuevas evaluaciones, sin alterar el avistamiento ni la búsqueda. El flujo está documentado en `notification-inbox.md`.
+
 La sesión usa una cookie `HttpOnly`, `SameSite=Lax`, con `Secure` en producción. Los cambios desde la web comprueban el origen. La web consulta la API interna usando esa cookie; la clave SMTP se utiliza exclusivamente en el backend. Una sesión vencida no impide enviar un avistamiento como visitante.
 
 Las fotos permanecen en el bucket privado y la ruta de cada alerta verifica el dueño del aviso, el avistamiento y la foto. El mapa también ofrece miniaturas procesadas de reportes visibles, según `public-observations.md`. La ubicación precisa se comparte solo con el dueño mediante sus endpoints privados de alerta o revisión del aviso. El correo contiene fecha y localidad, sin coordenadas precisas ni fotos adjuntas. Los avistamientos públicos mantienen coordenadas aproximadas.

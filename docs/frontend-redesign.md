@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+La bandeja de notificaciones suma un grupo flexible de tres filtros, Sin leer, Todas y Archivadas. La barra de cantidades reúne las acciones de lectura y actualización, con salto de línea en pantallas estrechas.
+
 Las fotos ampliadas usan una ventana de hasta 1180 × 900 px, limitada al ancho y alto disponibles con 16 px de margen. La cabecera, el lienzo flexible y el pie ocupan tres filas; la imagen se ajusta completa al lienzo y las acciones siguen visibles en móvil.
 
 Contacto reutiliza el contenedor centrado de 640 px de las páginas de cuenta, sin exigir una sesión. La tarjeta ocupa todo el ancho interior y se ajusta al padding lateral existente en móvil.
@@ -28,6 +30,8 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 ## Section Order
 
+Notificaciones muestra cuenta y acceso a preferencias, filtros, explicación de lectura y archivo, contador y acciones, confirmaciones, tarjetas y paginación. Un detalle abierto desde una alerta conserva su regreso a la bandeja y omite los filtros de listado.
+
 La ventana de fotos presenta título y cierre, imagen, y posición con controles de anterior y siguiente cuando hay varias. Se abre sobre el contexto actual sin sustituir la ficha ni la tarjeta del mapa.
 
 La revisión de cada aviso reúne **Enviados desde este aviso** y **Posibles coincidencias de otros reportes**. Los primeros permanecen disponibles aunque la comparación automática esté pendiente o sea incompatible. Sus tarjetas muestran miniatura, fecha y hora, zona, descripción, motivos, lugar privado y acciones de revisión.
@@ -45,6 +49,8 @@ La portada incorpora las reseñas después de los avisos y el acceso al mapa, an
 El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las tarjetas de avisos activos. Muestra únicamente animales perdidos con ubicación; el enlace **Abrir mapa completo** mantiene el acceso a avistamientos, encontrados y filtros de la página `/mapa`.
 
 ## Navigation
+
+La bandeja inicia en Sin leer. Abrir alerta lleva al detalle y guarda la lectura; marcar una como leída la retira de esa vista. Todas conserva las alertas sin archivar. Archivar la mueve a Archivadas, donde Restaurar la devuelve a Todas. Los filtros indican selección con `aria-pressed` y las acciones muestran el resultado después del éxito del servidor. Se bloquean durante el guardado para evitar operaciones simultáneas.
 
 La foto principal abre la ventana con clic, toque o Enter. Las miniaturas con un enlace o acción previa conservan ese destino y agregan un control independiente para ampliar. Cerrar, Escape o pulsar fuera regresa al control de apertura. Las flechas del teclado recorren la galería; Escape dentro de la ventana conserva los detalles del mapa. El diálogo nativo mantiene el foco dentro mientras está abierto.
 
@@ -70,6 +76,8 @@ Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda 
 
 ## Typography
 
+El estado de lectura de cada alerta usa texto de 12 px y fecha de Uruguay. Los filtros usan 14 px y peso 600. Los mensajes de guardado se anuncian como estados accesibles.
+
 El título de la ventana de fotos usa Arial de 18 px y peso 700; el contador del pie, 14 px, y los mensajes de carga o error, 15 px. Los títulos largos permiten saltos de línea.
 
 Los estados de carga usan título de 20–24 px, peso 700 y explicación de 15 px con interlineado 1,6. El mensaje distingue preparar la cuenta, abrir los avisos y consultar las publicaciones; los lectores de pantalla reciben un estado cortés y atómico.
@@ -84,6 +92,8 @@ Las reseñas usan texto principal de 15 px con interlineado 1,7, nombre público
 
 ## Color System
 
+Los filtros de notificaciones seleccionados usan borde y texto azul con fondo azul suave. Sin leer conserva borde y fondo azul; Leída y Archivada tienen texto secundario, separado de la etiqueta del resultado de comparación.
+
 La ventana de fotos conserva cabecera y pie blancos con texto navy. El lienzo usa navy oscuro `#102536` y el fondo exterior navy al 78%, para separar la foto de la página. Los controles tienen borde visible y foco azul.
 
 Variables semánticas en `globals.css` y colores equivalentes en el tema Tailwind. Fondo cálido, superficies blancas y texto navy. Coral para acciones principales; azul para información, ubicación y foco; verde para encontrado o compatibilidad alta; amarillo para revisión y advertencias. El coral se oscurece respecto de la referencia para mejorar el contraste del texto blanco. Los estados también llevan texto y no dependen solo del color.
@@ -93,6 +103,8 @@ El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Ele
 Las estrellas y la puntuación seleccionada usan coral, con texto accesible que informa de 1 a 5 estrellas. La invitación a reseñar usa fondo azul suave, separado de los mensajes de cierre ya guardado.
 
 ## Spacing and Layout Rhythm
+
+Los filtros de la bandeja usan objetivos de 44 px, padding de 10 × 16 px y separación de 8 px. Las acciones de la barra se separan 16 px y permiten salto de línea. El estado de lectura se separa 12 px del contenido de la alerta.
 
 La ventana de fotos usa 12 × 16 px en cabecera, 10 × 16 px en pie y 20 px entre sus controles. El cierre y las flechas miden 44 px. Las miniaturas tienen un indicador o botón de ampliar de 44 px, separado 6 px de los bordes.
 
@@ -122,6 +134,8 @@ Las tarjetas de la lista reutilizan `DogPhoto` para animales perdidos y `Observa
 
 ## Cards and Content Blocks
 
+Cada alerta muestra el estado de lectura antes del resultado de comparación. Marcar o archivar actualiza la lista y el contador, conserva el resultado del servidor frente a consultas anteriores y muestra una confirmación. Cada vista vacía explica dónde consultar las alertas leídas o archivadas.
+
 La ventana de fotos es un diálogo nativo con radio de 16 px y sombra, colocado en un portal fuera del mapa para evitar recortes y herencia de sus estilos. Admite carga, ausencia de imágenes, indisponibilidad y reintento. El desplazamiento de la página se bloquea hasta el cierre.
 
 Los avistamientos recibidos tienen una etiqueta independiente de la comparación: azul para pendiente o revisión manual, amarillo para no compatible y verde para posible coincidencia. Las decisiones del dueño tienen su propia etiqueta. Los resultados pendientes o incompatibles no se presentan con un porcentaje. Cada tarjeta privada utiliza una foto de 112 px y una fila flexible que se apila según el espacio disponible; la ubicación exacta se abre dentro de la misma página.
@@ -145,6 +159,8 @@ Cada reporte de la lista es un artículo dentro de una lista semántica, con bor
 Los avistamientos y encontrados añaden características informadas, fecha y hora de Uruguay, y un extracto de hasta 280 caracteres limitado a tres líneas en la lista. La tarjeta del mapa muestra la descripción completa. Los círculos de 24 px conservan coral y verde, con un contador para reportes en la misma zona; un grupo mixto combina ambos colores. Cuando coincide un aviso perdido, el círculo aparece a su lado sin modificar las coordenadas públicas.
 
 ## Buttons and CTAs
+
+Notificaciones agrega Abrir alerta, Marcar todas como leídas, Archivar notificación y Restaurar notificación. Archivar es reversible desde su vista propia; los reportes y sus controles de revisión se conservan. Los botones usan los estilos existentes y cambian a Guardando durante su operación.
 
 El icono de ampliar reutiliza el sistema SVG existente. En fotos con navegación previa es un botón separado del enlace; en fotos principales es un indicador dentro del botón que ocupa la imagen. Los botones de anterior y siguiente se deshabilitan al llegar a los extremos de la galería, y el contador comunica la posición también a lectores de pantalla.
 

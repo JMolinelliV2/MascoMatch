@@ -11,7 +11,8 @@ async function proxy(request: NextRequest, context: Context) {
     || (request.method === "GET" && path.length === 1 && uuid.test(path[0]))
     || (request.method === "GET" && path.length === 3 && uuid.test(path[0]) && path[1] === "photos" && uuid.test(path[2]))
     || (request.method === "GET" && path.length === 4 && uuid.test(path[0]) && path[1] === "photos" && uuid.test(path[2]) && path[3] === "large")
-    || (request.method === "PATCH" && path.length === 2 && uuid.test(path[0]) && path[1] === "read");
+    || (request.method === "PATCH" && path.length === 1 && path[0] === "read-all")
+    || (request.method === "PATCH" && path.length === 2 && uuid.test(path[0]) && ["read", "archive", "restore"].includes(path[1]));
   if (!valid) return NextResponse.json({ detail: "Ruta no válida." }, { status: 404 });
   try {
     const query = path.length === 0 ? request.nextUrl.search : "";

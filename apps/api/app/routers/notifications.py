@@ -1,8 +1,9 @@
+from typing import Literal
 from uuid import UUID
 
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import func, select
+from sqlalchemy import case as sql_case, func, select, update
 from sqlalchemy.orm import Session
 
 from app.analysis.service import utcnow
@@ -39,6 +40,7 @@ def serialize(db, row):
     return NotificationRead(
         id=notification.id, kind=notification.kind, title=notification.title, body=notification.body,
         read_at=notification.read_at, created_at=aware(notification.created_at), lost_case_id=case.id,
+        archived_at=notification.archived_at,
         pet_name=pet.name, observed_at=aware(observation.observed_at), public_location=observation.public_location,
         latitude=observation.latitude, longitude=observation.longitude,
         reasons=match.explanation if match else observation.matching_reasons, photo_ids=photos,
@@ -50,23 +52,57 @@ def serialize(db, row):
 
 
 @router.get("", response_model=NotificationList)
-def list_notifications(response: Response, limit: int = Query(default=30, ge=1, le=100), offset: int = Query(default=0, ge=0, le=10000), db: Session = Depends(get_db), user: User = Depends(current_user)):
+def list_notifications(response: Response, limit: int = Query(default=30, ge=1, le=100), offset: int = Query(default=0, ge=0, le=10000), view: Literal["all", "unread", "archived"] = "all", db: Session = Depends(get_db), user: User = Depends(current_user)):
     response.headers["Cache-Control"] = "no-store"
-    query = private_notifications(user)
+    available = private_notifications(user)
+    query = available.where(Notification.archived_at.is_not(None) if view == "archived" else Notification.archived_at.is_(None))
+    if view == "unread":
+        query = query.where(Notification.read_at.is_(None))
     total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
-    unread = db.scalar(select(func.count()).select_from(query.where(Notification.read_at.is_(None)).subquery())) or 0
+    unread = db.scalar(select(func.count()).select_from(available.where(Notification.archived_at.is_(None), Notification.read_at.is_(None)).subquery())) or 0
     rows = list(db.execute(query.order_by(Notification.created_at.desc(), Notification.id.desc()).offset(offset).limit(limit)))
     return NotificationList(items=[serialize(db, row) for row in rows], unread_count=unread, total=total)
+
+
+def cancel_pending_email():
+    return sql_case((Notification.email_status == "PENDING", "CANCELLED"), else_=Notification.email_status)
+
+
+@router.patch("/read-all")
+def mark_all_read(response: Response, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    now = utcnow()
+    identities = private_notifications(user).with_only_columns(Notification.id).where(Notification.archived_at.is_(None), Notification.created_at <= now)
+    result = db.execute(update(Notification).where(Notification.id.in_(identities), Notification.read_at.is_(None)).values(read_at=now, email_status=cancel_pending_email()).execution_options(synchronize_session=False))
+    db.commit()
+    response.headers["Cache-Control"] = "no-store"
+    return {"updated": result.rowcount, "read_at": now}
 
 
 @router.patch("/{notification_id}/read", response_model=NotificationRead)
 def mark_read(notification_id: UUID, response: Response, db: Session = Depends(get_db), user: User = Depends(current_user)):
     response.headers["Cache-Control"] = "no-store"
     row = owned_row(db, notification_id, user)
-    notification = row[0]
-    if notification.read_at is None:
-        notification.read_at = utcnow()
-        db.commit()
+    db.execute(update(Notification).where(Notification.id == row[0].id, Notification.owner_id == user.id).values(read_at=func.coalesce(Notification.read_at, utcnow()), email_status=cancel_pending_email()).execution_options(synchronize_session=False))
+    db.commit()
+    return serialize(db, row)
+
+
+@router.patch("/{notification_id}/archive", response_model=NotificationRead)
+def archive_notification(notification_id: UUID, response: Response, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    row = owned_row(db, notification_id, user)
+    now = utcnow()
+    db.execute(update(Notification).where(Notification.id == row[0].id, Notification.owner_id == user.id).values(archived_at=func.coalesce(Notification.archived_at, now), read_at=func.coalesce(Notification.read_at, now), email_status=cancel_pending_email()).execution_options(synchronize_session=False))
+    db.commit()
+    response.headers["Cache-Control"] = "no-store"
+    return serialize(db, row)
+
+
+@router.patch("/{notification_id}/restore", response_model=NotificationRead)
+def restore_notification(notification_id: UUID, response: Response, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    row = owned_row(db, notification_id, user)
+    db.execute(update(Notification).where(Notification.id == row[0].id, Notification.owner_id == user.id).values(archived_at=None).execution_options(synchronize_session=False))
+    db.commit()
+    response.headers["Cache-Control"] = "no-store"
     return serialize(db, row)
 
 

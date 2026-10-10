@@ -62,19 +62,19 @@ def deliver_pending(session_factory=None):
         return 0
     factory = session_factory or SessionLocal
     with factory() as db:
-        identities = list(db.scalars(select(Notification.id).where(Notification.is_active.is_(True), Notification.email_status == "PENDING", Notification.email_available_at <= utcnow()).order_by(Notification.created_at).limit(10)))
+        identities = list(db.scalars(select(Notification.id).where(Notification.is_active.is_(True), Notification.read_at.is_(None), Notification.archived_at.is_(None), Notification.email_status == "PENDING", Notification.email_available_at <= utcnow()).order_by(Notification.created_at).limit(10)))
     sent = 0
     for identity in identities:
         with factory() as db:
             notification = db.get(Notification, identity)
-            if notification is None or not notification.is_active or notification.email_status != "PENDING" or aware(notification.email_available_at) > utcnow():
+            if notification is None or not notification.is_active or notification.read_at is not None or notification.archived_at is not None or notification.email_status != "PENDING" or aware(notification.email_available_at) > utcnow():
                 continue
             # Match evaluators and delivery both lock the case before related records.
             case = db.scalar(select(LostCase).where(LostCase.id==notification.lost_case_id).with_for_update(skip_locked=True))
             if case is None:
                 continue
             group=list(db.scalars(select(Notification).where(Notification.lost_case_id==case.id,Notification.owner_id==notification.owner_id,
-                Notification.is_active.is_(True),Notification.email_status=="PENDING",Notification.email_available_at<=utcnow()).order_by(Notification.created_at,Notification.id).limit(100).with_for_update()))
+                Notification.is_active.is_(True),Notification.read_at.is_(None),Notification.archived_at.is_(None),Notification.email_status=="PENDING",Notification.email_available_at<=utcnow()).order_by(Notification.created_at,Notification.id).limit(100).with_for_update()))
             if not group:
                 continue
             notification=group[0]

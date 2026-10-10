@@ -56,8 +56,8 @@ def metrics(authorization: str | None = Header(default=None)):
             values["mascomatch_analysis_pending"] = db.scalar(select(func.count()).select_from(AnalysisJob).where(AnalysisJob.status.in_(["PENDING","DISPATCHING","QUEUED","RUNNING"])))
             oldest = db.scalar(select(func.min(AnalysisJob.created_at)).where(AnalysisJob.status.in_(["PENDING","DISPATCHING","QUEUED","RUNNING"])))
             values["mascomatch_analysis_oldest_seconds"] = max(0, (utcnow()-aware(oldest)).total_seconds()) if oldest else 0
-            values["mascomatch_email_failed"] = db.scalar(select(func.count()).select_from(Notification).where(Notification.email_status == "FAILED", Notification.is_active.is_(True)))
-            values["mascomatch_email_pending"] = db.scalar(select(func.count()).select_from(Notification).where(Notification.email_status == "PENDING", Notification.is_active.is_(True)))
+            values["mascomatch_email_failed"] = db.scalar(select(func.count()).select_from(Notification).where(Notification.email_status == "FAILED", Notification.is_active.is_(True), Notification.read_at.is_(None), Notification.archived_at.is_(None)))
+            values["mascomatch_email_pending"] = db.scalar(select(func.count()).select_from(Notification).where(Notification.email_status == "PENDING", Notification.is_active.is_(True), Notification.read_at.is_(None), Notification.archived_at.is_(None)))
             values["mascomatch_account_email_failed"] = db.scalar(select(func.count()).select_from(AccountToken).where(AccountToken.email_status == "FAILED"))
             values["mascomatch_contact_email_failed"] = db.scalar(select(func.count()).select_from(ContactMessage).where(ContactMessage.email_status == "FAILED"))
             values["mascomatch_contact_email_pending"] = db.scalar(select(func.count()).select_from(ContactMessage).where(ContactMessage.email_status == "PENDING"))

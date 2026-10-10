@@ -586,6 +586,14 @@ h1, h2, h3 { color: var(--text-primary); }
   .notifications-account, .notifications-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
   .notifications-account { margin-top: 16px; }
   .notifications-toolbar { margin-top: 24px; border-top: 1px solid var(--border); font-size: 14px; }
+  .notifications-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .notifications-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .notification-filter { min-height: 44px; padding: 10px 16px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text-secondary); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .notification-filter[aria-pressed="true"] { border-color: var(--accent-blue); color: var(--accent-blue); background: var(--accent-blue-soft); }
+  .notification-filter:hover:not(:disabled) { background: var(--accent-blue-soft); }
+  .notification-filter:disabled { opacity: .6; cursor: wait; }
+  .notification-card .notification-read-status { margin: 0 0 12px; color: var(--text-secondary); font-size: 12px; }
+  .notification-unread .notification-read-status { color: var(--accent-blue); font-weight: 700; }
   .notifications-list { display: grid; gap: 20px; }
   .notification-card { border: 1px solid var(--border); border-radius: 16px; padding: 24px; background: var(--surface); }
   .notification-unread { border-color: var(--accent-blue); background: var(--accent-blue-soft); }

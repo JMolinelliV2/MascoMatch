@@ -22,6 +22,7 @@ export function SiteHeader() {
     void load(); window.addEventListener("mascomatch:session", load); window.addEventListener("focus", load);
     return () => { disposed = true; controller?.abort(); window.removeEventListener("mascomatch:session", load); window.removeEventListener("focus", load); };
   }, []);
+  const visiblePrimary = primary.filter(([href]) => href !== "/mis-avisos" || signedIn);
   const active = (href: string) => href !== "/#como-funciona" && (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
   const links = (items: readonly (readonly [string, string])[]) => items.map(([href, label]) => <Link key={href} href={href} aria-current={active(href) ? "page" : undefined}>{label}</Link>);
   return (
@@ -30,11 +31,11 @@ export function SiteHeader() {
       <div className="site-header-inner">
         <Link href="/" className="site-name" aria-label="MascoMatch, inicio"><span className="brand-mark"><Icon name="paw" /></span><span>Masco<span className="brand-accent">Match</span></span></Link>
         <nav className="desktop-navigation" aria-label="Navegación principal">
-          {links(primary)}
+          {links(visiblePrimary)}
           <details className="explore-menu"><summary aria-label="Explorar MascoMatch">Explorar <span aria-hidden="true">⌄</span></summary><div className="explore-links" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(explore)}</div></details>
         </nav>
         <div className="header-tools"><NotificationsLink />{!signedIn && <Link href="/crear-cuenta" className="text-button registration-link" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}<Link href={signedIn ? "/mis-avisos" : "/login"} aria-label={signedIn ? "Ir a mi cuenta" : "Ingresar a mi cuenta"} aria-current={active(signedIn ? "/mis-avisos" : "/login") ? "page" : undefined} className="button button-secondary account-link"><Icon name="user" /><span>{signedIn ? "Mi cuenta" : "Ingresar"}</span></Link></div>
-        <details className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(primary)}{links(explore)}{!signedIn && <Link href="/crear-cuenta" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}</nav></details>
+        <details className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(visiblePrimary)}{links(explore)}{!signedIn && <Link href="/crear-cuenta" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}</nav></details>
       </div>
     </header>
   );

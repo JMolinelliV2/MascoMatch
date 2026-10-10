@@ -8,13 +8,17 @@ Contenedor de 1280 px con márgenes automáticos y 24 px laterales. Portada con 
 
 Cómo funciona ocupa una sección propia, con título visible, introducción y cuatro pasos en una grilla de dos columnas. A 640 px o menos se apila en una columna. La altura mínima en escritorio es 72 vh y el contenido puede crecer; en móvil se usa altura natural.
 
+Apoyanos utiliza el contenedor de 1280 px y una introducción centrada de hasta 780 px. Los cuatro niveles ocupan cuatro columnas, dos a 950 px o menos y una a 640 px o menos. El monto personalizado, el resumen y las acciones se apilan en móvil. El destino de los aportes usa tres columnas en escritorio y una en móvil.
+
 ## Section Order
 
-Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
+Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
+
+Apoyanos: regreso al inicio, presentación, aviso de disponibilidad próxima, frecuencia del aporte, niveles, monto personalizado, resumen, destino de los aportes, preguntas frecuentes y acción para explorar animales perdidos.
 
 ## Navigation
 
-Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`. La ruta activa usa subrayado coral y `aria-current`. En pantallas pequeñas hay un menú nativo desplegable y enlaces de cuenta y notificaciones con nombres accesibles.
+Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`, y agrega Apoyanos. La ruta activa usa subrayado coral y `aria-current`. En pantallas pequeñas hay un menú nativo desplegable y enlaces de cuenta y notificaciones con nombres accesibles.
 
 ## Typography
 
@@ -22,9 +26,13 @@ Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos
 
 El título de Cómo funciona usa 28–36 px, la introducción 16–17 px, los títulos de pasos 20–21 px y su texto principal 15 px. Los detalles complementarios se separan con una línea y usan 13 px.
 
+Apoyanos mantiene los títulos generales, encabezados de sección de 24–28 px y niveles de 21 px. Los importes usan 30 px y peso 800, con frecuencia de 13 px. Las descripciones usan 15 px y los detalles de destino 13 px.
+
 ## Color System
 
 Variables semánticas en `globals.css` y colores equivalentes en el tema Tailwind. Fondo cálido, superficies blancas y texto navy. Coral para acciones principales; azul para información, ubicación y foco; verde para encontrado o compatibilidad alta; amarillo para revisión y advertencias. El coral se oscurece respecto de la referencia para mejorar el contraste del texto blanco. Los estados también llevan texto y no dependen solo del color.
+
+El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Elegido. El resumen usa fondo azul suave. El botón de pagos pendientes es gris y está deshabilitado; no se presenta como una operación en curso.
 
 ## Spacing and Layout Rhythm
 
@@ -32,9 +40,13 @@ Separaciones de 8, 12, 16, 20, 24, 28 y 32 px. Tarjetas con 24–28 px de paddin
 
 Cómo funciona tiene 64 px de separación superior y 72 px inferior en escritorio, tarjetas de al menos 240 px y gaps de 24 px. En móvil el padding vertical es 48 px y los pasos crecen según su contenido, sin recortar texto ni forzar espacio vacío.
 
+Los niveles de apoyo usan gaps de 20 px y padding de 24 px; el resumen, 24–28 px. La sección de destino empieza 64 px después del selector, reducidos a 48 px en móvil. El bloque de apoyo en portada usa padding de 28 px y una separación inferior de 40 px.
+
 ## Image Treatment
 
 La fotografía existente de portada conserva su atribución. Los avisos muestran únicamente fotos reales de la API, con un estado de ausencia cuando no hay foto. Miniaturas cuadradas y fotos de detalle de 4:3. El cargador compartido conserva una foto opcional para reportes generales y hasta cuatro para avistamientos vinculados, con JPEG, PNG y WebP de hasta 10 MB. Incluye selección, arrastre, miniaturas, eliminación y errores; no agrega campos al payload.
+
+Apoyanos reutiliza los iconos SVG de corazón, huella, coincidencias y cuidado del proyecto. No añade imágenes remotas ni fotografías de supuestos reencuentros.
 
 ## Cards and Content Blocks
 
@@ -42,15 +54,21 @@ Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Compo
 
 Los cuatro pasos de Cómo funciona usan iconos existentes, un número visible y dos niveles de explicación. El bloque final de consejos usa fondo azul suave. El contenido distingue confirmar un avistamiento de recuperar al animal y explica el envío breve sin cuenta.
 
+Los niveles de patrocinio son etiquetas de radios nativos: toda la tarjeta permite seleccionar, el teclado conserva el comportamiento del grupo y el foco tiene contorno azul. Nombre, importe, frecuencia y descripción tienen jerarquía propia. Las preguntas frecuentes usan `details` y `summary` nativos. No se muestran cantidades de donantes, metas ni testimonios ficticios.
+
 ## Buttons and CTAs
 
 Acción principal coral, secundaria blanca con borde y terciaria azul con texto. Radios de 10–12 px. En móvil las acciones principales de publicación ocupan el ancho disponible. Todos los controles de cerrar, quitar foto o navegar tienen texto o nombre accesible. Se mantiene el bloqueo de controles durante las operaciones y el feedback de guardado, error y éxito.
 
 El cierre de Cómo funciona enlaza al catálogo con **Ver animales perdidos** y al formulario existente con **Reportar un animal encontrado**. En móvil la acción al catálogo ocupa el ancho disponible.
 
+La portada enlaza a **Conocé cómo apoyar**. En Apoyanos, **Donaciones próximamente** está deshabilitado y acompañado por la explicación de disponibilidad. Elegir un nivel no genera un cobro. La acción final **Ver animales perdidos** permite seguir participando sin aportar dinero.
+
 ## Overall Design Feel
 
 Herramienta clara y cercana, con fotografías como principal elemento emocional. No se agregan ilustraciones decorativas, métricas ficticias ni mensajes de identidad confirmada a partir de una puntuación. La compatibilidad se muestra con contexto y conserva la revisión humana.
+
+La página de apoyo conserva ese estilo simple y presenta la donación como voluntaria. Los importes están identificados como UYU y los niveles no ofrecen prioridad en las búsquedas. El circuito de pagos queda pendiente, documentado en `donations.md`.
 
 ## Preservación de flujos
 
@@ -84,3 +102,7 @@ Las pruebas de componentes comprueban las tres etapas, el contrato de sexo, las 
 - Portada local: avisos reales con y sin foto, revisados en escritorio y móvil. Las fotos compactas quedan dentro de su columna y no se superponen al texto. La instancia temporal de revisión fue retirada al terminar.
 
 La revisión de navegador usó matching por datos declarados. No mide la calidad de identificación por fotos ni confirma entrega de correo real: IA y correo estaban desactivados en esa instancia temporal. El rediseño conserva esos servicios y sus estados de procesamiento.
+
+### Revisión de Apoyanos del 10 de octubre de 2026
+
+TypeScript terminó sin errores y la revisión visual de la página local mostró los cuatro niveles en UYU, la frecuencia, el campo de otro monto, el resumen y el botón de pagos deshabilitado. Se guardó una captura de la página. No se ejecutaron pruebas de flujos ni se enviaron pagos, correos o reportes; esta entrega agrega contenido y selección local al frontend.

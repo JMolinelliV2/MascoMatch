@@ -130,12 +130,81 @@ h1, h2, h3 { color: var(--text-primary); }
   .home-footer { max-width: 1232px; margin: 0 auto; padding: 24px 0; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--text-secondary); }
   .home-footer a:hover { text-decoration: underline; }
   .home-footer a { display: inline-flex; align-items: center; min-height: 44px; }
+  .home-support { display: flex; align-items: center; gap: 24px; width: calc(100% - 48px); max-width: 1232px; margin: 0 auto 40px; padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--primary-soft); }
+  .home-support > div { flex: 1; min-width: 0; }
+  .home-support .eyebrow { margin-bottom: 8px; }
+  .home-support h2 { margin: 0 0 8px; font-size: 24px; font-weight: 700; line-height: 1.3; }
+  .home-support div > p:last-child { margin: 0; color: var(--text-secondary); font-size: 14px; }
+  .home-support > .button { flex-shrink: 0; }
 
   .page { max-width: 800px; margin: 0 auto; padding: 40px 24px 64px; }
   .page h1 { margin: 16px 0 0; font-size: clamp(32px, 4vw, 46px); line-height: 1.15; letter-spacing: -1.2px; font-weight: 800; }
   .page-intro { margin: 12px 0 0; color: var(--text-secondary); font-size: 16px; }
   .back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--text-secondary); font-size: 13px; }
   .back-link:hover { color: var(--accent-blue); }
+  .support-page { max-width: 1280px; }
+  .support-intro { max-width: 780px; margin: 16px auto 48px; text-align: center; }
+  .support-mark { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 20px; color: var(--primary); background: var(--primary-soft); }
+  .support-mark .ui-icon { width: 32px; height: 32px; }
+  .support-intro .eyebrow { margin-bottom: 12px; }
+  .support-intro > p:not(.eyebrow):not(.support-availability) { margin: 20px 0 0; color: var(--text-secondary); font-size: 17px; line-height: 1.7; }
+  .support-intro .support-availability { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0 0; color: var(--text-secondary); font-size: 13px; }
+  .support-availability .ui-icon { width: 17px; height: 17px; }
+  .support-options-heading { text-align: center; }
+  .support-options h2, .support-use h2, .support-faq h2 { margin: 0 0 12px; font-size: 28px; font-weight: 700; line-height: 1.3; }
+  .support-options-heading > p, .support-use > p { margin: 0; color: var(--text-secondary); font-size: 15px; }
+  .support-frequency { margin: 24px auto 28px; text-align: center; }
+  .support-frequency legend { width: 100%; margin-bottom: 10px; font-size: 13px; color: var(--text-secondary); }
+  .support-frequency-options { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+  .support-frequency-options label { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 8px; color: var(--text-secondary); font-size: 14px; cursor: pointer; }
+  .support-frequency-options label.is-selected { color: var(--primary); background: var(--primary-soft); font-weight: 700; }
+  .support-frequency-options label:focus-within, .support-level:focus-within { outline: 3px solid var(--accent-blue); outline-offset: 3px; }
+  .support-frequency input, .support-custom-choice input { width: 18px; height: 18px; flex-shrink: 0; margin: 0; accent-color: var(--primary); }
+  .support-level-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  .support-level { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 24px; border: 2px solid var(--border); border-radius: 16px; background: var(--surface); cursor: pointer; }
+  .support-level:hover { border-color: var(--border-strong); }
+  .support-level.is-selected { border-color: var(--primary); background: var(--primary-soft); }
+  .support-level > input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .support-level-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .support-level-state { display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); font-size: 12px; }
+  .support-level.is-selected .support-level-state { color: var(--primary); font-weight: 700; }
+  .support-level-state .ui-icon { width: 16px; height: 16px; }
+  .support-level-name { font-size: 21px; font-weight: 700; }
+  .support-level-price { margin-top: 12px; font-size: 30px; font-weight: 800; line-height: 1.3; }
+  .support-level-price > span { display: block; margin-top: 4px; color: var(--text-secondary); font-size: 13px; font-weight: 400; }
+  .support-level-description { margin: 20px 0; color: var(--text-secondary); font-size: 15px; line-height: 1.6; }
+  .support-level-focus { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+  .support-custom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); align-items: center; gap: 24px; margin-top: 20px; padding: 20px 24px; border: 2px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .support-custom.is-selected { border-color: var(--primary); background: var(--primary-soft); }
+  .support-custom-choice { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+  .support-custom-choice strong { display: block; font-size: 17px; }
+  .support-custom-choice span > span { display: block; margin-top: 4px; color: var(--text-secondary); font-size: 14px; }
+  .support-custom input:disabled { background: var(--background); color: var(--text-muted); }
+  .support-custom input[type="radio"]:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 3px; }
+  .support-custom input[aria-invalid="true"] + .field-help { color: var(--danger); }
+  .support-selection { display: flex; justify-content: space-between; align-items: center; gap: 32px; margin-top: 24px; padding: 24px 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--accent-blue-soft); }
+  .support-selection .eyebrow { margin-bottom: 8px; }
+  .support-selection-amount { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.3; }
+  .support-selection-amount > span { color: var(--text-secondary); font-size: 14px; font-weight: 400; }
+  .support-payment { max-width: 340px; text-align: center; }
+  .support-payment .button { width: 100%; }
+  .support-payment .button:disabled { opacity: 1; cursor: default; color: var(--text-secondary); background: var(--border); border-color: var(--border); }
+  .support-payment p { margin: 10px 0 0; color: var(--text-secondary); font-size: 13px; }
+  .support-use { margin-top: 64px; }
+  .support-use-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 24px; }
+  .support-use-grid article { padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .support-use-grid h3 { margin: 20px 0 10px; font-size: 19px; font-weight: 700; line-height: 1.3; }
+  .support-use-grid p { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.65; }
+  .support-faq { max-width: 900px; margin: 56px auto; }
+  .support-faq h2 { margin-bottom: 20px; }
+  .support-faq details { border-bottom: 1px solid var(--border); }
+  .support-faq summary { min-height: 52px; padding: 16px 8px; font-size: 15px; font-weight: 600; }
+  .support-faq details p { margin: 0; padding: 0 8px 20px; color: var(--text-secondary); font-size: 14px; line-height: 1.65; }
+  .support-community { display: flex; align-items: center; gap: 24px; padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .support-community > div { flex: 1; min-width: 0; }
+  .support-community h2 { margin: 0 0 8px; font-size: 22px; font-weight: 700; line-height: 1.3; }
+  .support-community p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+  .support-community > .button { flex-shrink: 0; }
   .report-page { max-width: 1280px; }
   .report-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; margin-top: 32px; }
   .report-form { min-width: 0; }
@@ -382,6 +451,9 @@ h1, h2, h3 { color: var(--text-primary); }
     .hero-content h1 { font-size: 46px; }
   }
   @media (max-width: 950px) {
+    .support-level-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .support-community, .home-support { flex-wrap: wrap; }
+    .support-community > div, .home-support > div { flex-basis: calc(100% - 72px); }
     .desktop-navigation { display: none; }
     .mobile-menu { display: block; }
     .mobile-menu > summary { display: flex; align-items: center; gap: 8px; list-style: none; min-height: 44px; font-size: 14px; }
@@ -401,6 +473,27 @@ h1, h2, h3 { color: var(--text-primary); }
     .lost-dogs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 640px) {
+    .home-support { width: calc(100% - 40px); padding: 24px 20px; gap: 16px; margin-bottom: 32px; }
+    .home-support > div { flex-basis: calc(100% - 64px); }
+    .home-support h2 { font-size: 21px; }
+    .home-support > .button { width: 100%; }
+    .support-intro { margin: 16px auto 36px; }
+    .support-intro > p:not(.eyebrow):not(.support-availability) { font-size: 16px; }
+    .support-options h2, .support-use h2, .support-faq h2 { font-size: 24px; }
+    .support-frequency-options { display: flex; }
+    .support-frequency-options label { flex: 1; padding: 10px 8px; font-size: 13px; }
+    .support-level-grid, .support-custom, .support-use-grid { grid-template-columns: 1fr; }
+    .support-level { padding: 24px 20px; }
+    .support-custom { padding: 20px; gap: 16px; }
+    .support-selection { flex-direction: column; align-items: stretch; padding: 24px 20px; gap: 24px; }
+    .support-selection-amount { font-size: 25px; }
+    .support-payment { max-width: none; }
+    .support-use { margin-top: 48px; }
+    .support-faq { margin: 40px auto; }
+    .support-community { padding: 24px 20px; gap: 16px; }
+    .support-community > div { flex-basis: calc(100% - 64px); }
+    .support-community h2 { font-size: 20px; }
+    .support-community > .button { width: 100%; }
     .site-header-inner { padding: 8px 16px; min-height: 68px; gap: 10px; }
     .site-name { font-size: 20px; gap: 6px; }
     .brand-mark { width: 32px; height: 32px; border-radius: 10px; }

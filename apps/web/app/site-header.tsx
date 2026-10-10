@@ -6,7 +6,7 @@ import { NotificationsLink } from "./notifications-link";
 import { Icon } from "./ui/pictogram";
 
 const primary = [["/", "Inicio"], ["/perdi", "Perdí una mascota"], ["/avistamiento", "Vi una mascota"], ["/mis-avisos", "Mis avisos"]] as const;
-const explore = [["/perdidos", "Animales perdidos"], ["/mapa", "Mapa"], ["/encontre", "Encontré una mascota"], ["/#como-funciona", "Cómo funciona"]] as const;
+const explore = [["/perdidos", "Animales perdidos"], ["/mapa", "Mapa"], ["/encontre", "Encontré una mascota"], ["/#como-funciona", "Cómo funciona"], ["/apoyanos", "Apoyanos"]] as const;
 
 export function SiteHeader() {
   const pathname = usePathname();

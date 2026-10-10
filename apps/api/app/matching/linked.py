@@ -196,9 +196,10 @@ def mark_related_pending(db, owner_type, owner_id):
     request_matching(db, owner_type, owner_id)
     identities = related_ids(db, owner_type, owner_id)
     if identities:
-        db.execute(update(Observation).where(Observation.id.in_(identities), Observation.linked_case_id.is_not(None)).values(matching_status="PENDING"))
-        db.execute(update(Match).where(Match.observation_id.in_(identities)).values(explanation=["La comparación está en curso; el avistamiento sigue disponible para revisión"]))
-        db.execute(update(Notification).where(Notification.observation_id.in_(identities)).values(kind="REPORTED_SIGHTING",title="Avistamiento reportado · comparación en curso",body=PENDING_REPORT_BODY))
+        linked_identities = select(Observation.id).where(Observation.id.in_(identities), Observation.linked_case_id.is_not(None))
+        db.execute(update(Observation).where(Observation.id.in_(linked_identities)).values(matching_status="PENDING"))
+        db.execute(update(Match).where(Match.observation_id.in_(linked_identities)).values(explanation=["La comparación está en curso; el avistamiento sigue disponible para revisión"]))
+        db.execute(update(Notification).where(Notification.observation_id.in_(linked_identities)).values(kind="REPORTED_SIGHTING",title="Avistamiento reportado · comparación en curso",body=PENDING_REPORT_BODY))
 
 
 def reconcile_related(owner_type, owner_id, session_factory=None):

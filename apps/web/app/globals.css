@@ -403,6 +403,26 @@ h1, h2, h3 { color: var(--text-primary); }
   .map-legend-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-primary); }
   .map-layer-sighting { background: var(--primary); }
   .map-layer-found { background: var(--success); }
+  .map-report-list { margin-top: 20px; }
+  .map-report-list > summary { min-height: 44px; padding-block: 10px; color: var(--accent-blue); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .map-report-list > summary:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 4px; border-radius: 8px; }
+  .map-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .map-report-grid > li { min-width: 0; }
+  .map-report-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; height: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+  .map-report-photo { display: block; width: 112px; min-width: 0; overflow: hidden; align-self: start; border-radius: 10px; }
+  .map-report-photo .dog-photo { width: 112px; height: 112px; }
+  .map-report-photo .dog-photo-placeholder { padding: 8px; font-size: 11px; text-align: center; }
+  .map-report-photo .dog-photo-placeholder .ui-icon { width: 28px; height: 28px; }
+  .map-report-content { min-width: 0; }
+  .map-report-type { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--accent-blue-soft); color: var(--accent-blue); font-size: 11px; font-weight: 700; }
+  .map-report-sighting .map-report-type { background: var(--primary-soft); color: var(--primary); }
+  .map-report-found .map-report-type { background: var(--success-soft); color: var(--success); }
+  .map-report-content h3 { margin: 8px 0 4px; font-size: 19px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .map-report-content h3 a:hover { text-decoration: underline; }
+  .map-report-content p { margin: 6px 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .map-report-area, .map-report-date { display: flex; align-items: flex-start; gap: 6px; }
+  .map-report-area .ui-icon, .map-report-date .ui-icon { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+  .map-report-content .map-report-action { margin-top: 4px; min-height: 44px; font-size: 13px; }
 
   .lost-dogs-page { max-width: 1280px; }
   .lost-dogs-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
@@ -534,6 +554,7 @@ h1, h2, h3 { color: var(--text-primary); }
     .header-tools { margin-left: auto; }
   }
   @media (max-width: 950px) {
+    .map-report-grid { grid-template-columns: 1fr; }
     .home-reviews-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .support-level-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .support-community, .home-support { flex-wrap: wrap; }
@@ -647,6 +668,10 @@ h1, h2, h3 { color: var(--text-primary); }
     .dog-detail { grid-template-columns: 1fr; padding: 16px; gap: 24px; }
     .location-map { height: 240px; }
     .map-filters { grid-template-columns: 1fr; }
+    .map-report-grid { grid-template-columns: 1fr; }
+    .map-report-card { grid-template-columns: 88px minmax(0, 1fr); gap: 12px; padding: 12px; }
+    .map-report-photo, .map-report-photo .dog-photo { width: 88px; }
+    .map-report-photo .dog-photo { height: 88px; }
     .match-card { grid-template-columns: 1fr; padding: 16px; }
     .dashboard-summary { gap: 12px; }
     .summary-card { padding: 16px 12px; flex-wrap: wrap; gap: 8px; }

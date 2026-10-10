@@ -1,12 +1,12 @@
 "use client";
-import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import type {Map as LeafletMap,LayerGroup} from "leaflet";
 import {addLostMapMarker,lostMapLocations} from "@/lib/lost-map-marker";
-import type {LostMapPoint,LostMapSelection} from "@/lib/lost-map-marker";
+import type {LostMapSelection} from "@/lib/lost-map-marker";
 import {LostLocationPreview} from "../lost-map-preview";
-type Point=LostMapPoint&{layer:"lost"|"sighting"|"found";species:string;area:string|null;when:string;url:string|null};
+import {MapReportCard} from "./map-report-card";
+import type {MapReportPoint as Point} from "./map-report-card";
 const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:8000/api/v1").replace(/\/$/,"");
 const colors={lost:"var(--text-primary)",sighting:"var(--primary)",found:"var(--success)"};
 const layerClasses={lost:"map-layer-lost",sighting:"map-layer-sighting",found:"map-layer-found"};
@@ -56,6 +56,6 @@ export function CommunityMap(){
     <p className="field-help" id="community-map-help">Pasá el mouse sobre una foto o tocala para ver la miniatura del animal perdido y abrir su aviso.</p>
     <div ref={container} className="community-map" role="region" aria-label="Mapa de ubicaciones aproximadas" aria-describedby="community-map-help"/>
     {selection&&createPortal(<LostLocationPreview key={selection.points[0].id} selection={selection} origin="mapa" onRefresh={()=>setRefresh(value=>value+1)}/>,selection.content)}
-    {!busy&&!visible.length&&<p>No hay reportes para estos filtros.</p>}<details><summary>Ver reportes en una lista</summary><ul>{visible.slice(0,100).map(point=><li key={`${point.layer}-${point.id}`}>{point.url?<Link href={noticeFromMap(point.url)}>{point.title}</Link>:point.title} · {labels[point.layer]} · {point.area||"Zona aproximada"}</li>)}</ul>{visible.length>100&&<p>La lista muestra los primeros 100. Ajustá los filtros para ver menos resultados.</p>}</details>
+    {!busy&&!visible.length&&<p>No hay reportes para estos filtros.</p>}<details className="map-report-list"><summary>Ver reportes en una lista</summary><ul className="map-report-grid" aria-label="Reportes en las capas seleccionadas">{visible.slice(0,100).map(point=><li key={`${point.layer}-${point.id}`}><MapReportCard point={point} href={point.url?noticeFromMap(point.url):undefined}/></li>)}</ul>{visible.length>100&&<p>La lista muestra los primeros 100. Ajustá los filtros para ver menos resultados.</p>}</details>
   </>;
 }

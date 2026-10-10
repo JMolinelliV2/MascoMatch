@@ -14,6 +14,8 @@ Las reseñas de portada usan el mismo contenedor, tres columnas en escritorio, d
 
 El mapa de animales perdidos ocupa todo el ancho del bloque de avisos, con lienzo de 420 px en escritorio y 360 px en móvil. El encabezado y el acceso al mapa completo se apilan bajo 640 px. La miniatura del pin tiene 240 px de ancho y altura limitada con desplazamiento interno cuando hace falta.
 
+Debajo del mapa completo, la lista desplegable presenta tarjetas en dos columnas y pasa a una columna bajo 950 px. Cada tarjeta divide miniatura cuadrada y contenido; la foto mide 112 px, reducidos a 88 px bajo 640 px. La zona y la fecha pueden ocupar varias líneas sin desbordar.
+
 ## Section Order
 
 Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
@@ -35,6 +37,8 @@ Explorar y el menú móvil se cierran al pulsar fuera del desplegable, con mouse
 La flecha de Explorar reutiliza el chevron SVG de 16 px, centrado con el texto mediante flex. Apunta abajo al estar cerrado y arriba al estar abierto, siguiendo directamente el atributo nativo `open`, también al cerrar con Escape o pulsar fuera. La rotación dura 180 ms y se desactiva con la preferencia de movimiento reducido.
 
 Los círculos de animales perdidos abren una miniatura al pasar el mouse, tanto en portada como en `/mapa`. El cierre se demora 450 ms al salir para permitir mover el puntero hasta la tarjeta y usar **Ver aviso**. Pulsar el círculo, Enter o Espacio mantiene la tarjeta abierta; en táctil se abre con un toque. El foco tiene contorno azul y el estado se informa con `aria-expanded`. La miniatura muestra foto, nombre, rasgos, localidad y fecha. Las fichas abiertas en portada usan `origen=inicio` y vuelven a `/#mapa-perdidos`; las abiertas desde `/mapa` conservan su regreso a `/mapa`.
+
+La lista conserva `details` y `summary` nativos. La miniatura, el nombre y **Ver aviso** de un animal perdido llevan a su ficha con `origen=mapa`. Las capas, los filtros y el límite de 100 reportes siguen usando los mismos puntos del mapa.
 
 Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda dentro del mismo paso, con foco, fondo azul suave, icono de cámara y acciones Agregar una foto / Continuar sin foto. Mantiene los tres pasos y la publicación opcional sin imagen. El bloque usa padding de 20 px, título de 18 px y texto de 14 px. El recordatorio por correo reutiliza el logo y el botón centrado de los mensajes transaccionales; su enlace abre la carga de fotos del aviso propio en Mis avisos.
 
@@ -76,6 +80,8 @@ Las reseñas usan el corazón existente y estrellas de texto; no añaden avatare
 
 Los marcadores de animales perdidos son círculos de 56 px con foto real recortada mediante `object-fit: cover`, borde blanco de 3 px y anillo coral. Sin foto o ante error se reutiliza la huella de marca. La API informa la presencia de foto en la misma consulta de puntos; el navegador carga la imagen desde el endpoint público que elimina metadatos. No se exponen claves de almacenamiento ni coordenadas precisas.
 
+Las tarjetas de la lista reutilizan `DogPhoto` y su carga diferida para las fotos públicas de animales perdidos. Sin foto o ante error conservan sus estados de ausencia. Avistamientos y encontrados muestran los iconos existentes de ojo y corazón con **Miniatura no disponible**; no se solicitan imágenes privadas ni se publica una ruta nueva de fotos.
+
 ## Cards and Content Blocks
 
 Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Componentes compartidos para stepper, fotos, iconos, tarjetas de animales y compatibilidad. El panel muestra las cantidades disponibles en sus datos; no se inventan nuevos avistamientos, compartidos, historias o recorridos. La foto de un aviso activo respeta el endpoint público y sus restricciones.
@@ -85,6 +91,8 @@ Los cuatro pasos de Cómo funciona usan iconos existentes, un número visible y 
 Los niveles de patrocinio son etiquetas de radios nativos: toda la tarjeta permite seleccionar, el teclado conserva el comportamiento del grupo y el foco tiene contorno azul. Nombre, importe, frecuencia y descripción tienen jerarquía propia. Las preguntas frecuentes usan `details` y `summary` nativos. No se muestran cantidades de donantes, metas ni testimonios ficticios.
 
 Las tarjetas de reseñas son artículos con puntuación, cita y pie de autor/fecha. El formulario opcional tiene cinco radios nativos, nombre público, comentario, contador y consentimiento sin marcar inicialmente. Solo se muestran testimonios persistidos de dueños de avisos retirados.
+
+Cada reporte de la lista es un artículo dentro de una lista semántica, con borde discreto, radio de 14 px, padding de 16 px y gap de 16 px. En móvil se reducen padding y gap a 12 px. El tipo lleva una etiqueta azul, coral o verde con texto; el título usa 19 px y los datos 13 px. La acción **Ver aviso** conserva un objetivo de al menos 44 px.
 
 ## Buttons and CTAs
 
@@ -150,3 +158,7 @@ TypeScript y la sintaxis Python terminaron sin errores. La API inició con la mi
 ### Revisión de círculos con foto del 10 de octubre de 2026
 
 TypeScript y la sintaxis Python terminaron sin errores. La consulta pública del mapa incluye `photo_url` para los avisos perdidos que tienen foto. Se revisaron la portada y el mapa completo con avisos reales: foto circular, huella para ausencia de foto, miniatura y enlace con el origen correspondiente. La tarjeta se abrió con mouse y con Enter; **Ver aviso** abrió la ficha con **Volver al mapa** apuntando a `/mapa`. Se corrigieron el alcance de Tailwind para incluir las clases del helper compartido, la precedencia de los estilos de imagen frente a Leaflet y el manejo del clic dentro de la tarjeta para conservar la navegación. La captura final muestra el círculo y la tarjeta completa. No se ejecutaron pruebas automatizadas ni se modificaron avisos, fotos o cuentas durante la revisión.
+
+### Revisión de miniaturas en la lista del mapa del 10 de octubre de 2026
+
+TypeScript terminó sin errores. Se abrió la lista desplegable de `/mapa` con los reportes existentes y se guardó una captura: muestra tarjetas con foto pública, ausencia de foto, iconos para avistamientos, tipo, especie, localidad y fecha. Los enlaces de los avisos incluyen `origen=mapa`. No se ejecutaron pruebas automatizadas ni se cambiaron fotos, reportes o permisos de acceso; las fotos privadas de observaciones siguen sin publicarse en esta lista.

@@ -5,7 +5,7 @@ import { lostDogsEndpoint } from "@/lib/lost-dogs";
 import type { LostDogNotice } from "@/lib/lost-dogs";
 import { Icon } from "../ui/pictogram";
 
-export function DogPhoto({ dog }: { dog: LostDogNotice }) {
+export function DogPhoto({ dog }: { dog: Pick<LostDogNotice, "id" | "name" | "photo_url"> }) {
   const [failed, setFailed] = useState(false);
   return <div className="dog-photo">
     {dog.photo_url && !failed

@@ -79,7 +79,7 @@ def _add_branded_html(message: EmailMessage, url: str, *, preheader: str, eyebro
               <p style="margin:0 0 12px;font-size:12px;line-height:18px;font-weight:700;letter-spacing:1.4px;color:#0863b4;">{escape(eyebrow)}</p>
               <h1 style="margin:0 0 16px;font-size:28px;line-height:36px;font-weight:700;color:#0b2a4a;">{escape(title)}</h1>
               <p style="margin:0 0 24px;font-size:16px;line-height:26px;color:#52677e;">{escape(description)}</p>
-              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin:0 0 24px;">
+              <table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" style="margin:0 auto 24px;">
                 <tr>
                   <td align="center" bgcolor="#d93646" style="border-radius:10px;">
                     <a href="{safe_url}" style="display:inline-block;padding:14px 24px;border:1px solid #d93646;border-radius:10px;color:#ffffff;text-decoration:none;font-size:16px;line-height:24px;font-weight:700;">{escape(action)}</a>

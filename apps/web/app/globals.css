@@ -62,6 +62,8 @@ h1, h2, h3 { color: var(--text-primary); }
   .desktop-navigation a:hover, .explore-menu summary:hover { color: var(--primary); }
   .explore-menu { position: relative; }
   .explore-menu > summary { list-style: none; gap: 6px; }
+  .explore-menu .explore-chevron { display: block; width: 16px; height: 16px; transform: rotate(90deg); transition: transform .18s ease; }
+  .explore-menu[open] > summary .explore-chevron { transform: rotate(-90deg); }
   .explore-menu > summary::-webkit-details-marker, .mobile-menu > summary::-webkit-details-marker { display: none; }
   .explore-links { position: absolute; z-index: 35; top: 56px; right: 0; min-width: 220px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
   .explore-links a { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 8px; font-size: 14px; }
@@ -617,7 +619,7 @@ h1, h2, h3 { color: var(--text-primary); }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .button { transition: none; }
+    .button, .explore-menu .explore-chevron { transition: none; }
   }
 }
 

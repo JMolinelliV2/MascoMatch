@@ -47,14 +47,6 @@ export default function Home() {
             </li>
           ))}
         </ol>
-        <div className="how-help">
-          <div>
-            <h3>Los detalles hacen la diferencia</h3>
-            <p>Una foto clara, una ubicación ajustada en el mapa y una fecha aproximada ayudan a revisar los reportes. Si el animal está a salvo con vos, usá “Encontré una mascota”.</p>
-            <Link href="/encontre" className="text-button">Reportar un animal encontrado <Icon name="arrow" /></Link>
-          </div>
-          <Link href="/perdidos" className="button button-secondary">Ver animales perdidos <Icon name="arrow" /></Link>
-        </div>
       </section>
       <HomeLostAnimals />
       <HomeReviews />

@@ -406,6 +406,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
               {fieldFeedback("description")}
             </label>
             <PhotoUploader name="photo" inputRef={photoInputRef} files={photoFiles} onFilesChange={files => { setPhoto(files[0] ?? null); setMissingPhotoNotice(false); }} />
+            {kind !== "lost" && <p className="field-help">La descripción y las fotos del animal pueden verse en el mapa público. Tu contacto y la ubicación exacta se mantienen privados.</p>}
           </Section>
 
           <Section title={copy.event} number={2} active={step}>

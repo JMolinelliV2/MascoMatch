@@ -422,6 +422,28 @@ h1, h2, h3 { color: var(--text-primary); }
   .map-report-area, .map-report-date { display: flex; align-items: flex-start; gap: 6px; }
   .map-report-area .ui-icon, .map-report-date .ui-icon { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
   .map-report-content .map-report-action { margin-top: 4px; min-height: 44px; font-size: 13px; }
+  .map-report-photo-button { padding: 0; border: 0; background: none; cursor: pointer; }
+  .map-report-content .map-report-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+  .observation-map-pin { display: grid; place-items: center; border: 0; background: none; }
+  .observation-map-dot { position: absolute; left: 10px; top: 10px; display: block; width: 24px; height: 24px; border: 3px solid var(--surface); border-radius: 50%; background: var(--primary); box-shadow: 0 1px 6px rgb(11 42 74 / 25%); }
+  .observation-map-found .observation-map-dot { background: var(--success); }
+  .observation-map-mixed .observation-map-dot { background: linear-gradient(135deg, var(--primary) 50%, var(--success) 50%); }
+  .observation-map-count { position: absolute; top: -9px; right: -12px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border: 2px solid var(--surface); border-radius: 50%; background: var(--text-primary); color: var(--surface); font-size: 10px; font-weight: 700; }
+  .observation-map-popup .leaflet-popup-content-wrapper { border-radius: 14px; color: var(--text-primary); }
+  .observation-map-popup .leaflet-popup-content { margin: 24px 16px 16px; line-height: 1.5; }
+  .observation-map-popup .leaflet-popup-scrolled { overflow-x: hidden; }
+  .observation-map-popup a.leaflet-popup-close-button { width: 44px; height: 44px; line-height: 44px; border-radius: 0 14px 0 10px; background: var(--surface); color: var(--text-secondary); }
+  .observation-map-popup-content { width: 240px; max-width: 100%; }
+  .observation-map-popup-content > .field-label { margin: 0 0 16px; }
+  .observation-map-preview .dog-photo { height: 144px; margin-bottom: 12px; border-radius: 10px; }
+  .observation-map-popup .observation-map-preview .dog-photo img { width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain; background: var(--background); }
+  .observation-map-preview h3 { margin: 12px 0; font-size: 18px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+  .observation-map-preview h4 { margin: 16px 0 8px; font-size: 14px; font-weight: 700; }
+  .observation-map-popup .observation-map-preview p { margin: 8px 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .observation-map-preview .observation-map-help { color: var(--text-secondary); font-size: 11px; }
+  .observation-map-description { white-space: pre-wrap; }
+  .observation-map-related { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .observation-map-related .text-button { font-size: 13px; }
 
   .lost-dogs-page { max-width: 1280px; }
   .lost-dogs-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; }

@@ -118,11 +118,12 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
             <div><h2>¿Dónde lo viste?</h2><LocationPicker value={location} required onChange={place => { changed(); setLocation(place); setLocationError(""); }} />{locationError && <p role="alert" className="notice notice-error">{locationError}</p>}</div>
             <div>
               <PhotoUploader name="photos" label="Fotos" maxFiles={4} inputRef={fileInput} files={photos} onFilesChange={next => { changed(); setPhotos(next); }} />
+              <p className="field-help">Las fotos del animal pueden verse en el mapa público, junto a una zona aproximada.</p>
             </div>
             <label className="sighting-recent"><input type="checkbox" checked={recent} onChange={event => { changed(); setRecent(event.target.checked); }} />Lo vi recién</label>
             {!recent && <label className="field-label">¿Cuándo lo viste?<input type="datetime-local" value={when} required className="form-input" onChange={event => { changed(); setWhen(event.target.value); }} /><span className="field-help">La fecha y la hora pueden ser aproximadas.</span></label>}
             {error && <p role="alert" className="notice notice-error">{error}</p>}
-            <div className="form-footer"><button type="submit" className="button button-primary">{busy ? "Enviando…" : "Enviar avistamiento"}</button><p className="form-privacy">Podés enviarlo sin crear una cuenta. El lugar y las fotos se compartirán con el dueño si el avistamiento resulta relevante. La identidad del animal siempre está por confirmar.</p></div>
+            <div className="form-footer"><button type="submit" className="button button-primary">{busy ? "Enviando…" : "Enviar avistamiento"}</button><p className="form-privacy">Podés enviarlo sin crear una cuenta. La ubicación exacta se compartirá de forma privada con el dueño si el avistamiento resulta relevante. La identidad del animal siempre está por confirmar.</p></div>
           </fieldset>
         </form>
       </>}

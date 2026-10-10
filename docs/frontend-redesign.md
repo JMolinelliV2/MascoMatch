@@ -22,6 +22,8 @@ El mapa de animales perdidos ocupa todo el ancho del bloque de avisos, con lienz
 
 Debajo del mapa completo, la lista desplegable presenta tarjetas en dos columnas y pasa a una columna bajo 950 px. Cada tarjeta divide miniatura cuadrada y contenido; la foto mide 112 px, reducidos a 88 px bajo 640 px. La zona y la fecha pueden ocupar varias líneas sin desbordar.
 
+Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro del mapa. Su altura visible se limita al alto del mapa y permite desplazamiento para la descripción completa. Los reportes que comparten una zona se eligen desde un selector en la misma tarjeta.
+
 ## Section Order
 
 Contacto presenta regreso al inicio, título e introducción, formulario y dirección de correo alternativa. Los campos aparecen en el orden nombre, correo, tipo de consulta y mensaje; siguen una explicación de privacidad y Enviar mensaje. Al recibir la solicitud, la confirmación reemplaza el formulario y permite escribir otra.
@@ -53,6 +55,8 @@ La flecha de Explorar reutiliza el chevron SVG de 16 px, centrado con el texto m
 Los círculos de animales perdidos abren una miniatura al pasar el mouse, tanto en portada como en `/mapa`. El cierre se demora 450 ms al salir para permitir mover el puntero hasta la tarjeta y usar **Ver aviso**. Pulsar el círculo, Enter o Espacio mantiene la tarjeta abierta; en táctil se abre con un toque. El foco tiene contorno azul y el estado se informa con `aria-expanded`. La miniatura muestra foto, nombre, rasgos, localidad y fecha. Las fichas abiertas en portada usan `origen=inicio` y vuelven a `/#mapa-perdidos`; las abiertas desde `/mapa` conservan su regreso a `/mapa`.
 
 La lista conserva `details` y `summary` nativos. La miniatura, el nombre y **Ver aviso** de un animal perdido llevan a su ficha con `origen=mapa`. Las capas, los filtros y el límite de 100 reportes siguen usando los mismos puntos del mapa.
+
+En avistamientos y encontrados, la foto y **Ver detalles en el mapa** centran el punto y abren el reporte elegido. Los puntos tienen un área de interacción de 44 px y admiten Enter y Espacio. Escape cierra la tarjeta y devuelve el foco. Un aviso relacionado solo enlaza si está activo y visible, conserva `origen=mapa` y aclara que no confirma la identidad.
 
 Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda dentro del mismo paso, con foco, fondo azul suave, icono de cámara y acciones Agregar una foto / Continuar sin foto. Mantiene los tres pasos y la publicación opcional sin imagen. El bloque usa padding de 20 px, título de 18 px y texto de 14 px. El recordatorio por correo reutiliza el logo y el botón centrado de los mensajes transaccionales; su enlace abre la carga de fotos del aviso propio en Mis avisos.
 
@@ -98,7 +102,7 @@ Las reseñas usan el corazón existente y estrellas de texto; no añaden avatare
 
 Los marcadores de animales perdidos son círculos de 56 px con foto real recortada mediante `object-fit: cover`, borde blanco de 3 px y anillo coral. Sin foto o ante error se reutiliza la huella de marca. La API informa la presencia de foto en la misma consulta de puntos; el navegador carga la imagen desde el endpoint público que elimina metadatos. No se exponen claves de almacenamiento ni coordenadas precisas.
 
-Las tarjetas de la lista reutilizan `DogPhoto` y su carga diferida para las fotos públicas de animales perdidos. Sin foto o ante error conservan sus estados de ausencia. Avistamientos y encontrados muestran los iconos existentes de ojo y corazón con **Miniatura no disponible**; no se solicitan imágenes privadas ni se publica una ruta nueva de fotos.
+Las tarjetas de la lista reutilizan `DogPhoto` para animales perdidos y `ObservationPhoto` para fotos propias de avistamientos y encontrados. Las miniaturas se cargan de forma diferida desde endpoints públicos que procesan las imágenes y eliminan metadatos; no se entregan claves ni URLs firmadas del almacenamiento. Sin foto usan ojo o corazón y **Sin foto**, y ante error **Foto no disponible**. En la tarjeta del mapa la foto mide 144 px de alto y usa `object-fit: contain` para ver el animal completo.
 
 ## Cards and Content Blocks
 
@@ -117,6 +121,8 @@ Los niveles de patrocinio son etiquetas de radios nativos: toda la tarjeta permi
 Las tarjetas de reseñas son artículos con puntuación, cita y pie de autor/fecha. El formulario opcional tiene cinco radios nativos, nombre público, comentario, contador y consentimiento sin marcar inicialmente. Solo se muestran testimonios persistidos de dueños de avisos retirados.
 
 Cada reporte de la lista es un artículo dentro de una lista semántica, con borde discreto, radio de 14 px, padding de 16 px y gap de 16 px. En móvil se reducen padding y gap a 12 px. El tipo lleva una etiqueta azul, coral o verde con texto; el título usa 19 px y los datos 13 px. La acción **Ver aviso** conserva un objetivo de al menos 44 px.
+
+Los avistamientos y encontrados añaden características informadas, fecha y hora de Uruguay, y un extracto de hasta 280 caracteres limitado a tres líneas en la lista. La tarjeta del mapa muestra la descripción completa. Los círculos de 24 px conservan coral y verde, con un contador para reportes en la misma zona; un grupo mixto combina ambos colores. Cuando coincide un aviso perdido, el círculo aparece a su lado sin modificar las coordenadas públicas.
 
 ## Buttons and CTAs
 
@@ -212,3 +218,7 @@ TypeScript terminó sin errores. La vista sin sesión mostró el título y el fo
 ### Contacto del 10 de octubre de 2026
 
 TypeScript y la sintaxis Python terminaron sin errores. La API inició con la migración `0017_contact_messages`, el correo SMTP habilitado y cero mensajes de contacto. La revisión visual de la página mostró los campos de nombre, correo, tipo y mensaje dentro de la tarjeta centrada, sin desbordamiento horizontal en escritorio. La navegación incluye el acceso desde Explorar y el pie del inicio. No se ejecutaron pruebas automatizadas ni se enviaron mensajes de contacto de prueba.
+
+### Detalles y fotos de avistamientos del 10 de octubre de 2026
+
+TypeScript y la sintaxis Python terminaron sin errores. La consulta del mapa mostró los dos avisos perdidos y tres avistamientos existentes, dos con foto propia. La foto pública respondió como JPEG y el detalle no incluyó datos de contacto ni coordenadas. La lista mostró ambas miniaturas y el estado sin foto; abrir el reporte del caniche mostró su foto, características, zona, fecha y hora de Uruguay, y descripción. No hubo desbordamiento horizontal en escritorio. No se ejecutaron pruebas automatizadas ni se publicaron reportes o fotos de muestra, se modificaron cuentas o enviaron correos.

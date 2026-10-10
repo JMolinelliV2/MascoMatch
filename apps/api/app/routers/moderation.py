@@ -5,7 +5,7 @@ from pydantic import BaseModel,ConfigDict,Field
 from sqlalchemy import select
 from app.db.session import get_db
 from app.dependencies import current_user,optional_user
-from app.models import AdminAudit,LostCase,ModerationReport,Observation,Pet,User,Notification,AnalysisJob,Match,Photo
+from app.models import AdminAudit,CaseReview,LostCase,ModerationReport,Observation,Pet,User,Notification,AnalysisJob,Match,Photo
 from app.matching.linked import mark_related_pending
 router=APIRouter(tags=["moderation"])
 
@@ -95,17 +95,18 @@ def review(report_id:UUID,payload:ReviewInput,db=Depends(get_db),user=Depends(ad
 def overview(response:Response,db=Depends(get_db),user=Depends(admin)):
     from sqlalchemy import func
     response.headers["Cache-Control"]="no-store"
-    counts={model.__tablename__:db.scalar(select(func.count()).select_from(model)) for model in (User,Pet,LostCase,Observation,Match,ModerationReport)}
+    counts={model.__tablename__:db.scalar(select(func.count()).select_from(model)) for model in (User,Pet,LostCase,Observation,Match,ModerationReport,CaseReview)}
     failures=[{"id":job.id,"source":job.source_type,"error_code":job.error_code,"finished_at":job.finished_at} for job in db.scalars(select(AnalysisJob).where(AnalysisJob.status=="FAILED").order_by(AnalysisJob.finished_at.desc()).limit(50))]
     audits=[{"action":item.action,"target_type":item.target_type,"target_id":item.target_id,"created_at":item.created_at} for item in db.scalars(select(AdminAudit).order_by(AdminAudit.created_at.desc()).limit(50))]
     return {"counts":counts,"ai_failures":failures,"audit":audits}
 
 
 @router.get("/admin/records/{kind}")
-def records(kind:Literal["users","pets","lost_cases","observations","matches"],response:Response,limit:int=Query(default=50,ge=1,le=100),offset:int=Query(default=0,ge=0,le=10000),db=Depends(get_db),user=Depends(admin)):
+def records(kind:Literal["users","pets","lost_cases","observations","matches","reviews"],response:Response,limit:int=Query(default=50,ge=1,le=100),offset:int=Query(default=0,ge=0,le=10000),db=Depends(get_db),user=Depends(admin)):
     config={"users":(User,["id","name","status","role"]),"pets":(Pet,["id","name","species","owner_id"]),
         "lost_cases":(LostCase,["id","status","moderation_status","description","pet_id"]),"observations":(Observation,["id","source_type","moderation_status","description","author_id"]),
-        "matches":(Match,["id","status","lost_case_id","observation_id","final_score","explanation"])}
+        "matches":(Match,["id","status","lost_case_id","observation_id","final_score","explanation"]),
+        "reviews":(CaseReview,["id","display_name","rating","comment","visibility","created_at"])}
     model,fields=config[kind]
     response.headers["Cache-Control"]="no-store"
     return {"items":[{field:getattr(item,field) for field in fields} for item in db.scalars(select(model).order_by(model.created_at.desc()).offset(offset).limit(limit))]}

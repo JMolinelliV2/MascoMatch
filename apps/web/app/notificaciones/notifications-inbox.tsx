@@ -9,6 +9,7 @@ import type { FeedbackSaved } from "../match-feedback";
 
 import { VerifyEmailNotice } from "../verify-email-notice";
 import { useSessionRefresh } from "../use-session-refresh";
+import { ReviewRequest } from "../review-request";
 type User = { email_verified?: boolean; email_verification_required?: boolean; id: string; name: string; email: string; notification_preferences: { email?: boolean } };
 type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; created_at: string; lost_case_id: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; reporter_contact:string|null };
 type Inbox = { items: Notice[]; unread_count: number; total: number };
@@ -28,8 +29,9 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
   const [marking, setMarking] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [selectedReviewed, setSelectedReviewed] = useState(false);
+  const [reviewCaseId, setReviewCaseId] = useState<string | null>(null);
 
-  useEffect(() => { setSelectedReviewed(false); setFeedbackMessage(""); }, [selectedId, user?.id]);
+  useEffect(() => { setSelectedReviewed(false); setFeedbackMessage(""); setReviewCaseId(null); }, [selectedId, user?.id]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,6 +68,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
   }, [user?.id, refresh, offset, selectedId, selectedReviewed]);
 
   function feedbackSaved(noticeId: string, result: FeedbackSaved) {
+    if (result.recovered) setReviewCaseId(result.caseId);
     setFeedbackMessage(result.recovered ? "Tu mascota quedó marcada como encontrada. La búsqueda está cerrada y el aviso ya no aparece entre los animales perdidos."
       : result.status === "RESOLVED" ? "Confirmaste el avistamiento. La búsqueda sigue activa hasta que recuperes a tu mascota."
       : result.status === "FALSE_MATCH" ? "Descartaste esta coincidencia. Tu búsqueda sigue activa." : "Guardaste el avistamiento como posible coincidencia. Tu búsqueda sigue activa.");
@@ -147,6 +150,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       {selectedId && <Link href="/notificaciones" className="text-button">Ver todas las notificaciones</Link>}
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
       {feedbackMessage && <div className="notice" role="status"><p>{feedbackMessage}</p><Link className="text-button" href="/mis-avisos">Ver el estado en Mis avisos</Link></div>}
+      {reviewCaseId && <ReviewRequest key={reviewCaseId} caseId={reviewCaseId} recovered />}
       {inbox?.total === 0 && !selectedReviewed && <div className="lost-dogs-empty"><h2>Sin avistamientos pendientes</h2><p>Los nuevos avisos aparecerán acá cuando alguien reporte un avistamiento compatible con una búsqueda activa.</p></div>}
       {inbox && <div className="notifications-list">{inbox.items.map(notice => <article key={notice.id} className={`notification-card ${notice.read_at ? "" : "notification-unread"}`}>
         <span className="lost-status">{notice.match_status === "RESOLVED" ? "Avistamiento confirmado · búsqueda activa" : notice.kind === "POSSIBLE_MATCH" ? "Posible coincidencia" : notice.photo_ids.length ? "Con fotos · por confirmar" : "Sin foto · por confirmar"}</span>

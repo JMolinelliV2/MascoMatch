@@ -8,7 +8,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.observability import ObservabilityMiddleware
-from app.routers import analysis, auth, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, operations, pets, photos, public_lost_dogs, upload_admission
+from app.routers import analysis, auth, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, operations, pets, photos, public_lost_dogs, reviews, upload_admission
 
 
 @asynccontextmanager
@@ -62,6 +62,7 @@ app.include_router(matches.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(map.router, prefix="/api/v1")
 app.include_router(moderation.router, prefix="/api/v1")
+app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(operations.router)
 app.include_router(upload_admission.router)
 

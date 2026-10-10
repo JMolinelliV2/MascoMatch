@@ -10,15 +10,21 @@ Cómo funciona ocupa una sección propia, con título visible, introducción y c
 
 Apoyanos utiliza el contenedor de 1280 px y una introducción centrada de hasta 780 px. Los cuatro niveles ocupan cuatro columnas, dos a 950 px o menos y una a 640 px o menos. El monto personalizado, el resumen y las acciones se apilan en móvil. El destino de los aportes usa tres columnas en escritorio y una en móvil.
 
+Las reseñas de portada usan el mismo contenedor, tres columnas en escritorio, dos bajo 950 px y una bajo 640 px. Sin reseñas visibles el componente devuelve `null`, por lo que no agrega espacio ni encabezado vacío.
+
 ## Section Order
 
 Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
 
 Apoyanos: regreso al inicio, presentación, aviso de disponibilidad próxima, frecuencia del aporte, niveles, monto personalizado, resumen, destino de los aportes, preguntas frecuentes y acción para explorar animales perdidos.
 
+La portada incorpora las reseñas después de los avisos y el acceso al mapa, antes de Apoyanos. En Mis avisos y Notificaciones, la invitación aparece después de guardar el cierre o la recuperación del animal y se mantiene separada del estado de la búsqueda.
+
 ## Navigation
 
 Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`, y agrega Apoyanos. La ruta activa usa subrayado coral y `aria-current`. En pantallas pequeñas hay un menú nativo desplegable y enlaces de cuenta y notificaciones con nombres accesibles.
+
+La reseña se escribe dentro de Mis avisos o de la pantalla de la notificación de recuperación, sin cambiar de página. El autor vuelve a ella desde Mis avisos para retirarla; administración agrega la categoría Reseñas a los registros existentes.
 
 ## Typography
 
@@ -28,11 +34,15 @@ El título de Cómo funciona usa 28–36 px, la introducción 16–17 px, los t�
 
 Apoyanos mantiene los títulos generales, encabezados de sección de 24–28 px y niveles de 21 px. Los importes usan 30 px y peso 800, con frecuencia de 13 px. Las descripciones usan 15 px y los detalles de destino 13 px.
 
+Las reseñas usan texto principal de 15 px con interlineado 1,7, nombre público de 14 px y fecha de 12 px. El formulario tiene título de 18 px y campos de 14–16 px. Los comentarios completos conservan saltos de línea y permiten cortar palabras largas para evitar desbordamientos.
+
 ## Color System
 
 Variables semánticas en `globals.css` y colores equivalentes en el tema Tailwind. Fondo cálido, superficies blancas y texto navy. Coral para acciones principales; azul para información, ubicación y foco; verde para encontrado o compatibilidad alta; amarillo para revisión y advertencias. El coral se oscurece respecto de la referencia para mejorar el contraste del texto blanco. Los estados también llevan texto y no dependen solo del color.
 
 El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Elegido. El resumen usa fondo azul suave. El botón de pagos pendientes es gris y está deshabilitado; no se presenta como una operación en curso.
+
+Las estrellas y la puntuación seleccionada usan coral, con texto accesible que informa de 1 a 5 estrellas. La invitación a reseñar usa fondo azul suave, separado de los mensajes de cierre ya guardado.
 
 ## Spacing and Layout Rhythm
 
@@ -42,11 +52,15 @@ Cómo funciona tiene 64 px de separación superior y 72 px inferior en escritori
 
 Los niveles de apoyo usan gaps de 20 px y padding de 24 px; el resumen, 24–28 px. La sección de destino empieza 64 px después del selector, reducidos a 48 px en móvil. El bloque de apoyo en portada usa padding de 28 px y una separación inferior de 40 px.
 
+La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducido a 20 px en móvil. La invitación tiene margen superior de 24 px y padding de 20 px. Puntuaciones y acciones conservan objetivos táctiles de 48 px.
+
 ## Image Treatment
 
 La fotografía existente de portada conserva su atribución. Los avisos muestran únicamente fotos reales de la API, con un estado de ausencia cuando no hay foto. Miniaturas cuadradas y fotos de detalle de 4:3. El cargador compartido conserva una foto opcional para reportes generales y hasta cuatro para avistamientos vinculados, con JPEG, PNG y WebP de hasta 10 MB. Incluye selección, arrastre, miniaturas, eliminación y errores; no agrega campos al payload.
 
 Apoyanos reutiliza los iconos SVG de corazón, huella, coincidencias y cuidado del proyecto. No añade imágenes remotas ni fotografías de supuestos reencuentros.
+
+Las reseñas usan el corazón existente y estrellas de texto; no añaden avatares, fotografías ni imágenes del aviso. El nombre público elegido se muestra independientemente de la identidad privada de la cuenta.
 
 ## Cards and Content Blocks
 
@@ -56,6 +70,8 @@ Los cuatro pasos de Cómo funciona usan iconos existentes, un número visible y 
 
 Los niveles de patrocinio son etiquetas de radios nativos: toda la tarjeta permite seleccionar, el teclado conserva el comportamiento del grupo y el foco tiene contorno azul. Nombre, importe, frecuencia y descripción tienen jerarquía propia. Las preguntas frecuentes usan `details` y `summary` nativos. No se muestran cantidades de donantes, metas ni testimonios ficticios.
 
+Las tarjetas de reseñas son artículos con puntuación, cita y pie de autor/fecha. El formulario opcional tiene cinco radios nativos, nombre público, comentario, contador y consentimiento sin marcar inicialmente. Solo se muestran testimonios persistidos de dueños de avisos retirados.
+
 ## Buttons and CTAs
 
 Acción principal coral, secundaria blanca con borde y terciaria azul con texto. Radios de 10–12 px. En móvil las acciones principales de publicación ocupan el ancho disponible. Todos los controles de cerrar, quitar foto o navegar tienen texto o nombre accesible. Se mantiene el bloqueo de controles durante las operaciones y el feedback de guardado, error y éxito.
@@ -64,11 +80,15 @@ El cierre de Cómo funciona enlaza al catálogo con **Ver animales perdidos** y 
 
 La portada enlaza a **Conocé cómo apoyar**. En Apoyanos, **Donaciones próximamente** está deshabilitado y acompañado por la explicación de disponibilidad. Elegir un nivel no genera un cobro. La acción final **Ver animales perdidos** permite seguir participando sin aportar dinero.
 
+La invitación ofrece **Escribir una reseña** y **Ahora no**. El formulario ofrece **Publicar reseña** y **Cancelar**. El cierre del aviso no depende de estas acciones. Una reseña guardada muestra **Retirar mi reseña de la portada**.
+
 ## Overall Design Feel
 
 Herramienta clara y cercana, con fotografías como principal elemento emocional. No se agregan ilustraciones decorativas, métricas ficticias ni mensajes de identidad confirmada a partir de una puntuación. La compatibilidad se muestra con contexto y conserva la revisión humana.
 
 La página de apoyo conserva ese estilo simple y presenta la donación como voluntaria. Los importes están identificados como UYU y los niveles no ofrecen prioridad en las búsquedas. El circuito de pagos queda pendiente, documentado en `donations.md`.
+
+Las reseñas describen experiencias de búsqueda, sin asumir que un cierre implica reencuentro ni atribuir una recuperación a MascoMatch. Incluyen puntuaciones de todo el rango y admiten apodos o anonimato.
 
 ## Preservación de flujos
 
@@ -106,3 +126,7 @@ La revisión de navegador usó matching por datos declarados. No mide la calidad
 ### Revisión de Apoyanos del 10 de octubre de 2026
 
 TypeScript terminó sin errores y la revisión visual de la página local mostró los cuatro niveles en UYU, la frecuencia, el campo de otro monto, el resumen y el botón de pagos deshabilitado. Se guardó una captura de la página. No se ejecutaron pruebas de flujos ni se enviaron pagos, correos o reportes; esta entrega agrega contenido y selección local al frontend.
+
+### Revisión de reseñas del 10 de octubre de 2026
+
+TypeScript y la sintaxis Python terminaron sin errores. La API inició con la migración `0014_case_reviews` aplicada y la consulta pública devolvió cero reseñas. La portada local se revisó en lectura y se guardó una captura: no muestra la sección de reseñas ni un espacio reservado. No se ejecutaron pruebas automatizadas ni se publicaron reseñas de muestra, se cerraron avisos o se enviaron correos para esta revisión. Los flujos autenticados de escritura quedan implementados sin haber modificado datos de usuarios durante la revisión.

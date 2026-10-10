@@ -213,6 +213,12 @@ La página pública `/apoyanos` se abre desde **Explorar → Apoyanos** y desde 
 
 La selección es una vista previa en el navegador; no se guarda como donación ni inicia un cobro. El botón **Donaciones próximamente** permanece deshabilitado hasta integrar los pagos. Publicar avisos y reportar avistamientos sigue siendo gratuito. [Alcance y configuración de los aportes](docs/donations.md).
 
+## Reseñas de la comunidad
+
+Al cerrar un aviso de pérdida o marcar a la mascota como encontrada, se ofrece dejar una reseña opcional. También se solicita después de **Ya la recuperé** desde una notificación. El aviso se actualiza antes de pedirla; no es necesario escribir una reseña para cerrar la búsqueda.
+
+La portada muestra hasta seis reseñas recientes con puntuación, comentario y nombre público elegido, o **Anónimo** si se deja vacío. Cuando no hay reseñas visibles, la sección no se renderiza. Se requiere ser dueño del aviso y tener correo confirmado, se admite una reseña por aviso y se solicita autorización explícita para publicarla. El autor puede retirarla desde Mis avisos; administración permite ocultar o restaurar reseñas que el autor no haya retirado. [Flujo y alcance](docs/community-reviews.md).
+
 ## Animales publicados como perdidos
 
 Desde una ficha, **Publicar un avistamiento** abre un formulario vinculado que pide ubicación y fotos opcionales, con hora actual o fecha aproximada. Se puede enviar sin crear una cuenta. El dueño recibe una alerta privada de posible avistamiento, con mapa y fotos, y puede habilitar correo SMTP. La comparación usa características de las fotos, fecha y zona; los reportes sin foto o inconclusos se identifican como por confirmar. [Implementación, pruebas y configuración de Brevo Free](docs/linked-sightings.md).

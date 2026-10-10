@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, Uuid, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, Uuid, UniqueConstraint, func
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -218,6 +218,22 @@ class Match(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(32), default="NEW", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
     feedback_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class CaseReview(TimestampMixin, Base):
+    __tablename__ = "case_reviews"
+    __table_args__ = (
+        UniqueConstraint("lost_case_id", name="uq_case_review_case"),
+        CheckConstraint("rating >= 1 AND rating <= 5", name="ck_case_review_rating"),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    lost_case_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("lost_cases.id", ondelete="CASCADE"), nullable=False)
+    author_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[str] = mapped_column(String(800), nullable=False)
+    visibility: Mapped[str] = mapped_column(String(24), default="VISIBLE", server_default="VISIBLE", nullable=False)
+    consent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class ModerationReport(TimestampMixin, Base):

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "./ui/pictogram";
 import { HomeLostAnimals } from "./home-lost-animals";
+import { HomeReviews } from "./home-reviews";
 
 const steps = [
   { title: "Publicá una mascota perdida", description: "Contanos cómo es, dónde y cuándo la viste por última vez. Podés agregar una foto y los rasgos que ayuden a reconocerla.", detail: "Creá una cuenta y confirmá tu correo para publicar y gestionar tu aviso.", icon: "paw" as const, tone: "feature-icon-0" },
@@ -56,6 +57,7 @@ export default function Home() {
         </div>
       </section>
       <HomeLostAnimals />
+      <HomeReviews />
       <section className="home-support" aria-labelledby="home-support-title"><span className="feature-icon"><Icon name="heart" /></span><div><p className="eyebrow">Apoyo voluntario</p><h2 id="home-support-title">Ayudá a sostener MascoMatch</h2><p>Conocé los niveles de patrocinio y cómo los aportes pueden acompañar las búsquedas de la comunidad.</p></div><Link href="/apoyanos" className="button button-secondary">Conocé cómo apoyar <Icon name="arrow" /></Link></section>
       <footer className="home-footer">
         <span>MascoMatch · Información que ayuda a volver a casa.</span>

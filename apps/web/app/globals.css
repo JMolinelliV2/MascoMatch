@@ -307,8 +307,8 @@ h1, h2, h3 { color: var(--text-primary); }
   .notification-login h2 { font-size: 23px; font-weight: 700; margin: 0 0 6px; }
   .notification-login fieldset { margin-top: 24px; }
   .account-page { max-width: 640px; }
-  .account-registration { max-width: none; }
-  .account-registration fieldset { margin-top: 0; }
+  .account-form { max-width: none; }
+  .account-form fieldset { margin-top: 0; }
   .notifications-account, .notifications-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
   .notifications-account { margin-top: 16px; }
   .notifications-toolbar { margin-top: 24px; border-top: 1px solid var(--border); font-size: 14px; }

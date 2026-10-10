@@ -26,6 +26,8 @@ Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en 
 
 La reseña se escribe dentro de Mis avisos o de la pantalla de la notificación de recuperación, sin cambiar de página. El autor vuelve a ella desde Mis avisos para retirarla; administración agrega la categoría Reseñas a los registros existentes.
 
+Explorar y el menú móvil se cierran al pulsar fuera del desplegable, con mouse, toque o lápiz, y al presionar Escape. Si el foco estaba dentro, Escape lo devuelve al botón que abre el menú. Las pulsaciones dentro conservan el menú abierto, salvo al seleccionar un enlace o volver a pulsar el botón de apertura.
+
 ## Typography
 
 Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos de página de 32–46 px y peso 800; portada de hasta 58 px; secciones de 22–26 px; tarjetas de 18–22 px; texto de 14–16 px y ayudas de 12–13 px. El contenido largo permite salto de línea.

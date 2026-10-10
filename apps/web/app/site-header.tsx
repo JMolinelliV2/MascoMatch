@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NotificationsLink } from "./notifications-link";
 import { Icon } from "./ui/pictogram";
 
@@ -11,6 +11,34 @@ const explore = [["/perdidos", "Animales perdidos"], ["/mapa", "Mapa"], ["/encon
 export function SiteHeader() {
   const pathname = usePathname();
   const [signedIn, setSignedIn] = useState(false);
+  const exploreMenu = useRef<HTMLDetailsElement>(null);
+  const mobileMenu = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const menus = [exploreMenu, mobileMenu];
+    function dismissOutside(event: PointerEvent) {
+      if (!(event.target instanceof Node)) return;
+      for (const ref of menus) {
+        const menu = ref.current;
+        if (menu?.open && !menu.contains(event.target)) menu.open = false;
+      }
+    }
+    function dismissEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      for (const ref of menus) {
+        const menu = ref.current;
+        if (!menu?.open) continue;
+        const focusedInside = menu.contains(document.activeElement);
+        menu.open = false;
+        if (focusedInside) { menu.querySelector("summary")?.focus(); event.preventDefault(); }
+      }
+    }
+    document.addEventListener("pointerdown", dismissOutside, true);
+    document.addEventListener("keydown", dismissEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside, true);
+      document.removeEventListener("keydown", dismissEscape);
+    };
+  }, []);
   useEffect(() => {
     let disposed = false;
     let controller: AbortController | undefined;
@@ -32,10 +60,10 @@ export function SiteHeader() {
         <Link href="/" className="site-name" aria-label="MascoMatch, inicio"><span className="brand-mark"><Icon name="paw" /></span><span>Masco<span className="brand-accent">Match</span></span></Link>
         <nav className="desktop-navigation" aria-label="Navegación principal">
           {links(visiblePrimary)}
-          <details className="explore-menu"><summary aria-label="Explorar MascoMatch">Explorar <span aria-hidden="true">⌄</span></summary><div className="explore-links" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(explore)}</div></details>
+          <details ref={exploreMenu} className="explore-menu"><summary aria-label="Explorar MascoMatch">Explorar <span aria-hidden="true">⌄</span></summary><div className="explore-links" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(explore)}</div></details>
         </nav>
         <div className="header-tools">{signedIn && <NotificationsLink />}{!signedIn && <Link href="/crear-cuenta" className="text-button registration-link" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}<Link href={signedIn ? "/mis-avisos" : "/login"} aria-label={signedIn ? "Ir a mi cuenta" : "Ingresar a mi cuenta"} aria-current={active(signedIn ? "/mis-avisos" : "/login") ? "page" : undefined} className="button button-secondary account-link"><Icon name="user" /><span>{signedIn ? "Mi cuenta" : "Ingresar"}</span></Link></div>
-        <details className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(visiblePrimary)}{links(explore)}{!signedIn && <Link href="/crear-cuenta" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}</nav></details>
+        <details ref={mobileMenu} className="mobile-menu"><summary><Icon name="menu" />Menú</summary><nav aria-label="Navegación móvil" onClick={event => { if ((event.target as Element).closest("a")) event.currentTarget.closest("details")?.removeAttribute("open"); }}>{links(visiblePrimary)}{links(explore)}{!signedIn && <Link href="/crear-cuenta" aria-current={active("/crear-cuenta") ? "page" : undefined}>Crear cuenta</Link>}</nav></details>
         <Link href="/apoyanos" className="button support-link" aria-current={active("/apoyanos") ? "page" : undefined}><Icon name="heart" />Apoyanos</Link>
       </div>
     </header>

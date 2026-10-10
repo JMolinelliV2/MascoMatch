@@ -326,6 +326,13 @@ class MatchRead(ORMModel):
 class MatchFeedback(BaseModel):
     model_config = ConfigDict(extra="forbid")
     status: Literal["CONFIRMED_RELEVANT", "FALSE_MATCH", "RESOLVED"]
+    recovered: bool = Field(default=False, strict=True)
+
+    @model_validator(mode="after")
+    def recovered_match(self):
+        if self.recovered and self.status != "RESOLVED":
+            raise ValueError("Recuperar la mascota requiere confirmar la coincidencia.")
+        return self
 
 
 class CaseEdit(BaseModel):

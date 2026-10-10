@@ -13,6 +13,12 @@ export function DogDetail({ id, fromMap = false }: { id: string; fromMap?: boole
   const [missing, setMissing] = useState(false);
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
+    const reload = () => setRefresh(value => value + 1);
+    window.addEventListener("focus", reload);
+    window.addEventListener("mascomatch:cases", reload);
+    return () => { window.removeEventListener("focus", reload); window.removeEventListener("mascomatch:cases", reload); };
+  }, []);
+  useEffect(() => {
     const controller = new AbortController();
     setError(""); setMissing(false); setDog(null);
     void fetch(`${lostDogsEndpoint}/${encodeURIComponent(id)}`, { signal: controller.signal, cache: "no-store" }).then(async response => {

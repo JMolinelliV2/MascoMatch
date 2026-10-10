@@ -317,6 +317,10 @@ h1, h2, h3 { color: var(--text-primary); }
   .notification-photos { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
   .notification-photos img { width: 160px; max-width: 100%; height: 160px; object-fit: contain; background: var(--accent-blue-soft); border-radius: 10px; }
   .notification-card .location-map-section { margin-top: 12px; }
+  .match-feedback { margin-top: 20px; }
+  .match-feedback h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+  .match-recovery { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 18px; }
+  .match-recovery .button { margin-top: 12px; }
   .notifications-page > .notice { margin-top: 20px; }
   .match-card { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 20px; padding: 20px; border: 1px solid var(--border); border-radius: 14px; margin-block: 16px; background: var(--surface); text-align: left; }
   .match-card img, .match-card .dog-photo { width: 110px; height: 110px; object-fit: cover; border-radius: 10px; }

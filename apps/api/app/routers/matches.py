@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import select
+from sqlalchemy import select, update
 from app.analysis.service import utcnow, is_current, schedule_owner
 from app.core.config import settings
 from app.db.session import get_db
@@ -39,13 +39,29 @@ def case_matches(case_id: UUID, response: Response, db=Depends(get_db), user=Dep
 
 @router.patch("/matches/{match_id}/feedback", response_model=MatchRead)
 def feedback(match_id: UUID, payload: MatchFeedback, response: Response, db=Depends(get_db), user=Depends(current_user)):
-    match = db.scalar(select(Match).join(LostCase, Match.lost_case_id == LostCase.id).join(Pet, LostCase.pet_id == Pet.id).where(Match.id == match_id, Pet.owner_id == user.id).with_for_update())
+    # Lock the owned case before its matches, as notification delivery does.
+    case = db.scalar(select(LostCase).join(Match, Match.lost_case_id == LostCase.id).join(Pet, LostCase.pet_id == Pet.id).where(Match.id == match_id, Pet.owner_id == user.id).with_for_update(of=LostCase))
+    if case is None:
+        raise HTTPException(status_code=404, detail="Coincidencia no encontrada.")
+    match = db.scalar(select(Match).where(Match.id == match_id, Match.lost_case_id == case.id).with_for_update())
     if match is None:
         raise HTTPException(status_code=404, detail="Coincidencia no encontrada.")
+    if payload.recovered and case.status not in {"ACTIVE", "FOUND"}:
+        raise HTTPException(status_code=409, detail="La búsqueda ya está cerrada. Revisá el estado en Mis avisos.")
     match.status, match.feedback_at = payload.status, utcnow()
-    if payload.status in {"FALSE_MATCH", "RESOLVED"}:
+    if payload.recovered:
+        case.status = "FOUND"
+        db.execute(update(Match).where(Match.lost_case_id == case.id).values(is_active=False))
+        db.execute(update(Notification).where(Notification.lost_case_id == case.id).values(is_active=False))
+        db.execute(update(Notification).where(Notification.lost_case_id == case.id, Notification.email_status == "PENDING").values(email_status="CANCELLED"))
+    elif payload.status == "FALSE_MATCH":
         for notification in db.scalars(select(Notification).where(Notification.match_id == match.id)):
             notification.is_active = False
+    elif payload.status == "RESOLVED":
+        for notification in db.scalars(select(Notification).where(Notification.match_id == match.id)):
+            notification.read_at = notification.read_at or utcnow()
+            if notification.email_status == "PENDING":
+                notification.email_status = "CANCELLED"
     db.commit()
     response.headers["Cache-Control"] = "no-store"
     return match

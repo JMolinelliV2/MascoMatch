@@ -10,12 +10,14 @@ from app.dependencies import current_user, verified_user
 from app.models import Observation, User
 from app.schemas import ObservationCreate, ObservationRead, ObservationUpdate
 from app.matching.linked import mark_related_pending
+from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/observations", tags=["observations"])
 
 
 @router.post("", response_model=ObservationRead, status_code=status.HTTP_201_CREATED)
 def create_observation(payload: ObservationCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     observation = Observation(author_id=user.id, **payload.model_dump())
     db.add(observation)
     db.flush()
@@ -42,6 +44,7 @@ def get_observation(observation_id: UUID, db: Session = Depends(get_db)):
 
 @router.patch("/{observation_id}", response_model=ObservationRead)
 def update_observation(observation_id: UUID, payload: ObservationUpdate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     observation = db.get(Observation, observation_id)
     if observation is None or observation.author_id != user.id:
         raise HTTPException(status_code=404, detail="Observation not found")
@@ -57,6 +60,7 @@ def update_observation(observation_id: UUID, payload: ObservationUpdate, db: Ses
 
 @router.delete("/{observation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_observation(observation_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    user=lock_active_user(db,user)
     observation = db.get(Observation, observation_id)
     if observation is None or observation.author_id != user.id:
         raise HTTPException(status_code=404, detail="Observation not found")

@@ -5,7 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Literal
 import re
 
 from app.core.security import create_access_token, decode_token_claims, hash_password, verify_password, password_needs_upgrade
@@ -14,7 +15,7 @@ from app.core.login_limit import check_login_budget
 from app.analysis.service import utcnow
 from app.db.session import get_db
 from app.dependencies import current_user, oauth2_scheme
-from app.models import User, AuthSession, Notification
+from app.models import User, AuthSession, Notification, AccountToken
 from app.schemas import LoginRequest, NotificationPreferences, RegisterRequest, TokenResponse, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -104,12 +105,25 @@ def request_verification(db=Depends(get_db),user=Depends(current_user)):
 def verify_email(payload:VerificationCode,db=Depends(get_db)):
     from app.account_mail import consume_token
     user=consume_token(db,payload.code,"VERIFY_EMAIL")
+    email_changed=False
+    if user is None:
+        user=consume_token(db,payload.code,"CHANGE_EMAIL")
+        email_changed=user is not None
     if user is None:
         raise HTTPException(status_code=400,detail="El enlace venció o ya fue usado. Pedí uno nuevo.")
-    user.email_verified_at=utcnow()
-    db.execute(update(Notification).where(Notification.owner_id==user.id,Notification.email_status=="PENDING").values(email_available_at=utcnow()))
-    db.commit()
-    return {"ok":True}
+    try:
+        user.email_verified_at=utcnow()
+        if email_changed:
+            user.email=user.pending_email
+            user.pending_email=None
+            db.execute(update(AccountToken).where(AccountToken.user_id==user.id,AccountToken.consumed_at.is_(None)).values(consumed_at=utcnow(),email_status="CANCELLED"))
+            db.execute(update(AuthSession).where(AuthSession.user_id==user.id,AuthSession.revoked_at.is_(None)).values(revoked_at=utcnow()))
+        db.execute(update(Notification).where(Notification.owner_id==user.id,Notification.email_status=="PENDING").values(email_available_at=utcnow()))
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Ese correo ya está en uso. Elegí otro desde Mi cuenta.") from exc
+    return {"ok":True,"email_changed":email_changed}
 
 
 @router.post("/password-reset")
@@ -142,6 +156,87 @@ def reset_password(payload:ResetPassword,db=Depends(get_db)):
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(current_user)):
     return user
+
+
+class ContactUpdate(BaseModel):
+    model_config=ConfigDict(extra="forbid")
+    name: str=Field(min_length=1,max_length=120)
+    phone: str | None=Field(default=None,max_length=32)
+    email: str=Field(min_length=5,max_length=320)
+    password: str | None=Field(default=None,max_length=128)
+
+
+class AccountDelete(BaseModel):
+    model_config=ConfigDict(extra="forbid")
+    password: str=Field(min_length=1,max_length=128)
+    confirmation: Literal["ELIMINAR"]
+
+
+def confirm_password(user, password):
+    check_login_budget(user.email)
+    if not password or not verify_password(password,user.password_hash):
+        raise HTTPException(400,"La contraseña actual no es correcta.")
+
+
+def require_token_budget(db,user,kind):
+    from app.account_mail import issue_token
+    wait=issue_token(db,user,kind)
+    if wait:
+        raise HTTPException(429,"Esperá antes de pedir otro enlace.",headers={"Retry-After":str(wait)})
+
+
+@router.patch("/contact",response_model=UserRead)
+def update_contact(payload:ContactUpdate,db=Depends(get_db),user=Depends(current_user),token=Depends(oauth2_scheme)):
+    from app.account_management import lock_account
+    user=lock_account(db,user,token)
+    email=payload.email.strip().lower()
+    name=payload.name.strip()
+    if not name or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",email):
+        raise HTTPException(422,"Revisá el nombre y el correo electrónico.")
+    if email!=user.email:
+        confirm_password(user,payload.password)
+        if db.scalar(select(User.id).where(User.email==email,User.id!=user.id)):
+            raise HTTPException(409,"Ese correo ya está en uso.")
+        require_account_mail()
+        user.pending_email=email
+        require_token_budget(db,user,"CHANGE_EMAIL")
+    user.name=name
+    user.phone=(payload.phone or "").strip() or None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.post("/contact/email/resend")
+def resend_email_change(db=Depends(get_db),user=Depends(current_user),token=Depends(oauth2_scheme)):
+    from app.account_management import lock_account
+    user=lock_account(db,user,token)
+    if not user.pending_email:
+        raise HTTPException(409,"No hay un cambio de correo pendiente.")
+    require_account_mail()
+    require_token_budget(db,user,"CHANGE_EMAIL")
+    db.commit()
+    return {"ok":True}
+
+
+@router.post("/contact/email/cancel",response_model=UserRead)
+def cancel_email_change(db=Depends(get_db),user=Depends(current_user),token=Depends(oauth2_scheme)):
+    from app.account_management import lock_account
+    user=lock_account(db,user,token)
+    user.pending_email=None
+    db.execute(update(AccountToken).where(AccountToken.user_id==user.id,AccountToken.kind=="CHANGE_EMAIL",AccountToken.consumed_at.is_(None)).values(consumed_at=utcnow(),email_status="CANCELLED"))
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.delete("/me",status_code=204)
+def remove_account(payload:AccountDelete,db=Depends(get_db),user=Depends(current_user),token=Depends(oauth2_scheme)):
+    from app.account_management import lock_account,delete_account
+    user=lock_account(db,user,token)
+    confirm_password(user,payload.password)
+    delete_account(db,user)
+    return Response(status_code=204)
 
 
 @router.patch("/notification-preferences", response_model=UserRead)

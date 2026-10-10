@@ -18,6 +18,7 @@ class User(TimestampMixin, Base):
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
+    pending_email: Mapped[str | None] = mapped_column(String(320))
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(32))
     name: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -47,6 +48,7 @@ class AccountToken(Base):
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     kind: Mapped[str] = mapped_column(String(24), nullable=False)
+    destination_email: Mapped[str | None] = mapped_column(String(320))
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     encrypted_token: Mapped[str] = mapped_column(String(512), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -105,6 +107,14 @@ class PhotoReminder(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PhotoDeletion(Base):
+    __tablename__ = "photo_deletions"
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    storage_key: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
 class Observation(TimestampMixin, Base):
@@ -261,7 +271,7 @@ class ModerationReport(TimestampMixin, Base):
 class AdminAudit(TimestampMixin, Base):
     __tablename__="admin_audit"
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True),primary_key=True,default=uuid4)
-    actor_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True),ForeignKey("users.id",ondelete="RESTRICT"),nullable=False)
+    actor_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True),ForeignKey("users.id",ondelete="SET NULL"))
     action: Mapped[str] = mapped_column(String(40),nullable=False)
     target_type: Mapped[str] = mapped_column(String(24),nullable=False)
     target_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True),nullable=False)

@@ -4,7 +4,7 @@ import Link from "next/link";
 import {VerifyEmailNotice} from "./verify-email-notice";
 import {useSessionRefresh} from "./use-session-refresh";
 import type {FormEvent,ReactNode} from "react";
-export type SessionUser={id:string;name:string;email?:string;role?:string;email_verified?:boolean;email_verification_required?:boolean};
+export type SessionUser={id:string;name:string;email?:string;phone?:string|null;pending_email?:string|null;role?:string;email_verified?:boolean;email_verification_required?:boolean};
 export function AccountSession({children}:{children:(user:SessionUser)=>ReactNode}) {
   const sessionVersion=useSessionRefresh();
   const [user,setUser]=useState<SessionUser|null>(null);

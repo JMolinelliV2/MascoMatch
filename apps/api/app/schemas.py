@@ -27,6 +27,7 @@ class LoginRequest(BaseModel):
 class UserRead(ORMModel):
     id: UUID
     email: str
+    pending_email: str | None = None
     name: str
     phone: str | None
     notification_preferences: dict

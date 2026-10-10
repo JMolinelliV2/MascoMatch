@@ -23,7 +23,7 @@ export default function Home() {
             <Link href="/perdi" className="button button-primary hero-primary"><Icon name="paw" />Perdí una mascota <Icon name="chevron" /></Link>
             <Link href="/avistamiento" className="button button-secondary"><Icon name="eye" />Vi una mascota</Link>
           </div>
-          <Link href="/encontre" className="text-button hero-found"><Icon name="heart" />¿Está con vos? Reportá un animal encontrado <Icon name="arrow" /></Link>
+          <Link href="/encontre" className="text-button hero-found"><Icon name="heart" />¿Encontraste una mascota? Reportá un animal encontrado <Icon name="arrow" /></Link>
           <p className="hero-note"><Icon name="shield" />Perros, gatos y otros animales. Fotos opcionales.</p>
         </div>
         <div className="hero-photo">

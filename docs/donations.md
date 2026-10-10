@@ -17,7 +17,7 @@ Son importes sugeridos en pesos uruguayos, editables en ese archivo. No represen
 
 La selección, la frecuencia y el monto personalizado viven únicamente en el estado del componente. No hay solicitudes de cobro, almacenamiento de preferencias, datos bancarios ni registro de donantes. El botón de pago está deshabilitado y la página comunica que los aportes estarán disponibles próximamente.
 
-Los niveles explican áreas que el apoyo puede acompañar: alojamiento, fotos, reportes, correos, herramientas, respaldos y mantenimiento. No asignan presupuestos, premios ni privilegios de búsqueda. La publicación de avisos y los avistamientos siguen siendo gratuitos.
+Los niveles explican áreas que el apoyo puede acompañar: alojamiento, fotos, reportes, correos, procesamiento de fotos y descripciones mediante IA, herramientas, respaldos y mantenimiento. Las propuestas de coincidencias requieren revisión humana. No asignan presupuestos, premios ni privilegios de búsqueda. La publicación de avisos y los avistamientos siguen siendo gratuitos.
 
 ## Integración pendiente
 

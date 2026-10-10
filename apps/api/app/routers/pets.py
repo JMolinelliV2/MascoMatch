@@ -10,12 +10,14 @@ from app.dependencies import current_user, verified_user
 from app.models import Pet, User
 from app.schemas import PetCreate, PetRead, PetUpdate
 from app.matching.linked import mark_related_pending
+from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
 
 @router.post("", response_model=PetRead, status_code=status.HTTP_201_CREATED)
 def create_pet(payload: PetCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     pet = Pet(owner_id=user.id, **payload.model_dump())
     db.add(pet)
     db.commit()
@@ -42,6 +44,7 @@ def get_pet(pet_id: UUID, db: Session = Depends(get_db), user: User = Depends(cu
 
 @router.patch("/{pet_id}", response_model=PetRead)
 def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     pet = owned_pet(db, pet_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(pet, field, value)
@@ -56,6 +59,7 @@ def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), 
 
 @router.delete("/{pet_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_pet(pet_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    user=lock_active_user(db,user)
     pet = owned_pet(db, pet_id, user)
     if pet.lost_cases:
         raise HTTPException(status_code=409, detail="A pet with lost-case history cannot be deleted")

@@ -16,6 +16,7 @@ from app.dependencies import optional_user
 from app.matching.linked import aware, evaluate_sighting
 from app.models import LostCase, Notification, Observation, Photo, User
 from app.schemas import LinkedSightingRead
+from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/public/lost-animals", tags=["linked-sightings"])
 
@@ -38,6 +39,8 @@ def create_linked_sighting(
     db: Session = Depends(get_db),
     user: User | None = Depends(optional_user),
 ):
+    if user:
+        user=lock_active_user(db,user)
     case = db.scalar(select(LostCase).where(LostCase.id == case_id, LostCase.status == "ACTIVE").with_for_update())
     if case is None:
         raise HTTPException(status_code=404, detail="El aviso ya no está activo.")

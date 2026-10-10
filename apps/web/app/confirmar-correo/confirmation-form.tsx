@@ -14,6 +14,7 @@ export function ConfirmationForm() {
   const [refresh, setRefresh] = useState(0);
   const [busy, setBusy] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [emailChanged, setEmailChanged] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -42,6 +43,8 @@ export function ConfirmationForm() {
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "No pudimos confirmar el correo. Intentá de nuevo.");
       setConfirmed(true);
+      setEmailChanged(Boolean(data.email_changed));
+      if (data.email_changed) setUser(null);
       window.history.replaceState(null, "", "/confirmar-correo");
       window.dispatchEvent(new Event("mascomatch:session"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos confirmar tu correo. Intentá de nuevo."); }
@@ -49,9 +52,9 @@ export function ConfirmationForm() {
   }
 
   if (confirmed || (!code && user?.email_verified)) return <section className="notification-login account-form">
-    <h2>{confirmed ? "Tu correo quedó confirmado" : "Tu correo ya está confirmado"}</h2>
-    <p role="status">Ya podés publicar avisos desde tu cuenta y recibir alertas por correo.</p>
-    <div className="location-actions"><Link href={user?.email_verified ? "/mis-avisos" : "/login"} className="button button-primary">{user?.email_verified ? "Ir a mi cuenta" : "Ingresar"}</Link><Link href="/perdi" className="text-button">Publicar una mascota perdida</Link></div>
+    <h2>{emailChanged ? "Tu correo quedó actualizado" : confirmed ? "Tu correo quedó confirmado" : "Tu correo ya está confirmado"}</h2>
+    <p role="status">{emailChanged ? "Ingresá con tu nuevo correo y tu contraseña habitual. Las sesiones anteriores se cerraron." : "Ya podés publicar avisos desde tu cuenta y recibir alertas por correo."}</p>
+    <div className="location-actions"><Link href={!emailChanged && user?.email_verified ? "/mi-cuenta" : "/login"} className="button button-primary">{!emailChanged && user?.email_verified ? "Ir a mi cuenta" : "Ingresar"}</Link>{!emailChanged && <Link href="/perdi" className="text-button">Publicar una mascota perdida</Link>}</div>
     <p className="field-help">Si tenés un formulario abierto en otra pestaña, volvé a él. Tus datos siguen ahí.</p>
   </section>;
 
@@ -64,6 +67,6 @@ export function ConfirmationForm() {
 
   if (checking) return <p role="status">Consultando tu cuenta…</p>;
   if (sessionError) return <div className="notice notice-warning" role="alert"><p>{sessionError}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
-  if (user) return <section className="notification-login account-form"><VerifyEmailNotice email={user.email} showInstructions={false} /><Link href="/mis-avisos" className="text-button">Ir a mi cuenta</Link></section>;
+  if (user) return <section className="notification-login account-form"><VerifyEmailNotice email={user.email} showInstructions={false} /><Link href="/mi-cuenta" className="text-button">Ir a mi cuenta</Link></section>;
   return <section className="notification-login account-form"><h2>Abrí el enlace de tu correo</h2><p>Buscá el mensaje de MascoMatch y tocá “Confirmar mi correo”. Si necesitás otro enlace, ingresá a tu cuenta para reenviarlo.</p><div className="location-actions"><Link href="/login" className="button button-primary">Ingresar</Link><Link href="/crear-cuenta" className="text-button">Crear cuenta</Link></div></section>;
 }

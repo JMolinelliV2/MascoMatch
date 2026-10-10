@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { SessionUser } from "../account-session";
@@ -8,6 +9,7 @@ import { useSessionRefresh } from "../use-session-refresh";
 
 export function RegistrationForm() {
   const sessionVersion = useSessionRefresh();
+  const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checking, setChecking] = useState(true);
   const [sessionUnavailable, setSessionUnavailable] = useState(false);
@@ -28,6 +30,10 @@ export function RegistrationForm() {
     }).finally(() => { if (!controller.signal.aborted) setChecking(false); });
     return () => controller.abort();
   }, [refresh, sessionVersion]);
+
+  useEffect(() => {
+    if (user && !created) router.replace(user.email_verified ? "/mis-avisos" : "/confirmar-correo");
+  }, [user, created, router]);
 
   async function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,11 +76,12 @@ export function RegistrationForm() {
 
   if (checking) return <p role="status">Consultando tu sesión…</p>;
   if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
+  if (user && !created) return <p role="status">Abriendo tu cuenta…</p>;
   if (user) return <section className="notification-login account-form">
-    <h2>{created ? "Tu cuenta está creada" : "Ya tenés una sesión iniciada"}</h2>
-    <p role={created ? "status" : undefined}>{created ? user.email_verified ? "Ya podés publicar desde tu cuenta." : "Ahora confirmá tu correo para empezar a publicar. Recibirás un mensaje con el enlace." : `Estás usando la cuenta de ${user.name}.`}</p>
+    <h2>Tu cuenta está creada</h2>
+    <p role="status">{user.email_verified ? "Ya podés publicar desde tu cuenta." : "Ahora confirmá tu correo para empezar a publicar. Recibirás un mensaje con el enlace."}</p>
     {user.email_verification_required && !user.email_verified && <VerifyEmailNotice email={user.email} />}
-    <div className="location-actions"><Link href={user.email_verified ? "/mis-avisos" : "/confirmar-correo"} className="button button-primary">{user.email_verified ? "Ir a mi cuenta" : "Confirmar mi correo"}</Link><Link href="/perdidos" className="text-button">Ver animales perdidos</Link></div>
+    <div className="location-actions"><Link href={user.email_verified ? "/mi-cuenta" : "/confirmar-correo"} className="button button-primary">{user.email_verified ? "Ir a mi cuenta" : "Confirmar mi correo"}</Link><Link href="/perdidos" className="text-button">Ver animales perdidos</Link></div>
     <button type="button" className="text-button" disabled={busy} onClick={() => void logout()}>{busy ? "Cerrando sesión…" : "Cerrar sesión"}</button>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}
   </section>;

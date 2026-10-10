@@ -11,6 +11,7 @@ from app.models import LostCase, Pet, User
 from app.schemas import LostCaseCreate, LostCaseRead, LostCaseUpdate
 from app.matching.linked import mark_related_pending
 from app.photo_reminders import schedule_reminder
+from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/lost-cases", tags=["lost-cases"])
 
@@ -24,6 +25,7 @@ def owned_case(db: Session, case_id: UUID, user: User) -> LostCase:
 
 @router.post("", response_model=LostCaseRead, status_code=status.HTTP_201_CREATED)
 def create_lost_case(payload: LostCaseCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     pet = db.scalar(select(Pet).where(Pet.id == payload.pet_id, Pet.owner_id == user.id))
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
@@ -51,6 +53,7 @@ def get_lost_case(case_id: UUID, db: Session = Depends(get_db), user: User = Dep
 
 @router.patch("/{case_id}", response_model=LostCaseRead)
 def update_lost_case(case_id: UUID, payload: LostCaseUpdate, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    user=lock_active_user(db,user)
     case = owned_case(db, case_id, user)
     changes = payload.model_dump(exclude_unset=True)
     # Owners can retire an existing notice while their email confirmation is pending.
@@ -68,6 +71,7 @@ def update_lost_case(case_id: UUID, payload: LostCaseUpdate, db: Session = Depen
 
 @router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_lost_case(case_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    user=lock_active_user(db,user)
     case = owned_case(db, case_id, user)
     purge_owner(db, "lost_case", case_id)
     db.delete(case)

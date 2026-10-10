@@ -482,6 +482,17 @@ h1, h2, h3 { color: var(--text-primary); }
   .account-page { max-width: 640px; }
   .account-form { max-width: none; }
   .account-form fieldset { margin-top: 0; }
+  .account-recovery > p:last-child { margin-top: 24px; text-align: center; }
+  .account-settings > form { margin-top: 24px; }
+  .account-settings > .text-button { display: inline-block; margin-top: 24px; }
+  .account-pending { margin-top: 24px; overflow-wrap: anywhere; }
+  .account-pending h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
+  .account-danger { margin-top: 32px; padding: 24px clamp(16px, 4vw, 28px); border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .account-danger summary { min-height: 44px; display: list-item; cursor: pointer; color: var(--accent); font-weight: 700; }
+  .account-danger h2 { margin: 16px 0 12px; font-size: 22px; font-weight: 700; }
+  .account-danger p { margin: 12px 0; font-size: 14px; line-height: 1.7; }
+  .account-danger form { margin-top: 24px; }
+  .account-danger .button { white-space: normal; }
   .account-confirmation .button { margin-top: 20px; }
   .account-confirmation .notice { margin-top: 16px; }
   .email-verification-notice { background: var(--accent-blue-soft); border-color: var(--border-strong); }

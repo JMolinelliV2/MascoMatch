@@ -45,6 +45,22 @@ def add_email_verification_content(message: EmailMessage, url: str) -> None:
         footer="Si no creaste una cuenta ni pediste este enlace, podés ignorar este correo.")
 
 
+def add_email_change_content(message: EmailMessage, url: str) -> None:
+    message.set_content("Confirmá tu nuevo correo en MascoMatch\n\n"
+        "Pediste usar esta dirección para tu cuenta. Confirmá el cambio:\n\n"
+        f"{url}\n\nEl enlace es de un solo uso y vence a las 24 horas. "
+        "Tu correo actual seguirá funcionando hasta que confirmes el cambio. "
+        "Después tendrás que ingresar de nuevo con esta dirección.\n\n"
+        "Si no pediste este cambio, ignorá el mensaje.\n\nMascoMatch")
+    _add_branded_html(message, url,
+        preheader="Confirmá la nueva dirección de tu cuenta.",
+        eyebrow="CAMBIO DE CORREO", title="Confirmá tu nuevo correo",
+        description="Pediste usar esta dirección en MascoMatch. Tu correo actual seguirá funcionando hasta que confirmes el cambio. Después tendrás que ingresar de nuevo con esta dirección.",
+        action="Confirmar nuevo correo", expiry_title="Tenés 24 horas",
+        expiry_text="Este enlace vence a las 24 horas y se puede usar una sola vez.",
+        footer="Si no pediste este cambio, podés ignorar el mensaje. Tu dirección actual seguirá siendo la misma.")
+
+
 def add_photo_reminder_content(message: EmailMessage, pet_name: str, url: str, preferences_url: str) -> None:
     message.set_content(
         "Una foto puede ayudar a encontrar a tu mascota\n\n"

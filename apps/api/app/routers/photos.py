@@ -14,6 +14,7 @@ from app.schemas import PhotoCreate, PhotoRead, PhotoUpdate, PhotoUploadRead
 from app.services.access import owner_has_access
 from app.matching.linked import mark_related_pending
 from app.photo_reminders import lock_photo_cases
+from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/photos", tags=["photos"])
 
@@ -27,6 +28,7 @@ def owned_photo(db: Session, photo_id: UUID, user: User) -> Photo:
 
 @router.post("", response_model=PhotoRead, status_code=status.HTTP_201_CREATED)
 def create_photo_metadata(payload: PhotoCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     if not owner_has_access(payload.owner_type, payload.owner_id, db, user):
         raise HTTPException(status_code=404, detail="Photo owner not found")
     expected_prefix = f"{payload.owner_type}/{payload.owner_id}/"
@@ -51,6 +53,7 @@ def upload_photo(
     db: Session = Depends(get_db),
     user: User = Depends(verified_user),
 ):
+    user=lock_active_user(db,user)
     if not owner_has_access(owner_type, owner_id, db, user):
         raise HTTPException(status_code=404, detail="Photo owner not found")
     mime_type = file.content_type or ""
@@ -102,6 +105,7 @@ def list_photo_metadata(
 
 @router.patch("/{photo_id}", response_model=PhotoRead)
 def update_photo_metadata(photo_id: UUID, payload: PhotoUpdate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
+    user=lock_active_user(db,user)
     photo = owned_photo(db, photo_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(photo, field, value)
@@ -118,6 +122,7 @@ def get_photo_url(photo_id: UUID, db: Session = Depends(get_db), user: User = De
 
 @router.delete("/{photo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_photo_metadata(photo_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    user=lock_active_user(db,user)
     photo = owned_photo(db, photo_id, user)
     delete_private_image(photo.storage_key)
     purge_photo(db, photo_id)

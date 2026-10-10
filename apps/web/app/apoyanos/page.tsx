@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Apoyanos — MascoMatch", descriptio
 
 const uses = [
   { title: "Una plataforma disponible", description: "Alojamiento de la web, almacenamiento de fotos y mantenimiento de los reportes.", icon: "paw" as const },
-  { title: "Alertas y herramientas", description: "Envío de correos y mejoras en las coincidencias, el mapa y la revisión de avistamientos.", icon: "bell" as const },
+  { title: "Alertas, IA y herramientas", description: "Envío de correos, procesamiento de fotos y descripciones con inteligencia artificial y mejoras en el mapa. La IA ayuda a proponer posibles coincidencias que las personas deben revisar.", icon: "bell" as const },
   { title: "Cuidado del proyecto", description: "Respaldos, mantenimiento y mejoras para que la información siga siendo útil.", icon: "shield" as const },
 ];
 

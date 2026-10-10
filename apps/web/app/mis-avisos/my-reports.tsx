@@ -60,4 +60,4 @@ function Reports({userId}:{userId:string}) {
     <p><Link href="/notificaciones" className="text-button">Ver mis notificaciones</Link></p>
   </>;
 }
-export function MyReports(){return <AccountSession>{user=><Reports key={user.id} userId={user.id}/>}</AccountSession>;}
+export function MyReports(){return <AccountSession>{user=><><Link href="/mi-cuenta" className="text-button">Editar mi contacto o gestionar mi cuenta</Link><Reports key={user.id} userId={user.id}/></>}</AccountSession>;}

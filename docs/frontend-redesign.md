@@ -106,6 +106,8 @@ La invitación ofrece **Escribir una reseña** y **Ahora no**. El formulario ofr
 
 ## Overall Design Feel
 
+Mi cuenta tiene una página propia de hasta 640 px, con contacto en una tarjeta blanca y eliminación en un desplegable separado. Correo pendiente, confirmación, errores y guardado se explican junto al formulario. Recuperar cuenta reutiliza el ancho, el regreso, el título, los campos y la tarjeta de ingreso y registro; sus resultados y enlaces permanecen dentro de esa tarjeta. El ingreso lleva directamente a Mis avisos o a confirmar el correo, sin la pantalla intermedia de sesión ya iniciada. La portada usa **¿Encontraste una mascota? Reportá un animal encontrado** y Apoyanos explica el procesamiento de IA con revisión humana.
+
 Herramienta clara y cercana, con fotografías como principal elemento emocional. No se agregan ilustraciones decorativas, métricas ficticias ni mensajes de identidad confirmada a partir de una puntuación. La compatibilidad se muestra con contexto y conserva la revisión humana.
 
 La página de apoyo conserva ese estilo simple y presenta la donación como voluntaria. Los importes están identificados como UYU y los niveles no ofrecen prioridad en las búsquedas. El circuito de pagos queda pendiente, documentado en `donations.md`.
@@ -162,3 +164,7 @@ TypeScript y la sintaxis Python terminaron sin errores. La consulta pública del
 ### Revisión de miniaturas en la lista del mapa del 10 de octubre de 2026
 
 TypeScript terminó sin errores. Se abrió la lista desplegable de `/mapa` con los reportes existentes y se guardó una captura: muestra tarjetas con foto pública, ausencia de foto, iconos para avistamientos, tipo, especie, localidad y fecha. Los enlaces de los avisos incluyen `origen=mapa`. No se ejecutaron pruebas automatizadas ni se cambiaron fotos, reportes o permisos de acceso; las fotos privadas de observaciones siguen sin publicarse en esta lista.
+
+### Gestión de cuenta y pedidos retomados del 10 de octubre de 2026
+
+TypeScript y la sintaxis de los archivos Python modificados terminaron sin errores. La API arrancó con `0016_account_management` aplicada. Recuperar, Mi cuenta, Apoyanos e Ingresar respondieron correctamente. La revisión visual confirmó la tarjeta centrada de recuperación, el acceso de invitados a Mi cuenta, la explicación de IA en los aportes y el texto del enlace a Encontré una mascota. Se guardó una captura de recuperación. No se ejecutaron pruebas automatizadas ni se eliminaron cuentas, modificaron contactos o solicitaron correos; los flujos autenticados de cambio de correo y eliminación se revisaron en código, sin modificar cuentas reales.

@@ -77,6 +77,8 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const feedbackId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoNoticeRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<{ name: string; native: boolean } | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [review, setReview] = useState<Review | null>(null);
@@ -95,6 +97,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const [locationError, setLocationError] = useState("");
   const [resetCount, setResetCount] = useState(0);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [missingPhotoNotice, setMissingPhotoNotice] = useState(false);
   const [preview, setPreview] = useState("");
   const photoFiles = useMemo(() => photo ? [photo] : [], [photo]);
   const copy = labels[kind];
@@ -152,7 +155,10 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     return () => URL.revokeObjectURL(url);
   }, [photo]);
 
+  useEffect(() => { if (missingPhotoNotice) photoNoticeRef.current?.focus(); }, [missingPhotoNotice]);
+
   function goToStep(next: Step) {
+    setMissingPhotoNotice(false);
     setError("");
     setErrorField("");
     pendingFocus.current = { name: "heading", native: false };
@@ -246,6 +252,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     const text = (key: string) => String(form.get(key) ?? "").trim();
     if (step < 3) {
       if (!validateStage(formElement, step)) return;
+      if (kind === "lost" && step === 1 && !photo && !missingPhotoNotice) { setMissingPhotoNotice(true); return; }
       if (step === 2) updateReview(formElement);
       goToStep((step + 1) as Step);
       return;
@@ -309,7 +316,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       }
       if (photo) {
         try { await sendPhoto(photo, ownerType, report.id); }
-        catch { setPhotoWarning("El reporte se guardó, pero la foto no pudo subirse. La información que compartiste quedó registrada."); }
+        catch { setPhotoWarning(kind === "lost" ? "El aviso se guardó, pero la foto no pudo subirse. Podés agregarla desde Mis avisos para que más personas reconozcan a tu mascota." : "El reporte se guardó, pero la foto no pudo subirse. La información que compartiste quedó registrada."); }
       }
       setSuccess(kind === "lost" ? `El aviso de ${text("petName")} quedó guardado.` : "Gracias por ayudar. Tu reporte quedó guardado.");
       setSavedReport({ ownerType, ownerId: report.id });
@@ -398,7 +405,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
               <span id="description-help" className="field-help">Contanos sobre sus colores, manchas, collar u otras características.</span>
               {fieldFeedback("description")}
             </label>
-            <PhotoUploader name="photo" files={photoFiles} onFilesChange={files => setPhoto(files[0] ?? null)} />
+            <PhotoUploader name="photo" inputRef={photoInputRef} files={photoFiles} onFilesChange={files => { setPhoto(files[0] ?? null); setMissingPhotoNotice(false); }} />
           </Section>
 
           <Section title={copy.event} number={2} active={step}>
@@ -469,9 +476,10 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
 
           <div className="form-footer">
             {error && (!errorField || errorField === "photo") && <p role="alert" className="notice notice-error">{error}</p>}
+            {kind === "lost" && step === 1 && missingPhotoNotice && !photo && <div ref={photoNoticeRef} tabIndex={-1} role="alert" className="photo-missing-notice"><div className="photo-missing-heading"><span className="feature-icon feature-icon-1"><Icon name="camera" /></span><h3>Una foto puede ayudar a encontrarla</h3></div><p>Una imagen clara ayuda a que otras personas reconozcan a tu mascota y puede mejorar las posibilidades de encontrarla. Podés publicar sin foto y agregarla después.</p><button type="button" className="button button-secondary" onClick={() => photoInputRef.current?.click()}><Icon name="camera" />Agregar una foto</button><p className="field-help">Si no tenés una ahora, elegí «Continuar sin foto».</p></div>}
             <div className="form-navigation">
               {step > 1 && <button type="button" className="button button-secondary" onClick={() => goToStep((step - 1) as Step)}>Atrás</button>}
-              <button type="submit" disabled={busy || (step === 3 && (sessionChecking || Boolean(sessionError) || needsVerification))} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? "Continuar →" : needsVerification ? "Confirmá tu correo para publicar" : !sessionUser && accountMode === "register" ? "Crear cuenta y confirmar correo" : copy.submit}</button>
+              <button type="submit" disabled={busy || (step === 3 && (sessionChecking || Boolean(sessionError) || needsVerification))} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? kind === "lost" && step === 1 && missingPhotoNotice && !photo ? "Continuar sin foto →" : "Continuar →" : needsVerification ? "Confirmá tu correo para publicar" : !sessionUser && accountMode === "register" ? "Crear cuenta y confirmar correo" : copy.submit}</button>
             </div>
             <p className="form-privacy">{step === 3 ? !sessionUser && accountMode === "register" ? "Primero crearemos tu cuenta y te enviaremos el enlace de confirmación. Los datos del aviso seguirán en esta pestaña." : "Tu correo y la ubicación exacta no se muestran públicamente." : "Todavía no se publica nada. Podés revisar los datos al final."}</p>
           </div>

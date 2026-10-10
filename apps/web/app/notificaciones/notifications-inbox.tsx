@@ -145,8 +145,8 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
     </form> : <>
       {user.email_verification_required && !user.email_verified && <VerifyEmailNotice email={user.email} />}
       <div className="notifications-account"><span>{user.name}</span><button type="button" className="text-button" onClick={() => void logout()}>Cerrar sesión</button></div>
-      <label className="sighting-recent"><input type="checkbox" checked={user.notification_preferences.email !== false} disabled={busy} onChange={event => void preference(event.target.checked)} />Recibir también alertas por correo</label>
-      <p className="field-help">Los correos se envían cuando hay un servidor de correo configurado. Podés abrirlos sin estar conectado a MascoMatch.</p>
+      <label className="sighting-recent"><input type="checkbox" checked={user.notification_preferences.email !== false} disabled={busy} onChange={event => void preference(event.target.checked)} />Recibir alertas y recordatorios por correo</label>
+      <p className="field-help">Incluye posibles avistamientos y recordatorios para completar tus avisos. Podés abrir los correos sin estar conectado a MascoMatch.</p>
       {selectedId && <Link href="/notificaciones" className="text-button">Ver todas las notificaciones</Link>}
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
       {feedbackMessage && <div className="notice" role="status"><p>{feedbackMessage}</p><Link className="text-button" href="/mis-avisos">Ver el estado en Mis avisos</Link></div>}

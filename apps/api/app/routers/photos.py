@@ -13,6 +13,7 @@ from app.models import Photo, User
 from app.schemas import PhotoCreate, PhotoRead, PhotoUpdate, PhotoUploadRead
 from app.services.access import owner_has_access
 from app.matching.linked import mark_related_pending
+from app.photo_reminders import lock_photo_cases
 
 router = APIRouter(prefix="/photos", tags=["photos"])
 
@@ -32,6 +33,7 @@ def create_photo_metadata(payload: PhotoCreate, db: Session = Depends(get_db), u
     if not payload.storage_key.startswith(expected_prefix):
         raise HTTPException(status_code=422, detail="Storage key must be scoped to the photo owner")
     photo = Photo(**payload.model_dump())
+    lock_photo_cases(db, photo.owner_type, photo.owner_id)
     db.add(photo)
     db.flush()
     schedule_photo(db, photo)
@@ -71,6 +73,7 @@ def upload_photo(
         height=height,
     )
     try:
+        lock_photo_cases(db, owner_type, owner_id)
         db.add(photo)
         db.flush()
         schedule_photo(db, photo)

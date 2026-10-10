@@ -10,6 +10,7 @@ from app.dependencies import current_user, verified_user
 from app.models import LostCase, Pet, User
 from app.schemas import LostCaseCreate, LostCaseRead, LostCaseUpdate
 from app.matching.linked import mark_related_pending
+from app.photo_reminders import schedule_reminder
 
 router = APIRouter(prefix="/lost-cases", tags=["lost-cases"])
 
@@ -31,6 +32,7 @@ def create_lost_case(payload: LostCaseCreate, db: Session = Depends(get_db), use
     db.flush()
     schedule_text(db, "lost_case", case.id)
     mark_related_pending(db, "lost_case", case.id)
+    schedule_reminder(db, case)
     db.commit()
     db.refresh(case)
     return case

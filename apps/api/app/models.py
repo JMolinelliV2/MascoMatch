@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, Uuid, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Uuid, UniqueConstraint, func
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -94,6 +94,17 @@ class LostCase(TimestampMixin, Base):
     public_location: Mapped[str | None] = mapped_column(String(350))
     search_radius_meters: Mapped[int] = mapped_column(Integer, default=15000, nullable=False)
     pet: Mapped[Pet] = relationship(back_populates="lost_cases")
+
+
+class PhotoReminder(Base):
+    __tablename__ = "photo_reminders"
+    __table_args__ = (Index("ix_photo_reminders_due", "status", "available_at"),)
+    lost_case_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("lost_cases.id", ondelete="CASCADE"), primary_key=True)
+    status: Mapped[str] = mapped_column(String(24), default="PENDING", nullable=False)
+    available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class Observation(TimestampMixin, Base):

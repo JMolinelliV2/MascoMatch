@@ -45,6 +45,25 @@ def add_email_verification_content(message: EmailMessage, url: str) -> None:
         footer="Si no creaste una cuenta ni pediste este enlace, podés ignorar este correo.")
 
 
+def add_photo_reminder_content(message: EmailMessage, pet_name: str, url: str, preferences_url: str) -> None:
+    message.set_content(
+        "Una foto puede ayudar a encontrar a tu mascota\n\n"
+        f"Tu aviso de {pet_name} sigue activo y todavía no tiene fotos. "
+        "Una imagen clara ayuda a que otras personas la reconozcan y puede mejorar las posibilidades de encontrarla.\n\n"
+        f"Podés agregar una foto desde Mis avisos:\n{url}\n\n"
+        "Elegí una foto donde se vean la cara, el cuerpo y sus marcas distintivas. "
+        "Tu aviso sigue publicado aunque no agregues una foto.\n\n"
+        f"Preferencias de correo:\n{preferences_url}\n\nMascoMatch"
+    )
+    _add_branded_html(message, url,
+        preheader="Agregá una foto para que más personas puedan reconocer a tu mascota.",
+        eyebrow="COMPLETÁ TU AVISO", title="Una foto puede ayudar",
+        description=f"Tu aviso de {pet_name} sigue activo y todavía no tiene fotos. Una imagen clara ayuda a que otras personas la reconozcan y puede mejorar las posibilidades de encontrarla.",
+        action="Agregar una foto", expiry_title="Elegí una foto clara",
+        expiry_text="Que se vean la cara, el cuerpo y sus marcas distintivas. Podés agregarla desde Mis avisos.",
+        footer=f"Tu aviso sigue publicado aunque no agregues una foto. Podés cambiar tus preferencias de correo en Notificaciones: {preferences_url}")
+
+
 def _add_branded_html(message: EmailMessage, url: str, *, preheader: str, eyebrow: str,
                       title: str, description: str, action: str, expiry_title: str,
                       expiry_text: str, footer: str) -> None:

@@ -36,6 +36,8 @@ La flecha de Explorar reutiliza el chevron SVG de 16 px, centrado con el texto m
 
 Los pines de portada se pueden seleccionar con mouse, toque o teclado. Abren una miniatura con foto, nombre, rasgos, localidad, fecha y **Ver aviso**. Las fichas abiertas allí usan `origen=inicio` y vuelven a `/#mapa-perdidos`; las abiertas desde `/mapa` conservan su regreso a `/mapa`.
 
+Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda dentro del mismo paso, con foco, fondo azul suave, icono de cámara y acciones Agregar una foto / Continuar sin foto. Mantiene los tres pasos y la publicación opcional sin imagen. El bloque usa padding de 20 px, título de 18 px y texto de 14 px. El recordatorio por correo reutiliza el logo y el botón centrado de los mensajes transaccionales; su enlace abre la carga de fotos del aviso propio en Mis avisos.
+
 ## Typography
 
 Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos de página de 32–46 px y peso 800; portada de hasta 58 px; secciones de 22–26 px; tarjetas de 18–22 px; texto de 14–16 px y ayudas de 12–13 px. El contenido largo permite salto de línea.

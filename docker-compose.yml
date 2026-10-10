@@ -76,6 +76,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-MascoMatch <avisos@mascomatch.local>}
       SMTP_TLS_MODE: ${SMTP_TLS_MODE:-starttls}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:3000}
+      PHOTO_REMINDER_DELAY_MINUTES: ${PHOTO_REMINDER_DELAY_MINUTES:-30}
       EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
       EMBEDDING_CACHE_DIR: /models/clip
       EMBEDDING_CPU_THREADS: ${EMBEDDING_CPU_THREADS:-2}

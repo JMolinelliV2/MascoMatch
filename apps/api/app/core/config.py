@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     smtp_from: str = "MascoMatch <avisos@mascomatch.local>"
     smtp_tls_mode: Literal["none", "starttls", "ssl"] = "starttls"
     public_site_url: str = "http://localhost:3000"
+    photo_reminder_delay_minutes: int = Field(default=30, ge=1, le=1440)
     embeddings_enabled: bool = False
     embedding_model: Literal["ViT-B-32"] = "ViT-B-32"
     embedding_pretrained: Literal["openai"] = "openai"

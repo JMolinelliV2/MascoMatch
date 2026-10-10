@@ -17,7 +17,8 @@ async def lifespan(application: FastAPI):
     from app.notifications.email import delivery_loop
     from app.matching.engine import general_matching_loop
     from app.account_mail import delivery_loop as account_delivery_loop
-    tasks = [asyncio.create_task(reconciliation_loop()), asyncio.create_task(delivery_loop()), asyncio.create_task(general_matching_loop()),asyncio.create_task(account_delivery_loop())]
+    from app.photo_reminders import delivery_loop as photo_reminder_loop
+    tasks = [asyncio.create_task(reconciliation_loop()), asyncio.create_task(delivery_loop()), asyncio.create_task(general_matching_loop()),asyncio.create_task(account_delivery_loop()), asyncio.create_task(photo_reminder_loop())]
     if settings.ai_enabled or settings.embeddings_enabled:
         from app.analysis.queue import dispatch_loop
         tasks.append(asyncio.create_task(dispatch_loop()))

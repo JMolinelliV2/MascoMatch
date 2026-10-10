@@ -213,6 +213,12 @@ La página pública `/apoyanos` se abre desde el botón **Apoyanos**, siempre vi
 
 La selección es una vista previa en el navegador; no se guarda como donación ni inicia un cobro. El botón **Donaciones próximamente** permanece deshabilitado hasta integrar los pagos. Publicar avisos y reportar avistamientos sigue siendo gratuito. [Alcance y configuración de los aportes](docs/donations.md).
 
+## Avisos de pérdida sin fotos
+
+Al intentar avanzar desde **Mascota** sin foto, el formulario explica que una imagen clara facilita reconocerla y puede mejorar las posibilidades de encontrarla. Ofrece **Agregar una foto** y permite **Continuar sin foto**; no agrega una etapa ni obliga a subir imágenes.
+
+Al publicar un nuevo aviso sin fotos, se programa un recordatorio por correo para 30 minutos después (`PHOTO_REMINDER_DELAY_MINUTES`). Antes de enviarlo, se comprueba que siga activo, visible y sin fotos del aviso o de la mascota; también se comprueba la cuenta y su preferencia de correo. El mensaje usa logo y botón centrado para abrir la carga de fotos del aviso en Mis avisos. [Programación y alcance](docs/photo-reminders.md).
+
 ## Reseñas de la comunidad
 
 Al cerrar un aviso de pérdida o marcar a la mascota como encontrada, se ofrece dejar una reseña opcional. También se solicita después de **Ya la recuperé** desde una notificación. El aviso se actualiza antes de pedirla; no es necesario escribir una reseña para cerrar la búsqueda.

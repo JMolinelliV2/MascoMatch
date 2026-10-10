@@ -325,6 +325,11 @@ h1, h2, h3 { color: var(--text-primary); }
   .review-details dt { color: var(--text-secondary); font-size: 12px; margin-bottom: 2px; }
   .review-details dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
   .form-footer { display: grid; gap: 16px; padding-top: 24px; margin-top: 28px; border-top: 1px solid var(--border); }
+  .photo-missing-notice { padding: 20px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--accent-blue-soft); }
+  .photo-missing-notice:focus { outline: 3px solid var(--accent-blue); outline-offset: 3px; }
+  .photo-missing-heading { display: flex; align-items: center; gap: 12px; }
+  .photo-missing-heading h3 { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; }
+  .photo-missing-notice > p:not(.field-help) { margin: 16px 0; color: var(--text-secondary); font-size: 14px; line-height: 1.65; }
   .form-navigation { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   .form-navigation .button-primary { margin-left: auto; min-width: 160px; }
   .form-privacy { margin: 0; color: var(--text-secondary); font-size: 12px; }
@@ -482,6 +487,7 @@ h1, h2, h3 { color: var(--text-primary); }
   .summary-card span { font-size: 14px; color: var(--text-secondary); }
   .summary-card-coral { background: var(--primary-soft); }
   .case-list { display: grid; gap: 24px; }
+  .case-list > .notification-card { scroll-margin-top: 24px; }
   .case-summary { display: flex; align-items: flex-start; gap: 20px; }
   .case-summary > div:last-child { flex: 1; min-width: 0; }
   .case-avatar { width: 140px; height: 140px; flex-shrink: 0; border-radius: 12px; overflow: hidden; background: var(--accent-blue-soft); }
@@ -494,6 +500,7 @@ h1, h2, h3 { color: var(--text-primary); }
   .case-description { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 14px; margin-top: 16px; }
   .case-actions { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
   .case-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  details.case-section { scroll-margin-top: 24px; }
   .case-section h3 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
   .photo-add-form { margin-top: 16px; }
   .photo-add-form .photo-dropzone { min-height: 140px; }

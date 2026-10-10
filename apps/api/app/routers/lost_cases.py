@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.analysis.service import purge_owner, schedule_text
-from app.dependencies import current_user
+from app.dependencies import current_user, verified_user
 from app.models import LostCase, Pet, User
 from app.schemas import LostCaseCreate, LostCaseRead, LostCaseUpdate
 from app.matching.linked import mark_related_pending
@@ -22,7 +22,7 @@ def owned_case(db: Session, case_id: UUID, user: User) -> LostCase:
 
 
 @router.post("", response_model=LostCaseRead, status_code=status.HTTP_201_CREATED)
-def create_lost_case(payload: LostCaseCreate, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def create_lost_case(payload: LostCaseCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
     pet = db.scalar(select(Pet).where(Pet.id == payload.pet_id, Pet.owner_id == user.id))
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
@@ -50,7 +50,11 @@ def get_lost_case(case_id: UUID, db: Session = Depends(get_db), user: User = Dep
 @router.patch("/{case_id}", response_model=LostCaseRead)
 def update_lost_case(case_id: UUID, payload: LostCaseUpdate, db: Session = Depends(get_db), user: User = Depends(current_user)):
     case = owned_case(db, case_id, user)
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    changes = payload.model_dump(exclude_unset=True)
+    # Owners can retire an existing notice while their email confirmation is pending.
+    if set(changes) != {"status"} or changes["status"] not in {"FOUND", "CLOSED", "CANCELLED"}:
+        verified_user(user)
+    for field, value in changes.items():
         setattr(case, field, value)
     db.flush()
     schedule_text(db, "lost_case", case.id)

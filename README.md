@@ -26,6 +26,8 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
+Para crear cuentas, configurá SMTP en `.env` para enviar el correo de confirmación. Para usar un buzón local en desarrollo, elegí `MAIL_DELIVERY_MODE=preview`, `SMTP_HOST=mailpit`, `SMTP_PORT=1025` y credenciales SMTP vacías; levantá el proyecto con `docker compose --profile mail-local up --build`. Abrí el enlace de confirmación desde `http://localhost:8025` antes de publicar desde la cuenta. [Configuración del correo](docs/production.md).
+
 La primera construcción instala PostGIS y pgvector sobre la imagen oficial `postgres:17-bookworm`, compila MinIO desde su código fuente e instala las dependencias de la aplicación. Puede tardar unos minutos. MinIO usa la versión fija `RELEASE.2025-10-15T17-29-55Z`, sin depender de la imagen retirada de Docker Hub. La API aplica la migración inicial antes de arrancar.
 
 - Web: http://localhost:3000
@@ -183,9 +185,9 @@ Copiar `.env.example` a `.env` antes de ejecutar Compose. Cambiar contraseñas y
 
 La portada presenta una fotografía y tres acciones: mascota perdida, avistamiento y animal encontrado. Los formularios se completan en tres etapas: **Mascota**, **Fecha y lugar**, y **Contacto y revisión**. Se valida cada etapa al continuar; el botón Atrás conserva los datos y la foto seleccionada. La última etapa muestra un resumen editable antes de crear la cuenta o ingresar y guardar el reporte. Las fotos son opcionales.
 
-**Crear cuenta** tiene una página independiente en `/crear-cuenta`, accesible desde el encabezado, el menú móvil y los formularios de ingreso. Pide nombre o apodo, correo y contraseña con confirmación, e inicia la sesión al guardar. Los formularios de publicación reconocen esa sesión y utilizan la cuenta existente. Permiten cambiar de cuenta conservando los datos del reporte. En producción se mantiene la confirmación de correo antes de recibir alertas externas.
+**Crear cuenta** tiene una página independiente en `/crear-cuenta`, accesible desde el encabezado, el menú móvil y los formularios de ingreso. Pide nombre o apodo, correo y contraseña con confirmación, e inicia la sesión al guardar. Envía automáticamente el correo de confirmación: antes de publicar o modificar avisos, subir fotos o solicitar análisis desde la cuenta, hay que confirmar el enlace de un solo uso que vence a las 24 horas. Los formularios de publicación reconocen esa sesión, conservan los datos y la foto mientras se confirma en otra pestaña y permiten cambiar de cuenta. Las cuentas existentes que todavía no confirmaron su correo pueden reenviar el enlace desde su cuenta; sus avisos se conservan y pueden cerrarse o marcarse encontrados.
 
-**Ingresar** abre `/login`, una página independiente que comparte el diseño y la disposición del registro. Pide correo y contraseña, ofrece enlaces para crear una cuenta o recuperar el acceso y, al ingresar correctamente, abre Mis avisos. Los enlaces de ingreso desde el registro y la recuperación también llevan a esta página. Cuando ya hay una sesión iniciada, el encabezado muestra **Mi cuenta** y lleva directamente a Mis avisos.
+**Ingresar** abre `/login`, una página independiente que comparte el diseño y la disposición del registro. Pide correo y contraseña, ofrece enlaces para crear una cuenta o recuperar el acceso y, al ingresar correctamente, abre Mis avisos si el correo está confirmado o `/confirmar-correo` si está pendiente. Los enlaces de ingreso desde el registro y la recuperación también llevan a esta página. Cuando ya hay una sesión iniciada, el encabezado muestra **Mi cuenta** y lleva directamente a Mis avisos.
 
 La opción **Mis avisos** solo aparece en la navegación de escritorio y en el menú móvil cuando hay una sesión iniciada. Se actualiza al ingresar, crear una cuenta o cerrar la sesión.
 

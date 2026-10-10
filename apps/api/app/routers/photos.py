@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.dependencies import current_user
+from app.dependencies import current_user, verified_user
 from app.core.config import settings
 from app.core.image_storage import create_download_url, delete_private_image, store_private_image
 from app.analysis.service import purge_photo, schedule_photo
@@ -25,7 +25,7 @@ def owned_photo(db: Session, photo_id: UUID, user: User) -> Photo:
 
 
 @router.post("", response_model=PhotoRead, status_code=status.HTTP_201_CREATED)
-def create_photo_metadata(payload: PhotoCreate, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def create_photo_metadata(payload: PhotoCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
     if not owner_has_access(payload.owner_type, payload.owner_id, db, user):
         raise HTTPException(status_code=404, detail="Photo owner not found")
     expected_prefix = f"{payload.owner_type}/{payload.owner_id}/"
@@ -47,7 +47,7 @@ def upload_photo(
     owner_id: UUID = Form(),
     file: UploadFile = File(),
     db: Session = Depends(get_db),
-    user: User = Depends(current_user),
+    user: User = Depends(verified_user),
 ):
     if not owner_has_access(owner_type, owner_id, db, user):
         raise HTTPException(status_code=404, detail="Photo owner not found")
@@ -98,7 +98,7 @@ def list_photo_metadata(
 
 
 @router.patch("/{photo_id}", response_model=PhotoRead)
-def update_photo_metadata(photo_id: UUID, payload: PhotoUpdate, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def update_photo_metadata(photo_id: UUID, payload: PhotoUpdate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
     photo = owned_photo(db, photo_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(photo, field, value)

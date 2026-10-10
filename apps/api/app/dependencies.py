@@ -34,3 +34,9 @@ def optional_user(token: str | None = Depends(optional_oauth2_scheme), db: Sessi
     return current_user(token, db) if token else None
 
 
+def verified_user(user: User = Depends(current_user)) -> User:
+    if not user.email_verified:
+        raise HTTPException(status_code=403, detail="Confirmá tu correo antes de publicar o modificar avisos.")
+    return user
+
+

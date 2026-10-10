@@ -16,16 +16,16 @@ class WindowLimiter:
     def __init__(self,clock=monotonic):
         self.clock=clock;self.buckets={};self.lock=Lock()
 
-    def allow(self,key,limit):
+    def allow(self,key,limit,seconds=60):
         now=self.clock()
         with self.lock:
-            start,count=self.buckets.get(key,(now,0))
-            if now-start>=60:start,count=now,0
+            start,count,_=self.buckets.get(key,(now,0,seconds))
+            if now-start>=seconds:start,count=now,0
             if key not in self.buckets and len(self.buckets)>=10000:
-                self.buckets={name:value for name,value in self.buckets.items() if now-value[0]<60}
-                if len(self.buckets)>=10000:return False,60
-            if count>=limit:return False,max(1,ceil(60-(now-start)))
-            self.buckets[key]=(start,count+1)
+                self.buckets={name:value for name,value in self.buckets.items() if now-value[0]<value[2]}
+                if len(self.buckets)>=10000:return False,seconds
+            if count>=limit:return False,max(1,ceil(seconds-(now-start)))
+            self.buckets[key]=(start,count+1,seconds)
             return True,0
 
 
@@ -33,8 +33,8 @@ RATE_SCRIPT = """
 local count = redis.call('INCR', KEYS[1])
 local ttl = redis.call('PTTL', KEYS[1])
 if ttl < 0 then
-    redis.call('PEXPIRE', KEYS[1], 60000)
-    ttl = 60000
+    ttl = tonumber(ARGV[1]) or 60000
+    redis.call('PEXPIRE', KEYS[1], ttl)
 end
 return {count, ttl}
 """
@@ -63,8 +63,8 @@ class RedisWindowLimiter:
     def __init__(self):
         self.client = Redis.from_url(settings.redis_url, socket_connect_timeout=1, socket_timeout=1)
 
-    async def allow(self, key, limit):
-        count, ttl = await self.client.eval(RATE_SCRIPT, 1, private_key(*key))
+    async def allow(self, key, limit, seconds=60):
+        count, ttl = await self.client.eval(RATE_SCRIPT, 1, private_key(*key), seconds*1000)
         return int(count) <= limit, max(1, ceil(int(ttl) / 1000))
 
 
@@ -78,8 +78,10 @@ class RateLimitMiddleware:
             return await self.app(scope,receive,send)
         path=scope["path"];headers=dict(scope.get("headers",[]));actor=client_address(scope)
         group="auth" if path.startswith("/api/v1/auth/") and scope["method"]=="POST" else "read" if scope["method"] in {"GET","HEAD"} else "publish"
+        if path=="/api/v1/auth/register" and scope["method"]=="POST":group="register"
+        seconds=3600 if group=="register" else 60
         authorization=headers.get(b"authorization",b"").decode("utf-8",errors="ignore")
-        if group != "auth" and authorization.startswith("Bearer "):
+        if group not in {"auth","register"} and authorization.startswith("Bearer "):
             try:actor=str(decode_access_token(authorization[7:]))
             except Exception:pass
         limit=getattr(settings,f"rate_limit_{group}")
@@ -87,12 +89,12 @@ class RateLimitMiddleware:
             if self.shared is None:
                 self.shared=RedisWindowLimiter()
             try:
-                allowed,wait=await self.shared.allow((group,actor),limit)
+                allowed,wait=await self.shared.allow((group,actor),limit,seconds)
             except (RedisError, OSError):
                 if group != "read":
                     return await JSONResponse({"detail":"El servicio está temporalmente ocupado. Intentá de nuevo."}, status_code=503, headers={"Retry-After":"10"})(scope,receive,send)
-                allowed,wait=self.limiter.allow((group,actor),limit)
+                allowed,wait=self.limiter.allow((group,actor),limit,seconds)
         else:
-            allowed,wait=self.limiter.allow((group,actor),limit)
+            allowed,wait=self.limiter.allow((group,actor),limit,seconds)
         if not allowed:return await JSONResponse({"detail":"Demasiadas solicitudes. Esperá un momento e intentá de nuevo."},status_code=429,headers={"Retry-After":str(wait)})(scope,receive,send)
         return await self.app(scope,receive,send)

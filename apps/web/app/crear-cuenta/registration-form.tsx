@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { SessionUser } from "../account-session";
 import { VerifyEmailNotice } from "../verify-email-notice";
+import { useSessionRefresh } from "../use-session-refresh";
 
 export function RegistrationForm() {
+  const sessionVersion = useSessionRefresh();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checking, setChecking] = useState(true);
   const [sessionUnavailable, setSessionUnavailable] = useState(false);
@@ -16,7 +18,7 @@ export function RegistrationForm() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setChecking(true); setSessionUnavailable(false); setError("");
+    setSessionUnavailable(false); setError("");
     void fetch("/api/session", { cache: "no-store", signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error("No pudimos consultar tu sesión. Intentá de nuevo.");
       const data = await response.json();
@@ -25,7 +27,7 @@ export function RegistrationForm() {
       if (!controller.signal.aborted) { setSessionUnavailable(true); setError(cause instanceof Error ? cause.message : "No pudimos consultar tu sesión."); }
     }).finally(() => { if (!controller.signal.aborted) setChecking(false); });
     return () => controller.abort();
-  }, [refresh]);
+  }, [refresh, sessionVersion]);
 
   async function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,7 +48,8 @@ export function RegistrationForm() {
       const data = await response.json();
       if (!response.ok) throw new Error(response.status === 409 ? "Ya existe una cuenta con ese correo. Ingresá o recuperá tu contraseña."
         : response.status === 422 ? "Revisá tus datos: ingresá un correo válido y una contraseña de entre 12 y 128 caracteres."
-        : response.status === 429 ? "Hubo demasiados intentos. Esperá unos minutos y volvé a intentar."
+        : response.status === 429 ? "Se alcanzó el límite de intentos de registro. Probá más tarde."
+        : response.status === 503 && typeof data.detail === "string" ? data.detail
         : "No pudimos crear tu cuenta. Intentá de nuevo.");
       form.reset(); setUser(data.user); setCreated(true);
       window.dispatchEvent(new Event("mascomatch:session"));
@@ -66,12 +69,12 @@ export function RegistrationForm() {
   }
 
   if (checking) return <p role="status">Consultando tu sesión…</p>;
-  if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
+  if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
   if (user) return <section className="notification-login account-form">
     <h2>{created ? "Tu cuenta está creada" : "Ya tenés una sesión iniciada"}</h2>
-    <p role={created ? "status" : undefined}>{created ? "Ya ingresaste a MascoMatch. Podés empezar a usar tu cuenta." : `Estás usando la cuenta de ${user.name}.`}</p>
-    {user.email_verification_required && !user.email_verified && <VerifyEmailNotice />}
-    <div className="location-actions"><Link href="/mis-avisos" className="button button-primary">Ir a mi cuenta</Link><Link href="/perdidos" className="text-button">Ver animales perdidos</Link></div>
+    <p role={created ? "status" : undefined}>{created ? user.email_verified ? "Ya podés publicar desde tu cuenta." : "Ahora confirmá tu correo para empezar a publicar. Recibirás un mensaje con el enlace." : `Estás usando la cuenta de ${user.name}.`}</p>
+    {user.email_verification_required && !user.email_verified && <VerifyEmailNotice email={user.email} />}
+    <div className="location-actions"><Link href={user.email_verified ? "/mis-avisos" : "/confirmar-correo"} className="button button-primary">{user.email_verified ? "Ir a mi cuenta" : "Confirmar mi correo"}</Link><Link href="/perdidos" className="text-button">Ver animales perdidos</Link></div>
     <button type="button" className="text-button" disabled={busy} onClick={() => void logout()}>{busy ? "Cerrando sesión…" : "Cerrar sesión"}</button>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}
   </section>;

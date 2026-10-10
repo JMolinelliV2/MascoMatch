@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app.analysis.service import utcnow
 from app.matching.linked import aware
 from app.core.image_storage import load_analysis_image
-from app.core.config import settings
 from app.db.session import get_db
 from app.dependencies import current_user
 from app.models import LostCase, Match, Notification, Observation, Pet, Photo, User
@@ -44,7 +43,7 @@ def serialize(db, row):
         reasons=match.explanation if match else observation.matching_reasons, photo_ids=photos,
         email_status=notification.email_status,
         match_id=notification.match_id, match_status=match.status if match else None,
-        reporter_contact=author.email if author and author.status=="ACTIVE" and (settings.app_env!="production" or author.email_verified) else None,
+        reporter_contact=author.email if author and author.status=="ACTIVE" and author.email_verified else None,
     )
 
 

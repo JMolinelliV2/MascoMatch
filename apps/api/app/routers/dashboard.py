@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Response, HTTPException
 from sqlalchemy import select
 from app.db.session import get_db
-from app.dependencies import current_user
+from app.dependencies import current_user,verified_user
 from app.models import LostCase, Observation, Pet
 from app.schemas import LostCaseRead, PetRead, ObservationRead, CaseEdit
 from app.routers.lost_cases import owned_case
@@ -22,7 +22,7 @@ def dashboard(response: Response,db=Depends(get_db),user=Depends(current_user)):
 
 
 @router.patch("/me/cases/{case_id}",response_model=LostCaseRead)
-def edit_case(case_id:UUID,payload:CaseEdit,response:Response,db=Depends(get_db),user=Depends(current_user)):
+def edit_case(case_id:UUID,payload:CaseEdit,response:Response,db=Depends(get_db),user=Depends(verified_user)):
     case=owned_case(db,case_id,user)
     pet=db.get(Pet,case.pet_id)
     for field,value in payload.pet.model_dump(exclude_unset=True).items():

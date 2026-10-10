@@ -5,7 +5,7 @@ from sqlalchemy import select, update
 from app.analysis.service import utcnow, is_current, schedule_owner
 from app.core.config import settings
 from app.db.session import get_db
-from app.dependencies import current_user
+from app.dependencies import current_user,verified_user
 from app.models import AnalysisJob, LostCase, Match, Notification, Observation, Pet, Photo
 from app.routers.lost_cases import owned_case
 from app.routers.public_lost_dogs import notice, photo_scope
@@ -80,7 +80,7 @@ def embedding_status(owner_type: Literal["pet", "lost_case", "observation"], own
 
 
 @router.post("/embeddings/{owner_type}/{owner_id}", status_code=202)
-def start_embeddings(owner_type: Literal["pet", "lost_case", "observation"], owner_id: UUID, response: Response, db=Depends(get_db), user=Depends(current_user)):
+def start_embeddings(owner_type: Literal["pet", "lost_case", "observation"], owner_id: UUID, response: Response, db=Depends(get_db), user=Depends(verified_user)):
     if not owner_has_access(owner_type,owner_id,db,user):
         raise HTTPException(status_code=404, detail="Reporte no encontrado.")
     if not settings.embeddings_enabled:

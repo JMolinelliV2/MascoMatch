@@ -12,6 +12,7 @@ import { PhotoUploader } from "./ui/photo-uploader";
 import { SexSelector } from "./ui/sex-selector";
 import { Icon } from "./ui/pictogram";
 import type { SessionUser } from "./account-session";
+import { VerifyEmailNotice } from "./verify-email-notice";
 
 type ReportKind = "lost" | "sighting" | "found";
 type AccountMode = "register" | "login";
@@ -97,6 +98,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const [preview, setPreview] = useState("");
   const photoFiles = useMemo(() => photo ? [photo] : [], [photo]);
   const copy = labels[kind];
+  const needsVerification = Boolean(sessionUser && !sessionUser.email_verified);
   const stepTitles = [kind === "lost" ? "Contanos sobre tu mascota" : "Contanos sobre el animal", copy.event, "Revisá el reporte y dejá tu contacto"];
   const stepIntros = ["Empezá por sus características. Los campos opcionales pueden quedar vacíos.", "La fecha y la hora pueden ser aproximadas. Elegí el lugar por su nombre o dirección.", "Podés editar los datos antes de publicar. Tu contacto se guarda con tu cuenta."];
 
@@ -255,14 +257,17 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     const when = new Date(text("observedAt"));
     setBusy(true);
     try {
-      if (!sessionUser) {
+      let accountUser = sessionUser;
+      if (!accountUser) {
         const account = await send<{ user: SessionUser & { email: string } }>(`/auth/${accountMode}`, {
           email: text("email").toLowerCase(),
           password: String(form.get("password") ?? ""),
           ...(accountMode === "register" ? { name: text("name") } : {}),
         });
         setSessionUser(account.user);
+        accountUser = account.user;
       }
+      if (!accountUser.email_verified) return;
       const species = text("species");
       const sex = text("sex");
       const color = text("color");
@@ -438,7 +443,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
             <h3 className="contact-heading">Tu contacto</h3>
             {sessionChecking && <p role="status" className="field-help">Consultando tu cuenta…</p>}
             {sessionError && <p role="alert" className="notice notice-warning">{sessionError} <button type="button" className="text-button" onClick={() => setSessionRefresh(value => value + 1)}>Reintentar</button></p>}
-            {sessionUser ? <div className="notice"><p>Vas a publicar con la cuenta de <strong>{sessionUser.name}</strong>.</p><p className="field-help">Correo de contacto: {sessionUser.email}</p><button type="button" className="text-button" disabled={busy || sessionChecking} onClick={() => void switchAccount()}>Usar otra cuenta</button></div> : <>
+            {sessionUser ? <><div className="notice"><p>Vas a publicar con la cuenta de <strong>{sessionUser.name}</strong>.</p><p className="field-help">Correo de contacto: {sessionUser.email}</p><button type="button" className="text-button" disabled={busy || sessionChecking} onClick={() => void switchAccount()}>Usar otra cuenta</button></div>{needsVerification && <><VerifyEmailNotice email={sessionUser.email} /><p className="field-help">Confirmá el correo y volvé a esta pestaña para publicar. Los datos y la foto siguen en el formulario.</p></>}</> : <>
             <div className="account-options" role="group" aria-label="Opciones de cuenta">
               <label><input type="radio" name="accountMode" checked={accountMode === "register"} onChange={() => setAccountMode("register")} />Crear cuenta</label>
               <label><input type="radio" name="accountMode" checked={accountMode === "login"} onChange={() => setAccountMode("login")} />Ya tengo cuenta</label>
@@ -466,9 +471,9 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
             {error && (!errorField || errorField === "photo") && <p role="alert" className="notice notice-error">{error}</p>}
             <div className="form-navigation">
               {step > 1 && <button type="button" className="button button-secondary" onClick={() => goToStep((step - 1) as Step)}>Atrás</button>}
-              <button type="submit" disabled={busy || (step === 3 && (sessionChecking || Boolean(sessionError)))} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? "Continuar →" : copy.submit}</button>
+              <button type="submit" disabled={busy || (step === 3 && (sessionChecking || Boolean(sessionError) || needsVerification))} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? "Continuar →" : needsVerification ? "Confirmá tu correo para publicar" : !sessionUser && accountMode === "register" ? "Crear cuenta y confirmar correo" : copy.submit}</button>
             </div>
-            <p className="form-privacy">{step === 3 ? "Tu correo y la ubicación exacta no se muestran públicamente." : "Todavía no se publica nada. Podés revisar los datos al final."}</p>
+            <p className="form-privacy">{step === 3 ? !sessionUser && accountMode === "register" ? "Primero crearemos tu cuenta y te enviaremos el enlace de confirmación. Los datos del aviso seguirán en esta pestaña." : "Tu correo y la ubicación exacta no se muestran públicamente." : "Todavía no se publica nada. Podés revisar los datos al final."}</p>
           </div>
         </fieldset>
         </div>

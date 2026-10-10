@@ -4,6 +4,7 @@ import base64
 from datetime import timedelta
 from email.message import EmailMessage
 from hashlib import sha256
+from math import ceil
 import logging
 import secrets
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -12,7 +13,7 @@ from app.analysis.service import utcnow
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.matching.linked import aware
-from app.mail_templates import add_password_reset_content
+from app.mail_templates import add_password_reset_content, add_email_verification_content
 from app.models import AccountToken, AuthSession, Notification, User
 from app.notifications.email import send_message
 
@@ -33,17 +34,20 @@ def decrypt_token(value):
 
 def issue_token(db, user, kind):
     db.scalar(select(User).where(User.id==user.id).with_for_update())
+    now=utcnow()
     last=db.scalar(select(AccountToken).where(AccountToken.user_id==user.id,AccountToken.kind==kind).order_by(AccountToken.created_at.desc()).limit(1))
-    recent=db.scalar(select(func.count()).select_from(AccountToken).where(AccountToken.user_id==user.id,AccountToken.created_at>utcnow()-timedelta(hours=1)))
+    recent=db.scalar(select(func.count()).select_from(AccountToken).where(AccountToken.user_id==user.id,AccountToken.created_at>now-timedelta(hours=1)))
     if recent>=3:
-        return
-    if last and aware(last.created_at)>utcnow()-timedelta(minutes=1):
-        return
+        oldest=db.scalar(select(func.min(AccountToken.created_at)).where(AccountToken.user_id==user.id,AccountToken.created_at>now-timedelta(hours=1)))
+        return max(1,ceil((aware(oldest)+timedelta(hours=1)-now).total_seconds()))
+    if last and aware(last.created_at)>now-timedelta(minutes=1):
+        return max(1,ceil((aware(last.created_at)+timedelta(minutes=1)-now).total_seconds()))
     # A replacement invalidates older links of the same purpose.
     db.execute(update(AccountToken).where(AccountToken.user_id==user.id,AccountToken.kind==kind,AccountToken.consumed_at.is_(None)).values(consumed_at=utcnow(),email_status="CANCELLED"))
     token=secrets.token_urlsafe(32)
     db.add(AccountToken(user_id=user.id,kind=kind,token_hash=sha256(token.encode()).hexdigest(),encrypted_token=encrypt_token(token),
-                        expires_at=utcnow()+timedelta(hours=24) if kind=="VERIFY_EMAIL" else utcnow()+timedelta(minutes=30),email_available_at=utcnow()))
+                        expires_at=now+timedelta(hours=24) if kind=="VERIFY_EMAIL" else now+timedelta(minutes=30),email_available_at=now))
+    return 0
 
 
 def consume_token(db, token, kind):
@@ -90,7 +94,7 @@ def deliver_pending(factory=None):
                     if ticket.kind=="RESET_PASSWORD":
                         add_password_reset_content(message,url)
                     else:
-                        message.set_content(f"Abrí este enlace para confirmar tu correo y recibir alertas:\n\n{url}\n\nEl enlace es de un solo uso y tiene vencimiento. Si no pediste esto, podés ignorar este mensaje.")
+                        add_email_verification_content(message,url)
                     send_message(message)
                     ticket.email_status="PREVIEWED" if settings.mail_delivery_mode=="preview" else "SENT"
                     sent+=1

@@ -1,4 +1,5 @@
 import {Suspense} from "react";
-import {AccountAccessForm} from "../account-access-form";
+import Link from "next/link";
+import {ConfirmationForm} from "./confirmation-form";
 export const metadata={title:"Confirmar correo — MascoMatch"};
-export default function Page(){return <main id="main-content" className="page report-page"><h1>Confirmá tu correo</h1><p>Esto permite enviarte alertas de posibles avistamientos.</p><Suspense fallback={<p>Cargando…</p>}><AccountAccessForm purpose="verify"/></Suspense></main>;}
+export default function Page(){return <main id="main-content" className="page account-page"><Link href="/" className="back-link"><span aria-hidden="true">←</span> Volver al inicio</Link><h1>Confirmá tu correo</h1><p className="page-intro">Verificá tu cuenta para publicar avisos y recibir alertas de posibles avistamientos.</p><Suspense fallback={<p>Cargando…</p>}><ConfirmationForm/></Suspense></main>;}

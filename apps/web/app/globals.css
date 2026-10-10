@@ -309,6 +309,11 @@ h1, h2, h3 { color: var(--text-primary); }
   .account-page { max-width: 640px; }
   .account-form { max-width: none; }
   .account-form fieldset { margin-top: 0; }
+  .account-confirmation .button { margin-top: 20px; }
+  .account-confirmation .notice { margin-top: 16px; }
+  .email-verification-notice { background: var(--accent-blue-soft); border-color: var(--border-strong); }
+  .email-verification-notice h3 { margin: 0; font-size: 17px; font-weight: 700; }
+  .email-verification-notice p { margin: 8px 0; overflow-wrap: anywhere; }
   .notifications-account, .notifications-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
   .notifications-account { margin-top: 16px; }
   .notifications-toolbar { margin-top: 24px; border-top: 1px solid var(--border); font-size: 14px; }

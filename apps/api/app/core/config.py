@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     mail_group_seconds: int = Field(default=15, ge=0, le=300)
     rate_limit_enabled: bool = True
     rate_limit_auth: int = Field(default=30,ge=1,le=10000)
+    rate_limit_register: int = Field(default=5,ge=1,le=100)
     rate_limit_publish: int = Field(default=60,ge=1,le=10000)
     rate_limit_read: int = Field(default=300,ge=1,le=10000)
     rate_limit_backend: Literal["memory", "redis"] = "memory"

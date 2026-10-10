@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.analysis.service import purge_owner, schedule_text
-from app.dependencies import current_user
+from app.dependencies import current_user, verified_user
 from app.models import Pet, User
 from app.schemas import PetCreate, PetRead, PetUpdate
 from app.matching.linked import mark_related_pending
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/pets", tags=["pets"])
 
 
 @router.post("", response_model=PetRead, status_code=status.HTTP_201_CREATED)
-def create_pet(payload: PetCreate, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def create_pet(payload: PetCreate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
     pet = Pet(owner_id=user.id, **payload.model_dump())
     db.add(pet)
     db.commit()
@@ -41,7 +41,7 @@ def get_pet(pet_id: UUID, db: Session = Depends(get_db), user: User = Depends(cu
 
 
 @router.patch("/{pet_id}", response_model=PetRead)
-def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), user: User = Depends(verified_user)):
     pet = owned_pet(db, pet_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(pet, field, value)

@@ -36,17 +36,16 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=422, detail="A valid email address is required")
     if db.scalar(select(User).where(User.email == email)):
         raise HTTPException(status_code=409, detail="An account with this email already exists")
+    require_account_mail()
     user = User(email=email, password_hash=hash_password(payload.password), name=payload.name.strip(), phone=payload.phone)
     db.add(user)
     try:
-        db.commit()
+        db.flush()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(status_code=409,detail="An account with this email already exists") from exc
-    db.refresh(user)
-    if settings.app_env == "production":
-        from app.account_mail import issue_token
-        issue_token(db,user,"VERIFY_EMAIL")
+    from app.account_mail import issue_token
+    issue_token(db,user,"VERIFY_EMAIL")
     return issue_session(db, user)
 
 
@@ -94,9 +93,11 @@ def request_verification(db=Depends(get_db),user=Depends(current_user)):
     from app.account_mail import issue_token
     if not user.email_verified:
         require_account_mail()
-        issue_token(db,user,"VERIFY_EMAIL")
+        wait=issue_token(db,user,"VERIFY_EMAIL")
+        if wait:
+            raise HTTPException(status_code=429, detail="Ya pediste un enlace recientemente. Esperá antes de reenviarlo.", headers={"Retry-After":str(wait)})
         db.commit()
-    return {"ok":True}
+    return {"ok":True, "already_verified":user.email_verified, **({"delivery_mode":"preview"} if settings.mail_delivery_mode=="preview" else {})}
 
 
 @router.post("/verify-email")

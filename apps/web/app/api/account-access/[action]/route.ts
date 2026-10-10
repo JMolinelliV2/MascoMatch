@@ -7,6 +7,7 @@ export async function POST(request:NextRequest,context:{params:Promise<{action:s
     const body=Buffer.from(await boundedBody(request,4096));
     const response=await fetch(`${serverApi}/auth/${action}`,{method:"POST",headers:{...authorization(request),"Content-Type":"application/json"},body,cache:"no-store",signal:AbortSignal.timeout(15000)});
     const result=NextResponse.json(await response.json(),{status:response.status,headers:{"Cache-Control":"no-store"}});
+    const retry=response.headers.get("Retry-After");if(retry)result.headers.set("Retry-After",retry);
     if(response.ok&&action==="reset-password")result.cookies.delete(SESSION_COOKIE);
     return result;
   }catch{return NextResponse.json({detail:"No pudimos completar la solicitud. Intentá de nuevo."},{status:503});}

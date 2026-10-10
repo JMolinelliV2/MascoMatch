@@ -13,6 +13,7 @@ x-backend: &backend
   TRUSTED_PROXY_IPS: 172.30.50.2,172.30.50.3
   RATE_LIMIT_BACKEND: redis
   RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_REGISTER: ${RATE_LIMIT_REGISTER:-5}
   S3_ENDPOINT: http://photos:8333
   S3_PUBLIC_ENDPOINT: http://photos:8333
   S3_BUCKET: pet-photos

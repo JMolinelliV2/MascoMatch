@@ -38,8 +38,7 @@ class UserRead(ORMModel):
     @computed_field
     @property
     def email_verification_required(self) -> bool:
-        from app.core.config import settings
-        return settings.app_env == "production"
+        return True
 
 
 class TokenResponse(BaseModel):

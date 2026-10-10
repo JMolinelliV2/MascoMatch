@@ -1,10 +1,10 @@
 from datetime import timedelta
 from typing import Literal
 from fastapi import APIRouter, Depends, Query, Response, HTTPException
-from sqlalchemy import select,text,or_
+from sqlalchemy import and_,exists,select,text,or_
 from app.analysis.service import utcnow
 from app.db.session import get_db
-from app.models import LostCase, Match, Observation, Pet
+from app.models import LostCase, Match, Observation, Pet, Photo
 from app.routers.public_lost_dogs import active_dogs
 from app.matching.linked import distance_meters
 router=APIRouter(prefix="/public/map",tags=["public-map"])
@@ -34,8 +34,12 @@ def public_map(response:Response,species:str=Query(default="",max_length=40),day
             case_query=case_query.where(LostCase.latitude.between(latitude-delta,latitude+delta))
             obs_query=obs_query.where(Observation.latitude.between(latitude-delta,latitude+delta))
     def include(lat,lon):return latitude is None or distance_meters(latitude,longitude,lat,lon)<=radius_km*1000
-    for case,pet in db.execute(case_query.order_by(LostCase.lost_at.desc()).limit(500)):
-        if include(case.latitude,case.longitude):points.append({"id":str(case.id),"layer":"lost","title":pet.name,"species":pet.species,"latitude":round(case.latitude,2),"longitude":round(case.longitude,2),"area":case.public_location,"when":case.lost_at,"url":f"/perdidos/{case.id}"})
+    photo_exists=exists().where(or_(
+        and_(Photo.owner_type=="lost_case",Photo.owner_id==LostCase.id),
+        and_(Photo.owner_type=="pet",Photo.owner_id==Pet.id),
+    )).correlate(LostCase,Pet)
+    for case,pet,has_photo in db.execute(case_query.add_columns(photo_exists).order_by(LostCase.lost_at.desc()).limit(500)):
+        if include(case.latitude,case.longitude):points.append({"id":str(case.id),"layer":"lost","title":pet.name,"species":pet.species,"latitude":round(case.latitude,2),"longitude":round(case.longitude,2),"area":case.public_location,"when":case.lost_at,"url":f"/perdidos/{case.id}","photo_url":f"/api/v1/public/lost-animals/{case.id}/photo" if has_photo else None})
     observations=db.scalars(obs_query.order_by(Observation.observed_at.desc()).limit(500)) if layer=="all" else ()
     for obs in observations:
         if include(obs.latitude,obs.longitude):points.append({"id":str(obs.id),"layer":"found" if obs.source_type=="FOUND_ANIMAL" else "sighting","title":"Animal encontrado" if obs.source_type=="FOUND_ANIMAL" else "Avistamiento","species":obs.species,"latitude":round(obs.latitude,2),"longitude":round(obs.longitude,2),"area":obs.public_location,"when":obs.observed_at,"url":None})

@@ -34,7 +34,7 @@ Explorar y el menú móvil se cierran al pulsar fuera del desplegable, con mouse
 
 La flecha de Explorar reutiliza el chevron SVG de 16 px, centrado con el texto mediante flex. Apunta abajo al estar cerrado y arriba al estar abierto, siguiendo directamente el atributo nativo `open`, también al cerrar con Escape o pulsar fuera. La rotación dura 180 ms y se desactiva con la preferencia de movimiento reducido.
 
-Los pines de portada se pueden seleccionar con mouse, toque o teclado. Abren una miniatura con foto, nombre, rasgos, localidad, fecha y **Ver aviso**. Las fichas abiertas allí usan `origen=inicio` y vuelven a `/#mapa-perdidos`; las abiertas desde `/mapa` conservan su regreso a `/mapa`.
+Los círculos de animales perdidos abren una miniatura al pasar el mouse, tanto en portada como en `/mapa`. El cierre se demora 450 ms al salir para permitir mover el puntero hasta la tarjeta y usar **Ver aviso**. Pulsar el círculo, Enter o Espacio mantiene la tarjeta abierta; en táctil se abre con un toque. El foco tiene contorno azul y el estado se informa con `aria-expanded`. La miniatura muestra foto, nombre, rasgos, localidad y fecha. Las fichas abiertas en portada usan `origen=inicio` y vuelven a `/#mapa-perdidos`; las abiertas desde `/mapa` conservan su regreso a `/mapa`.
 
 Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda dentro del mismo paso, con foco, fondo azul suave, icono de cámara y acciones Agregar una foto / Continuar sin foto. Mantiene los tres pasos y la publicación opcional sin imagen. El bloque usa padding de 20 px, título de 18 px y texto de 14 px. El recordatorio por correo reutiliza el logo y el botón centrado de los mensajes transaccionales; su enlace abre la carga de fotos del aviso propio en Mis avisos.
 
@@ -74,6 +74,8 @@ Apoyanos reutiliza los iconos SVG de corazón, huella, coincidencias y cuidado d
 
 Las reseñas usan el corazón existente y estrellas de texto; no añaden avatares, fotografías ni imágenes del aviso. El nombre público elegido se muestra independientemente de la identidad privada de la cuenta.
 
+Los marcadores de animales perdidos son círculos de 56 px con foto real recortada mediante `object-fit: cover`, borde blanco de 3 px y anillo coral. Sin foto o ante error se reutiliza la huella de marca. La API informa la presencia de foto en la misma consulta de puntos; el navegador carga la imagen desde el endpoint público que elimina metadatos. No se exponen claves de almacenamiento ni coordenadas precisas.
+
 ## Cards and Content Blocks
 
 Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Componentes compartidos para stepper, fotos, iconos, tarjetas de animales y compatibilidad. El panel muestra las cantidades disponibles en sus datos; no se inventan nuevos avistamientos, compartidos, historias o recorridos. La foto de un aviso activo respeta el endpoint público y sus restricciones.
@@ -102,7 +104,7 @@ La página de apoyo conserva ese estilo simple y presenta la donación como volu
 
 Las reseñas describen experiencias de búsqueda, sin asumir que un cierre implica reencuentro ni atribuir una recuperación a MascoMatch. Incluyen puntuaciones de todo el rango y admiten apodos o anonimato.
 
-El mapa de portada reutiliza Leaflet, las teselas existentes de OpenStreetMap y las coordenadas públicas redondeadas. No pide ubicación del dispositivo para mostrarse. Los avisos que comparten el mismo punto se agrupan con un contador y un selector, sin inventar ubicaciones distintas. La foto de la miniatura se consulta solo al seleccionar un aviso y usa el mismo componente público del catálogo.
+Los mapas reutilizan Leaflet, las teselas existentes de OpenStreetMap y las coordenadas públicas redondeadas. La portada no pide ubicación del dispositivo para mostrarse. Los avisos perdidos que comparten el mismo punto se agrupan con un contador y un selector, dando preferencia a una foto real para el círculo. Los detalles de la miniatura se consultan al abrirla y usan el componente público del catálogo. La tarjeta de hover se ajusta dentro del mapa sin desplazar el punto bajo el cursor. Avistamientos y encontrados conservan sus colores y las capas siguen controlando qué puntos y avisos aparecen.
 
 ## Preservación de flujos
 
@@ -144,3 +146,7 @@ TypeScript terminó sin errores y la revisión visual de la página local mostr�
 ### Revisión de reseñas del 10 de octubre de 2026
 
 TypeScript y la sintaxis Python terminaron sin errores. La API inició con la migración `0014_case_reviews` aplicada y la consulta pública devolvió cero reseñas. La portada local se revisó en lectura y se guardó una captura: no muestra la sección de reseñas ni un espacio reservado. No se ejecutaron pruebas automatizadas ni se publicaron reseñas de muestra, se cerraron avisos o se enviaron correos para esta revisión. Los flujos autenticados de escritura quedan implementados sin haber modificado datos de usuarios durante la revisión.
+
+### Revisión de círculos con foto del 10 de octubre de 2026
+
+TypeScript y la sintaxis Python terminaron sin errores. La consulta pública del mapa incluye `photo_url` para los avisos perdidos que tienen foto. Se revisaron la portada y el mapa completo con avisos reales: foto circular, huella para ausencia de foto, miniatura y enlace con el origen correspondiente. La tarjeta se abrió con mouse y con Enter; **Ver aviso** abrió la ficha con **Volver al mapa** apuntando a `/mapa`. Se corrigieron el alcance de Tailwind para incluir las clases del helper compartido, la precedencia de los estilos de imagen frente a Leaflet y el manejo del clic dentro de la tarjeta para conservar la navegación. La captura final muestra el círculo y la tarjeta completa. No se ejecutaron pruebas automatizadas ni se modificaron avisos, fotos o cuentas durante la revisión.

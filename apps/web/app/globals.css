@@ -139,16 +139,26 @@ h1, h2, h3 { color: var(--text-primary); }
   .home-lost-map > .field-help { margin-top: 12px; }
   .home-lost-map > .notice { margin-top: 12px; }
   .home-map-pin-count { position: absolute; top: -4px; right: -2px; display: grid; place-items: center; min-width: 22px; height: 22px; padding-inline: 4px; border: 1px solid var(--primary); border-radius: 999px; background: var(--surface); color: var(--text-primary); font-size: 12px; font-weight: 700; }
+  .lost-map-pin { background: none; border: none; border-radius: 50%; }
+  .lost-map-avatar { position: relative; display: grid; place-items: center; width: 56px; height: 56px; overflow: hidden; border: 3px solid var(--surface); border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 2px var(--primary), 0 3px 8px #0b2a4a30; pointer-events: none; }
+  .leaflet-container .lost-map-avatar img.lost-map-avatar-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .leaflet-container .lost-map-avatar img.lost-map-avatar-fallback { width: 36px; height: 36px; }
+  .lost-map-pin > span, .lost-map-pin .home-map-pin-count { pointer-events: none; }
+  .lost-map-pin:hover .lost-map-avatar, .lost-map-pin[aria-expanded="true"] .lost-map-avatar { box-shadow: 0 0 0 3px var(--primary), 0 4px 12px #0b2a4a40; }
+  .lost-map-pin:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 5px; }
+  .home-case-popup.lost-map-popup-shifted .leaflet-popup-tip-container { display: none; }
   .home-case-popup .leaflet-popup-content-wrapper { border-radius: 14px; color: var(--text-primary); }
   .home-case-popup .leaflet-popup-content { margin: 20px 16px 16px; line-height: 1.5; }
+  .home-case-popup .leaflet-popup-scrolled { overflow-x: hidden; }
+  .home-case-popup .leaflet-popup-scrolled .home-map-popup-content { width: 100%; }
   .home-case-popup a.leaflet-popup-close-button { width: 44px; height: 44px; line-height: 44px; border-radius: 0 14px 0 10px; background: var(--surface); color: var(--text-secondary); }
   .home-map-popup-content { width: 240px; max-width: calc(100vw - 110px); }
   .home-map-popup-content > .field-label { margin-bottom: 16px; font-size: 13px; }
   .home-map-popup-content .form-input { min-height: 44px; padding: 8px 10px; font-size: 14px; }
-  .home-map-preview .dog-photo { height: 120px; aspect-ratio: auto; margin-bottom: 12px; border-radius: 10px; }
+  .home-map-preview .dog-photo { height: 104px; aspect-ratio: auto; margin-bottom: 12px; border-radius: 10px; }
   .home-map-preview .dog-photo-placeholder .ui-icon { width: 32px; height: 32px; }
-  .home-map-preview h4 { margin: 10px 0 6px; font-size: 19px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
-  .home-case-popup .home-map-preview p { margin: 6px 0; font-size: 13px; overflow-wrap: anywhere; }
+  .home-map-preview h4 { margin: 8px 0 4px; font-size: 19px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .home-case-popup .home-map-preview p { margin: 4px 0; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
   .home-map-preview .home-map-traits, .home-map-preview .home-map-date { color: var(--text-secondary); }
   .home-case-popup .home-map-preview a.button-primary { width: 100%; margin-top: 12px; color: var(--surface); font-size: 14px; min-height: 44px; }
   .home-footer { max-width: 1232px; margin: 0 auto; padding: 24px 0; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--text-secondary); }

@@ -221,6 +221,8 @@ La portada muestra hasta seis reseñas recientes con puntuación, comentario y n
 
 ## Animales publicados como perdidos
 
+El inicio incluye un mapa interactivo de avisos de pérdida activos con ubicación aproximada, de todas las fechas. Al seleccionar un pin se abre la miniatura con foto (o el marcador de ausencia), características y **Ver aviso**. Si varios avisos comparten una zona, el pin muestra la cantidad y la tarjeta permite elegir cuál consultar. Desde esa ficha, **Volver al mapa del inicio** regresa a la sección de la portada. **Abrir mapa completo** conserva el acceso al mapa comunitario con sus capas y filtros.
+
 Desde una ficha, **Publicar un avistamiento** abre un formulario vinculado que pide ubicación y fotos opcionales, con hora actual o fecha aproximada. Se puede enviar sin crear una cuenta. El dueño recibe una alerta privada de posible avistamiento, con mapa y fotos, y puede habilitar correo SMTP. La comparación usa características de las fotos, fecha y zona; los reportes sin foto o inconclusos se identifican como por confirmar. [Implementación, pruebas y configuración de Brevo Free](docs/linked-sightings.md).
 
 En **Animales perdidos** (`/perdidos`), disponible desde la navegación y la portada, cualquier visitante puede consultar los animales de cualquier especie con aviso `ACTIVE`, buscar por nombre, zona o descripción y abrir una ficha individual. Se muestran hasta 24 avisos por página. Las fotos son opcionales; si no hay foto o no se puede cargar, se muestra un marcador de ausencia.

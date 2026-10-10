@@ -13,7 +13,7 @@ router=APIRouter(prefix="/public/map",tags=["public-map"])
 @router.get("")
 def public_map(response:Response,species:str=Query(default="",max_length=40),days:int=Query(default=30,ge=0,le=3650),
     latitude:float|None=Query(default=None,ge=-90,le=90),longitude:float|None=Query(default=None,ge=-180,le=180),
-    radius_km:int=Query(default=15,ge=1,le=200),compatible_only:bool=False,db=Depends(get_db)):
+    radius_km:int=Query(default=15,ge=1,le=200),compatible_only:bool=False,layer:Literal["all","lost"]="all",db=Depends(get_db)):
     if (latitude is None)!=(longitude is None):raise HTTPException(status_code=422,detail="Falta la referencia completa de ubicación.")
     points=[]
     case_query=active_dogs().where(LostCase.latitude.is_not(None),LostCase.longitude.is_not(None),LostCase.lost_at<=utcnow()+timedelta(minutes=1))
@@ -36,7 +36,8 @@ def public_map(response:Response,species:str=Query(default="",max_length=40),day
     def include(lat,lon):return latitude is None or distance_meters(latitude,longitude,lat,lon)<=radius_km*1000
     for case,pet in db.execute(case_query.order_by(LostCase.lost_at.desc()).limit(500)):
         if include(case.latitude,case.longitude):points.append({"id":str(case.id),"layer":"lost","title":pet.name,"species":pet.species,"latitude":round(case.latitude,2),"longitude":round(case.longitude,2),"area":case.public_location,"when":case.lost_at,"url":f"/perdidos/{case.id}"})
-    for obs in db.scalars(obs_query.order_by(Observation.observed_at.desc()).limit(500)):
+    observations=db.scalars(obs_query.order_by(Observation.observed_at.desc()).limit(500)) if layer=="all" else ()
+    for obs in observations:
         if include(obs.latitude,obs.longitude):points.append({"id":str(obs.id),"layer":"found" if obs.source_type=="FOUND_ANIMAL" else "sighting","title":"Animal encontrado" if obs.source_type=="FOUND_ANIMAL" else "Avistamiento","species":obs.species,"latitude":round(obs.latitude,2),"longitude":round(obs.longitude,2),"area":obs.public_location,"when":obs.observed_at,"url":None})
     response.headers["Cache-Control"]="no-store"
     return {"points":points,"approximate":True,"limit_per_layer":500}

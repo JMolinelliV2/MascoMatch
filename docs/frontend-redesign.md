@@ -12,6 +12,8 @@ Apoyanos utiliza el contenedor de 1280 px y una introducción centrada de hasta 
 
 Las reseñas de portada usan el mismo contenedor, tres columnas en escritorio, dos bajo 950 px y una bajo 640 px. Sin reseñas visibles el componente devuelve `null`, por lo que no agrega espacio ni encabezado vacío.
 
+El mapa de animales perdidos ocupa todo el ancho del bloque de avisos, con lienzo de 420 px en escritorio y 360 px en móvil. El encabezado y el acceso al mapa completo se apilan bajo 640 px. La miniatura del pin tiene 240 px de ancho y altura limitada con desplazamiento interno cuando hace falta.
+
 ## Section Order
 
 Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
@@ -19,6 +21,8 @@ Portada: navegación, presentación y acciones para los tres tipos de reporte, C
 Apoyanos: regreso al inicio, presentación, aviso de disponibilidad próxima, frecuencia del aporte, niveles, monto personalizado, resumen, destino de los aportes, preguntas frecuentes y acción para explorar animales perdidos.
 
 La portada incorpora las reseñas después de los avisos y el acceso al mapa, antes de Apoyanos. En Mis avisos y Notificaciones, la invitación aparece después de guardar el cierre o la recuperación del animal y se mantiene separada del estado de la búsqueda.
+
+El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las tarjetas de avisos activos. Muestra únicamente animales perdidos con ubicación; el enlace **Abrir mapa completo** mantiene el acceso a avistamientos, encontrados y filtros de la página `/mapa`.
 
 ## Navigation
 
@@ -29,6 +33,8 @@ La reseña se escribe dentro de Mis avisos o de la pantalla de la notificación 
 Explorar y el menú móvil se cierran al pulsar fuera del desplegable, con mouse, toque o lápiz, y al presionar Escape. Si el foco estaba dentro, Escape lo devuelve al botón que abre el menú. Las pulsaciones dentro conservan el menú abierto, salvo al seleccionar un enlace o volver a pulsar el botón de apertura.
 
 La flecha de Explorar reutiliza el chevron SVG de 16 px, centrado con el texto mediante flex. Apunta abajo al estar cerrado y arriba al estar abierto, siguiendo directamente el atributo nativo `open`, también al cerrar con Escape o pulsar fuera. La rotación dura 180 ms y se desactiva con la preferencia de movimiento reducido.
+
+Los pines de portada se pueden seleccionar con mouse, toque o teclado. Abren una miniatura con foto, nombre, rasgos, localidad, fecha y **Ver aviso**. Las fichas abiertas allí usan `origen=inicio` y vuelven a `/#mapa-perdidos`; las abiertas desde `/mapa` conservan su regreso a `/mapa`.
 
 ## Typography
 
@@ -94,6 +100,8 @@ La página de apoyo conserva ese estilo simple y presenta la donación como volu
 
 Las reseñas describen experiencias de búsqueda, sin asumir que un cierre implica reencuentro ni atribuir una recuperación a MascoMatch. Incluyen puntuaciones de todo el rango y admiten apodos o anonimato.
 
+El mapa de portada reutiliza Leaflet, las teselas existentes de OpenStreetMap y las coordenadas públicas redondeadas. No pide ubicación del dispositivo para mostrarse. Los avisos que comparten el mismo punto se agrupan con un contador y un selector, sin inventar ubicaciones distintas. La foto de la miniatura se consulta solo al seleccionar un aviso y usa el mismo componente público del catálogo.
+
 ## Preservación de flujos
 
 - Los pasos generales siguen siendo Mascota → Fecha y lugar → Contacto y revisión. Las fotos permanecen en el primer paso y no se agrega una etapa nueva.
@@ -103,7 +111,7 @@ Las reseñas describen experiencias de búsqueda, sin asumir que un cierre impli
 - El avistamiento vinculado conserva ubicación, hora y fotos opcionales, envío sin cuenta, identificador de solicitud y consulta posterior del estado.
 - Mis avisos conserva edición, fotos, coincidencias, feedback, encontrado, cierre y reapertura. El mapa de última ubicación usa los datos privados del caso propio.
 - La navegación conserva catálogo, mapa, notificaciones, recuperación, confirmación y administración mediante sus rutas existentes.
-- Los avisos abiertos desde los puntos o la lista del mapa incluyen `origen=mapa` y muestran **Volver al mapa**. Los avisos abiertos desde el catálogo conservan **Volver a animales perdidos**. Solo se admite ese origen conocido, sin aceptar direcciones de regreso arbitrarias.
+- Los avisos abiertos desde los puntos o la lista del mapa incluyen `origen=mapa` y muestran **Volver al mapa**. Los abiertos desde el mapa de portada usan `origen=inicio` y muestran **Volver al mapa del inicio**. Los avisos abiertos desde el catálogo conservan **Volver a animales perdidos**. Solo se admiten estos orígenes conocidos, sin aceptar direcciones de regreso arbitrarias.
 
 ## Verificación
 

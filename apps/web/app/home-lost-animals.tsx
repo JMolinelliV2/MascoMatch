@@ -5,6 +5,7 @@ import { lostDogsEndpoint } from "@/lib/lost-dogs";
 import type { LostDogList } from "@/lib/lost-dogs";
 import { PetCard } from "./ui/pet-card";
 import { Icon } from "./ui/pictogram";
+import { HomeLostMap } from "./home-lost-map";
 
 export function HomeLostAnimals() {
   const [result, setResult] = useState<LostDogList | null>(null);
@@ -25,6 +26,6 @@ export function HomeLostAnimals() {
       : !result ? <div className="home-animals-loading" role="status" aria-label="Cargando animales perdidos"><div className="skeleton skeleton-card" /><div className="skeleton skeleton-card" /></div>
         : result.items.length ? <div className="home-animals-grid">{result.items.map(animal => <PetCard key={animal.id} animal={animal} compact />)}</div>
           : <div className="lost-dogs-empty"><h3>Todavía no hay avisos activos</h3><p>Los animales publicados como perdidos aparecerán acá.</p><Link href="/perdi" className="button button-secondary">Publicar un aviso</Link></div>}
-    <Link href="/mapa" className="home-map-link"><span className="help-icon"><Icon name="pin" /></span><div><strong>Consultá los reportes en el mapa</strong><span>Perdidos, avistamientos y animales encontrados por zona.</span></div><Icon name="arrow" /></Link>
+    <HomeLostMap />
   </section>;
 }

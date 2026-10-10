@@ -8,5 +8,5 @@ export default async function DogNoticePage({ params, searchParams }: {
   searchParams: Promise<{ origen?: string | string[] }>;
 }) {
   const [{ id }, { origen }] = await Promise.all([params, searchParams]);
-  return <DogDetail id={id} fromMap={origen === "mapa"} />;
+  return <DogDetail id={id} fromMap={origen === "mapa"} fromHomeMap={origen === "inicio"} />;
 }

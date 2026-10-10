@@ -6,17 +6,21 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 Contenedor de 1280 px con márgenes automáticos y 24 px laterales. Portada con texto y foto en dos columnas. Formularios con una columna principal flexible y ayuda lateral de 320 px; bajo 950 px pasan a una columna. Desde 360 px los controles se apilan, el stepper muestra la etapa activa y las fotos se pueden recorrer horizontalmente.
 
+Cómo funciona ocupa una sección propia, con título visible, introducción y cuatro pasos en una grilla de dos columnas. A 640 px o menos se apila en una columna. La altura mínima en escritorio es 72 vh y el contenido puede crecer; en móvil se usa altura natural.
+
 ## Section Order
 
-Portada: navegación, presentación y acciones para los tres tipos de reporte, explicación breve, avisos activos reales, acceso al mapa y pie con atribución de la fotografía. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
+Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro; termina con consejos de fotos, lugar y fecha y acceso a los animales publicados. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
 
 ## Navigation
 
-Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; notificaciones y cuenta a la derecha. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y Cómo funciona. La ruta activa usa subrayado coral y `aria-current`. En pantallas pequeñas hay un menú nativo desplegable y enlaces de cuenta y notificaciones con nombres accesibles.
+Logo a la izquierda; Inicio, Perdí una mascota, Vi una mascota y Mis avisos en el centro; notificaciones y cuenta a la derecha. Mis avisos y Notificaciones se muestran con sesión iniciada. Explorar conserva Animales perdidos, Mapa, Encontré una mascota y el enlace a `#como-funciona`. La ruta activa usa subrayado coral y `aria-current`. En pantallas pequeñas hay un menú nativo desplegable y enlaces de cuenta y notificaciones con nombres accesibles.
 
 ## Typography
 
 Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos de página de 32–46 px y peso 800; portada de hasta 58 px; secciones de 22–26 px; tarjetas de 18–22 px; texto de 14–16 px y ayudas de 12–13 px. El contenido largo permite salto de línea.
+
+El título de Cómo funciona usa 28–36 px, la introducción 16–17 px, los títulos de pasos 20–21 px y su texto principal 15 px. Los detalles complementarios se separan con una línea y usan 13 px.
 
 ## Color System
 
@@ -26,6 +30,8 @@ Variables semánticas en `globals.css` y colores equivalentes en el tema Tailwin
 
 Separaciones de 8, 12, 16, 20, 24, 28 y 32 px. Tarjetas con 24–28 px de padding en escritorio y 16–20 px en móvil. Campos de al menos 48 px y acciones táctiles de al menos 44 px. Ayudas y revisión conservan una jerarquía separada de los campos.
 
+Cómo funciona tiene 64 px de separación superior y 72 px inferior en escritorio, tarjetas de al menos 240 px y gaps de 24 px. En móvil el padding vertical es 48 px y los pasos crecen según su contenido, sin recortar texto ni forzar espacio vacío.
+
 ## Image Treatment
 
 La fotografía existente de portada conserva su atribución. Los avisos muestran únicamente fotos reales de la API, con un estado de ausencia cuando no hay foto. Miniaturas cuadradas y fotos de detalle de 4:3. El cargador compartido conserva una foto opcional para reportes generales y hasta cuatro para avistamientos vinculados, con JPEG, PNG y WebP de hasta 10 MB. Incluye selección, arrastre, miniaturas, eliminación y errores; no agrega campos al payload.
@@ -34,9 +40,13 @@ La fotografía existente de portada conserva su atribución. Los avisos muestran
 
 Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Componentes compartidos para stepper, fotos, iconos, tarjetas de animales y compatibilidad. El panel muestra las cantidades disponibles en sus datos; no se inventan nuevos avistamientos, compartidos, historias o recorridos. La foto de un aviso activo respeta el endpoint público y sus restricciones.
 
+Los cuatro pasos de Cómo funciona usan iconos existentes, un número visible y dos niveles de explicación. El bloque final de consejos usa fondo azul suave. El contenido distingue confirmar un avistamiento de recuperar al animal y explica el envío breve sin cuenta.
+
 ## Buttons and CTAs
 
 Acción principal coral, secundaria blanca con borde y terciaria azul con texto. Radios de 10–12 px. En móvil las acciones principales de publicación ocupan el ancho disponible. Todos los controles de cerrar, quitar foto o navegar tienen texto o nombre accesible. Se mantiene el bloqueo de controles durante las operaciones y el feedback de guardado, error y éxito.
+
+El cierre de Cómo funciona enlaza al catálogo con **Ver animales perdidos** y al formulario existente con **Reportar un animal encontrado**. En móvil la acción al catálogo ocupa el ancho disponible.
 
 ## Overall Design Feel
 

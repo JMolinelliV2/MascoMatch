@@ -45,6 +45,7 @@ fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 summary { cursor: pointer; }
 h1, h2, h3 { color: var(--text-primary); }
 .ui-icon { width: 20px; height: 20px; flex-shrink: 0; vertical-align: middle; }
+@keyframes account-loading-turn { to { transform: rotate(360deg); } }
 
 @layer components {
   .skip-link { position: absolute; z-index: 100; top: 8px; left: 16px; padding: 12px 16px; background: var(--surface); border: 2px solid var(--accent-blue); transform: translateY(-150%); }
@@ -482,6 +483,23 @@ h1, h2, h3 { color: var(--text-primary); }
   .account-page { max-width: 640px; }
   .account-form { max-width: none; }
   .account-form fieldset { margin-top: 0; }
+  .account-loading { max-width: 640px; min-height: 280px; margin: 28px auto; padding: 36px 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .account-loading-message { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 206px; text-align: center; }
+  .account-loading-mark { position: relative; display: grid; place-items: center; width: 76px; height: 76px; margin-bottom: 24px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
+  .account-loading-mark > .ui-icon { width: 30px; height: 30px; }
+  .account-loading-ring { position: absolute; inset: -5px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: account-loading-turn 1.2s linear infinite; }
+  .account-loading-message h2 { margin: 0 0 8px; font-size: clamp(20px, 3vw, 24px); font-weight: 700; line-height: 1.3; }
+  .account-loading-message p { max-width: 440px; margin: 0; color: var(--text-secondary); font-size: 15px; line-height: 1.6; }
+  .account-loading--reports { max-width: none; }
+  .account-loading-preview { max-width: 760px; margin: 28px auto 0; }
+  .account-loading-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .account-loading-summary > span { height: 64px; border-radius: 12px; background: var(--background); border: 1px solid var(--border); }
+  .account-loading-case { display: flex; align-items: center; gap: 20px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; }
+  .account-loading-photo { flex-shrink: 0; width: clamp(56px, 10vw, 80px); aspect-ratio: 1; border-radius: 12px; background: var(--border); }
+  .account-loading-lines { display: grid; gap: 12px; flex: 1; min-width: 0; }
+  .account-loading-lines > span { display: block; height: 10px; max-width: 380px; background: var(--border); border-radius: 6px; }
+  .account-loading-lines > span:first-child { width: 45%; height: 16px; }
+  .account-loading-lines > span:last-child { width: 65%; }
   .account-recovery > p:last-child { margin-top: 24px; text-align: center; }
   .account-settings > form { margin-top: 24px; }
   .account-settings > .text-button { display: inline-block; margin-top: 24px; }
@@ -693,6 +711,7 @@ h1, h2, h3 { color: var(--text-primary); }
     .case-actions .text-button { font-size: 13px; }
   }
   @media (prefers-reduced-motion: reduce) {
+    .account-loading-ring { animation: none; }
     html { scroll-behavior: auto; }
     .button, .explore-menu .explore-chevron { transition: none; }
   }

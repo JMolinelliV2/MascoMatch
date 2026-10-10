@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import type { SessionUser } from "../account-session";
 import { VerifyEmailNotice } from "../verify-email-notice";
 import { useSessionRefresh } from "../use-session-refresh";
+import { AccountLoading } from "../ui/account-loading";
 
 export function RegistrationForm() {
   const sessionVersion = useSessionRefresh();
@@ -74,9 +75,9 @@ export function RegistrationForm() {
     finally { setBusy(false); }
   }
 
-  if (checking) return <p role="status">Consultando tu sesión…</p>;
+  if (checking) return <AccountLoading description="Estamos abriendo tu espacio en MascoMatch." />;
   if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
-  if (user && !created) return <p role="status">Abriendo tu cuenta…</p>;
+  if (user && !created) return <AccountLoading title="Abriendo tu cuenta" description="Enseguida vas a poder continuar." />;
   if (user) return <section className="notification-login account-form">
     <h2>Tu cuenta está creada</h2>
     <p role="status">{user.email_verified ? "Ya podés publicar desde tu cuenta." : "Ahora confirmá tu correo para empezar a publicar. Recibirás un mensaje con el enlace."}</p>

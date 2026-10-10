@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { SessionUser } from "../account-session";
 import { useSessionRefresh } from "../use-session-refresh";
+import { AccountLoading } from "../ui/account-loading";
 
 export function LoginForm() {
   const sessionVersion = useSessionRefresh();
@@ -56,9 +57,9 @@ export function LoginForm() {
     finally { setBusy(false); }
   }
 
-  if (checking) return <p role="status">Consultando tu sesión…</p>;
+  if (checking) return <AccountLoading description="Estamos abriendo tu espacio en MascoMatch." />;
   if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
-  if (user) return <p role="status">Abriendo tu cuenta…</p>;
+  if (user) return <AccountLoading title={user.email_verified ? "Abriendo tus avisos" : "Abriendo la confirmación de correo"} description={user.email_verified ? "Enseguida vas a poder seguir tus búsquedas." : "Ya falta un paso para empezar a publicar."} />;
 
   return <form className="notification-login account-form" onSubmit={login} aria-busy={busy}>
     <fieldset className="section-fields" disabled={busy}>

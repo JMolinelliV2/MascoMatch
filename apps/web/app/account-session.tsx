@@ -3,6 +3,7 @@ import {useEffect,useState} from "react";
 import Link from "next/link";
 import {VerifyEmailNotice} from "./verify-email-notice";
 import {useSessionRefresh} from "./use-session-refresh";
+import {AccountLoading} from "./ui/account-loading";
 import type {FormEvent,ReactNode} from "react";
 export type SessionUser={id:string;name:string;email?:string;phone?:string|null;pending_email?:string|null;role?:string;email_verified?:boolean;email_verification_required?:boolean};
 export function AccountSession({children}:{children:(user:SessionUser)=>ReactNode}) {
@@ -18,6 +19,6 @@ export function AccountSession({children}:{children:(user:SessionUser)=>ReactNod
     catch(cause){setError(cause instanceof Error?cause.message:"No pudimos iniciar sesión.");}finally{setBusy(false);}
   }
   async function logout(){const response=await fetch("/api/session",{method:"DELETE"});if(response.ok){setUser(null);window.dispatchEvent(new Event("mascomatch:session"));}else setError("No pudimos cerrar tu sesión.");}
-  if(checking)return <p role="status">Consultando tu sesión…</p>;
+  if(checking)return <AccountLoading description="Estamos abriendo tu espacio en MascoMatch."/>;
   return <>{user?<><div className="notifications-account"><span>{user.name}</span><button className="text-button" type="button" onClick={()=>void logout()}>Cerrar sesión</button></div>{user.email_verification_required&&!user.email_verified&&<VerifyEmailNotice email={user.email}/>}{children(user)}</>:<form onSubmit={login} className="notification-login"><h2>Ingresá con tu cuenta</h2><fieldset disabled={busy} className="section-fields"><label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required autoComplete="email"/></label><label className="field-label">Contraseña<input className="form-input" name="password" type="password" required autoComplete="current-password"/></label><button className="button button-primary" type="submit">{busy?"Ingresando…":"Ingresar"}</button></fieldset><p>¿Todavía no tenés cuenta? <Link className="text-button" href="/crear-cuenta">Crear cuenta</Link></p><p><Link className="text-button" href="/recuperar">Olvidé mi contraseña</Link></p></form>}{error&&<p className="notice notice-warning" role="alert">{error}</p>}</>;
 }

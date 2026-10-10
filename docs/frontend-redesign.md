@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+La espera al ingresar y consultar la sesión usa una tarjeta centrada de hasta 640 px, con altura mínima de 280 px. La carga inicial de Mis avisos ocupa el ancho disponible y agrega una vista provisional de dos bloques de resumen y una tarjeta, limitada a 760 px. En móvil el contenido se ajusta al ancho y la miniatura provisional baja de 80 a 56 px.
+
 Contenedor de 1280 px con márgenes automáticos y 24 px laterales. Portada con texto y foto en dos columnas. Formularios con una columna principal flexible y ayuda lateral de 320 px; bajo 950 px pasan a una columna. Desde 360 px los controles se apilan, el stepper muestra la etapa activa y las fotos se pueden recorrer horizontalmente.
 
 Cómo funciona ocupa una sección propia, con título visible, introducción y cuatro pasos en una grilla de dos columnas. A 640 px o menos se apila en una columna. La altura mínima en escritorio es 72 vh y el contenido puede crecer; en móvil se usa altura natural.
@@ -44,6 +46,8 @@ Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda 
 
 ## Typography
 
+Los estados de carga usan título de 20–24 px, peso 700 y explicación de 15 px con interlineado 1,6. El mensaje distingue preparar la cuenta, abrir los avisos y consultar las publicaciones; los lectores de pantalla reciben un estado cortés y atómico.
+
 Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos de página de 32–46 px y peso 800; portada de hasta 58 px; secciones de 22–26 px; tarjetas de 18–22 px; texto de 14–16 px y ayudas de 12–13 px. El contenido largo permite salto de línea.
 
 El título de Cómo funciona usa 28–36 px, la introducción 16–17 px, los títulos de pasos 20–21 px y su texto principal 15 px. Los detalles complementarios se separan con una línea y usan 13 px.
@@ -72,6 +76,8 @@ La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducid
 
 ## Image Treatment
 
+La espera reutiliza la huella SVG de 30 px dentro de un círculo coral suave de 76 px. Un aro de 3 px rota cada 1,2 segundos y permanece quieto con movimiento reducido. No requiere descargar imágenes. Las formas provisionales se ocultan a los lectores de pantalla y no representan cantidades ni publicaciones reales.
+
 La fotografía existente de portada conserva su atribución. Los avisos muestran únicamente fotos reales de la API, con un estado de ausencia cuando no hay foto. Miniaturas cuadradas y fotos de detalle de 4:3. El cargador compartido conserva una foto opcional para reportes generales y hasta cuatro para avistamientos vinculados, con JPEG, PNG y WebP de hasta 10 MB. Incluye selección, arrastre, miniaturas, eliminación y errores; no agrega campos al payload.
 
 Apoyanos reutiliza los iconos SVG de corazón, huella, coincidencias y cuidado del proyecto. No añade imágenes remotas ni fotografías de supuestos reencuentros.
@@ -83,6 +89,8 @@ Los marcadores de animales perdidos son círculos de 56 px con foto real recorta
 Las tarjetas de la lista reutilizan `DogPhoto` y su carga diferida para las fotos públicas de animales perdidos. Sin foto o ante error conservan sus estados de ausencia. Avistamientos y encontrados muestran los iconos existentes de ojo y corazón con **Miniatura no disponible**; no se solicitan imágenes privadas ni se publica una ruta nueva de fotos.
 
 ## Cards and Content Blocks
+
+La tarjeta de carga usa superficie blanca, borde existente, radio de 16 px, padding de 36 × 24 px y mensaje centrado. La huella se separa 24 px del título. Los bloques provisionales son estáticos, de color neutro, con 16 px entre resúmenes y 20 px dentro de la tarjeta. Se retiran cuando llegan los datos o se muestra un error, siguiendo los estados existentes de la sesión y del listado.
 
 Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Componentes compartidos para stepper, fotos, iconos, tarjetas de animales y compatibilidad. El panel muestra las cantidades disponibles en sus datos; no se inventan nuevos avistamientos, compartidos, historias o recorridos. La foto de un aviso activo respeta el endpoint público y sus restricciones.
 
@@ -168,3 +176,7 @@ TypeScript terminó sin errores. Se abrió la lista desplegable de `/mapa` con l
 ### Gestión de cuenta y pedidos retomados del 10 de octubre de 2026
 
 TypeScript y la sintaxis de los archivos Python modificados terminaron sin errores. La API arrancó con `0016_account_management` aplicada. Recuperar, Mi cuenta, Apoyanos e Ingresar respondieron correctamente. La revisión visual confirmó la tarjeta centrada de recuperación, el acceso de invitados a Mi cuenta, la explicación de IA en los aportes y el texto del enlace a Encontré una mascota. Se guardó una captura de recuperación. No se ejecutaron pruebas automatizadas ni se eliminaron cuentas, modificaron contactos o solicitaron correos; los flujos autenticados de cambio de correo y eliminación se revisaron en código, sin modificar cuentas reales.
+
+### Estado de carga del 10 de octubre de 2026
+
+TypeScript terminó sin errores y la web local se actualizó. La lectura de la página Mis avisos mostró **Preparando tu cuenta** y su explicación durante la consulta inicial, seguida del formulario de ingreso de invitados. Los estados de sesión, apertura y listado reutilizan el componente de carga. No se ejecutaron pruebas automatizadas ni se iniciaron sesiones o modificaron cuentas para esta revisión.

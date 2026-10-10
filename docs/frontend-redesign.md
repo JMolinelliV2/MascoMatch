@@ -94,6 +94,8 @@ Las tarjetas de la lista reutilizan `DogPhoto` y su carga diferida para las foto
 
 ## Cards and Content Blocks
 
+Guardar el contacto en Mi cuenta abre un `dialog` nativo de hasta 440 px, centrado, con fondo blanco, radio de 20 px, padding de 36 × 28 px y un check verde de 64 px. El título **Cambios guardados** usa 26 px y la descripción 15 px. Un fondo navy con opacidad del 45% separa la confirmación de la página. Solo aparece después de recibir éxito del servidor y aclara la confirmación pendiente de un correo nuevo. El foco pasa a Entendido; el diálogo nativo mantiene el foco dentro y permite Escape. También se puede cerrar con el botón de 44 px o al pulsar fuera. El ancho deja 16 px laterales en móvil y la altura admite desplazamiento en pantallas bajas. Al cerrar, se conserva el resultado junto al formulario.
+
 La tarjeta de carga usa superficie blanca, borde existente, radio de 16 px, padding de 36 × 24 px y mensaje centrado. La huella se separa 24 px del título. Los bloques provisionales son estáticos, de color neutro, con 16 px entre resúmenes y 20 px dentro de la tarjeta. Se retiran cuando llegan los datos o se muestra un error, siguiendo los estados existentes de la sesión y del listado.
 
 Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Componentes compartidos para stepper, fotos, iconos, tarjetas de animales y compatibilidad. El panel muestra las cantidades disponibles en sus datos; no se inventan nuevos avistamientos, compartidos, historias o recorridos. La foto de un aviso activo respeta el endpoint público y sus restricciones.
@@ -188,3 +190,7 @@ TypeScript terminó sin errores y la web local se actualizó. La lectura de la p
 ### Preferencias en Mi cuenta del 10 de octubre de 2026
 
 TypeScript y la sintaxis de las plantillas de correo terminaron sin errores. La API inició correctamente y Mi cuenta y Notificaciones respondieron en lectura. El control de correo se trasladó a Mi cuenta, reutilizando su persistencia existente, con bloqueo durante el guardado, confirmación y error propios. La bandeja y los correos apuntan a la nueva sección. No se ejecutaron pruebas automatizadas ni se modificaron preferencias reales o enviaron correos durante esta revisión.
+
+### Confirmación al guardar contacto del 10 de octubre de 2026
+
+TypeScript terminó sin errores. El guardado exitoso del contacto abre un diálogo nativo con el resultado y, cuando corresponde, las instrucciones para confirmar el nuevo correo. Se revisaron la llamada posterior al éxito, la descripción accesible, el foco inicial y las formas de cierre en código. No se ejecutaron pruebas automatizadas ni se modificaron datos de cuentas reales para abrir el modal durante esta entrega.

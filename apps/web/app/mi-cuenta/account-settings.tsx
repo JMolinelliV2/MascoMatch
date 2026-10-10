@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { AccountSession } from "../account-session";
 import type { SessionUser } from "../account-session";
+import { SavedChangesDialog } from "../ui/saved-changes-dialog";
 
 async function requestChange(method: string, payload?: object, action?: "cancel" | "resend") {
   const response = await fetch(`/api/account-settings${action ? `?action=${action}` : ""}`, {
@@ -22,6 +23,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [savedConfirmation, setSavedConfirmation] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(user.notification_preferences?.email !== false);
@@ -60,7 +62,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
       const password = form.elements.namedItem("password");
       if (password instanceof HTMLInputElement) password.value = "";
       setEmail(updated.email || "");
-      setMessage(updated.pending_email ? "Datos guardados. Revisá el correo de la nueva dirección para confirmar el cambio." : "Tus datos de contacto quedaron actualizados.");
+      setSavedConfirmation(updated.pending_email ? "Tus datos se guardaron. Para completar el cambio de correo, abrí el enlace enviado a la nueva dirección. Hasta confirmarlo, seguirá funcionando tu correo actual." : "Tus datos de contacto quedaron actualizados.");
       window.dispatchEvent(new Event("mascomatch:session"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos guardar tus datos."); }
     finally { setBusy(false); }
@@ -92,6 +94,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
   }
 
   return <>
+    {savedConfirmation && <SavedChangesDialog description={savedConfirmation} onClose={() => { setMessage(savedConfirmation); setSavedConfirmation(null); }} />}
     <section className="notification-login account-form account-settings" aria-labelledby="contact-title">
       <h2 id="contact-title">Datos de contacto</h2>
       <p className="field-help">El correo se usa para ingresar y recibir alertas. Tu teléfono solo se comparte en los reportes donde lo hayas autorizado.</p>

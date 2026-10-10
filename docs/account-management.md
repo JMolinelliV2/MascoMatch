@@ -12,6 +12,8 @@ La bandeja `/notificaciones` contiene las alertas y un enlace a `/mi-cuenta#noti
 
 Nombre y teléfono se guardan inmediatamente. Cambiar el correo requiere la contraseña actual y genera un enlace de un solo uso, válido durante 24 horas, enviado a la nueva dirección. Hasta confirmarlo, el correo actual sigue siendo la dirección de ingreso y de las alertas. La dirección pendiente no reserva una cuenta: su disponibilidad se vuelve a comprobar mediante la restricción única de la base al confirmar.
 
+Al guardar los datos de contacto, una respuesta exitosa abre el modal **Cambios guardados**. Si hay un cambio de correo pendiente, aclara que falta confirmar la nueva dirección. Se cierra con Entendido, el botón de cerrar, Escape o al pulsar el fondo; luego queda el mensaje junto al formulario. Los errores se muestran en el formulario y no abren el modal de éxito.
+
 El usuario puede reenviar o cancelar el cambio desde Mi cuenta. Se aplican los límites existentes de enlaces (un minuto entre solicitudes y tres por hora por cuenta) y de intentos de contraseña. Confirmar el cambio invalida los enlaces de acceso pendientes y todas las sesiones anteriores; hay que ingresar con el nuevo correo y la contraseña habitual. Los enlaces de cambio están asociados a su destinatario para evitar que un enlace anterior confirme otra dirección.
 
 ## Eliminación

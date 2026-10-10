@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+Contacto reutiliza el contenedor centrado de 640 px de las páginas de cuenta, sin exigir una sesión. La tarjeta ocupa todo el ancho interior y se ajusta al padding lateral existente en móvil.
+
 Mis avisos usa un contenedor centrado de hasta 640 px al consultar la sesión y mostrar el ingreso sin cuenta, igual que la página Ingresar. El título, la introducción, el formulario y los errores comparten el ancho disponible. Al mostrar una sesión iniciada, el contenedor pasa a 1280 px para los resúmenes y avisos. En móvil conserva el padding lateral de 20 px.
 
 La espera al ingresar y consultar la sesión usa una tarjeta centrada de hasta 640 px, con altura mínima de 280 px. La carga inicial de Mis avisos ocupa el ancho disponible y agrega una vista provisional de dos bloques de resumen y una tarjeta, limitada a 760 px. En móvil el contenido se ajusta al ancho y la miniatura provisional baja de 80 a 56 px.
@@ -22,6 +24,8 @@ Debajo del mapa completo, la lista desplegable presenta tarjetas en dos columnas
 
 ## Section Order
 
+Contacto presenta regreso al inicio, título e introducción, formulario y dirección de correo alternativa. Los campos aparecen en el orden nombre, correo, tipo de consulta y mensaje; siguen una explicación de privacidad y Enviar mensaje. Al recibir la solicitud, la confirmación reemplaza el formulario y permite escribir otra.
+
 Mi cuenta reúne contacto, notificaciones por correo y eliminación de cuenta, en ese orden. Notificaciones mantiene la bandeja de alertas y enlaza a la configuración en Mi cuenta. La sección de preferencias tiene título, casilla, explicación, feedback de guardado y enlace para consultar las alertas.
 
 Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro en cuatro pasos. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
@@ -33,6 +37,8 @@ La portada incorpora las reseñas después de los avisos y el acceso al mapa, an
 El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las tarjetas de avisos activos. Muestra únicamente animales perdidos con ubicación; el enlace **Abrir mapa completo** mantiene el acceso a avistamientos, encontrados y filtros de la página `/mapa`.
 
 ## Navigation
+
+Contacto y sugerencias está disponible en Explorar, el menú móvil y el pie del inicio. La página conserva el regreso al inicio y el enlace directo a info@mascomatch.com.
 
 El enlace de configuración de la bandeja y de los correos abre `/mi-cuenta#notificaciones`. La sección se lleva a la vista después de cargar la sesión, incluso al entrar sin una sesión iniciada y luego ingresar desde esa página.
 
@@ -95,6 +101,8 @@ Los marcadores de animales perdidos son círculos de 56 px con foto real recorta
 Las tarjetas de la lista reutilizan `DogPhoto` y su carga diferida para las fotos públicas de animales perdidos. Sin foto o ante error conservan sus estados de ausencia. Avistamientos y encontrados muestran los iconos existentes de ojo y corazón con **Miniatura no disponible**; no se solicitan imágenes privadas ni se publica una ruta nueva de fotos.
 
 ## Cards and Content Blocks
+
+El formulario de contacto reutiliza la tarjeta blanca, el borde discreto y el radio de 16 px de Ingresar y Mi cuenta. Tiene un mensaje de hasta 4000 caracteres con contador, ayuda debajo del correo y errores junto a los campos o al formulario. Durante el envío bloquea sus controles; al recibir éxito muestra el check verde existente y lleva el foco al título de agradecimiento. No afirma que el correo ya haya llegado a la bandeja.
 
 Guardar el contacto en Mi cuenta abre un `dialog` nativo de hasta 440 px, centrado, con fondo blanco, radio de 20 px, padding de 36 × 28 px y un check verde de 64 px. El título **Cambios guardados** usa 26 px y la descripción 15 px. Un fondo navy con opacidad del 45% separa la confirmación de la página. Solo aparece después de recibir éxito del servidor y aclara la confirmación pendiente de un correo nuevo. El foco pasa a Entendido; el diálogo nativo mantiene el foco dentro y permite Escape. También se puede cerrar con el botón de 44 px o al pulsar fuera. El ancho deja 16 px laterales en móvil y la altura admite desplazamiento en pantallas bajas. Al cerrar, se conserva el resultado junto al formulario.
 
@@ -200,3 +208,7 @@ TypeScript terminó sin errores. El guardado exitoso del contacto abre un diálo
 ### Ingreso centrado en Mis avisos del 10 de octubre de 2026
 
 TypeScript terminó sin errores. La vista sin sesión mostró el título y el formulario dentro del mismo contenedor centrado de 640 px, con la tarjeta ocupando los 592 px interiores. No hubo desbordamiento horizontal en la vista de escritorio. Se guardó una captura con los campos vacíos; no se iniciaron sesiones, enviaron formularios ni ejecutaron pruebas automatizadas.
+
+### Contacto del 10 de octubre de 2026
+
+TypeScript y la sintaxis Python terminaron sin errores. La API inició con la migración `0017_contact_messages`, el correo SMTP habilitado y cero mensajes de contacto. La revisión visual de la página mostró los campos de nombre, correo, tipo y mensaje dentro de la tarjeta centrada, sin desbordamiento horizontal en escritorio. La navegación incluye el acceso desde Explorar y el pie del inicio. No se ejecutaron pruebas automatizadas ni se enviaron mensajes de contacto de prueba.

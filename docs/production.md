@@ -128,6 +128,8 @@ El comando verifica autenticidad, rutas y hashes antes de modificar destinos. Re
 
 ## Monitoreo
 
+El formulario público de contacto reutiliza el SMTP configurado y envía a info@mascomatch.com desde una cola privada. Sus métricas de mensajes pendientes y fallidos se incluyen en la supervisión del correo. Los límites por cliente y global, la retención y el reintento manual están descritos en `contact.md`.
+
 ```sh
 docker compose -p mascomatch --env-file .env.production -f compose.production.yml --profile monitoring up -d prometheus
 ```

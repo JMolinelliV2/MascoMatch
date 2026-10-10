@@ -53,6 +53,7 @@ export default function Home() {
       <section className="home-support" aria-labelledby="home-support-title"><span className="feature-icon"><Icon name="heart" /></span><div><p className="eyebrow">Apoyo voluntario</p><h2 id="home-support-title">Ayudá a sostener MascoMatch</h2><p>Conocé los niveles de patrocinio y cómo los aportes pueden acompañar las búsquedas de la comunidad.</p></div><Link href="/apoyanos" className="button button-secondary">Conocé cómo apoyar <Icon name="arrow" /></Link></section>
       <footer className="home-footer">
         <span>MascoMatch · Información que ayuda a volver a casa.</span>
+        <Link href="/contacto">Contacto y sugerencias</Link>
         <a href="https://unsplash.com/photos/golden-retriever-x5oPmHmY3kQ" target="_blank" rel="noopener noreferrer">Foto: Victor G / Unsplash</a>
       </footer>
     </main>

@@ -10,7 +10,7 @@ from app.analysis.service import utcnow
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.matching.linked import aware
-from app.models import AccountToken, AnalysisJob, Notification
+from app.models import AccountToken, AnalysisJob, ContactMessage, Notification
 
 router = APIRouter(tags=["operations"])
 
@@ -59,6 +59,8 @@ def metrics(authorization: str | None = Header(default=None)):
             values["mascomatch_email_failed"] = db.scalar(select(func.count()).select_from(Notification).where(Notification.email_status == "FAILED", Notification.is_active.is_(True)))
             values["mascomatch_email_pending"] = db.scalar(select(func.count()).select_from(Notification).where(Notification.email_status == "PENDING", Notification.is_active.is_(True)))
             values["mascomatch_account_email_failed"] = db.scalar(select(func.count()).select_from(AccountToken).where(AccountToken.email_status == "FAILED"))
+            values["mascomatch_contact_email_failed"] = db.scalar(select(func.count()).select_from(ContactMessage).where(ContactMessage.email_status == "FAILED"))
+            values["mascomatch_contact_email_pending"] = db.scalar(select(func.count()).select_from(ContactMessage).where(ContactMessage.email_status == "PENDING"))
     except Exception:
         values["mascomatch_ready"] = 0
     try:

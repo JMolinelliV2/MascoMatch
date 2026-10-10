@@ -79,22 +79,27 @@ class RateLimitMiddleware:
         path=scope["path"];headers=dict(scope.get("headers",[]));actor=client_address(scope)
         group="auth" if path.startswith("/api/v1/auth/") and scope["method"]=="POST" else "read" if scope["method"] in {"GET","HEAD"} else "publish"
         if path=="/api/v1/auth/register" and scope["method"]=="POST":group="register"
-        seconds=3600 if group=="register" else 60
+        if path.rstrip("/")=="/api/v1/contact" and scope["method"]=="POST":group="contact"
+        seconds=3600 if group in {"register", "contact"} else 60
         authorization=headers.get(b"authorization",b"").decode("utf-8",errors="ignore")
-        if group not in {"auth","register"} and authorization.startswith("Bearer "):
+        if group not in {"auth","register","contact"} and authorization.startswith("Bearer "):
             try:actor=str(decode_access_token(authorization[7:]))
             except Exception:pass
         limit=getattr(settings,f"rate_limit_{group}")
-        if settings.rate_limit_backend == "redis":
-            if self.shared is None:
-                self.shared=RedisWindowLimiter()
-            try:
-                allowed,wait=await self.shared.allow((group,actor),limit,seconds)
-            except (RedisError, OSError):
-                if group != "read":
-                    return await JSONResponse({"detail":"El servicio está temporalmente ocupado. Intentá de nuevo."}, status_code=503, headers={"Retry-After":"10"})(scope,receive,send)
-                allowed,wait=self.limiter.allow((group,actor),limit,seconds)
-        else:
-            allowed,wait=self.limiter.allow((group,actor),limit,seconds)
-        if not allowed:return await JSONResponse({"detail":"Demasiadas solicitudes. Esperá un momento e intentá de nuevo."},status_code=429,headers={"Retry-After":str(wait)})(scope,receive,send)
+        budgets = [((group, actor), limit, seconds)]
+        if group == "contact":
+            budgets.append((("contact-daily", "all"), settings.rate_limit_contact_daily, 86400))
+        for key, budget, window in budgets:
+            if settings.rate_limit_backend == "redis":
+                if self.shared is None:
+                    self.shared=RedisWindowLimiter()
+                try:
+                    allowed,wait=await self.shared.allow(key,budget,window)
+                except (RedisError, OSError):
+                    if group != "read":
+                        return await JSONResponse({"detail":"El servicio está temporalmente ocupado. Intentá de nuevo."}, status_code=503, headers={"Retry-After":"10"})(scope,receive,send)
+                    allowed,wait=self.limiter.allow(key,budget,window)
+            else:
+                allowed,wait=self.limiter.allow(key,budget,window)
+            if not allowed:return await JSONResponse({"detail":"Demasiadas solicitudes. Esperá un momento e intentá de nuevo."},status_code=429,headers={"Retry-After":str(wait)})(scope,receive,send)
         return await self.app(scope,receive,send)

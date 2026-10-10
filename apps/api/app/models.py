@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Uuid, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Text, Uuid, UniqueConstraint, func
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -266,6 +266,21 @@ class ModerationReport(TimestampMixin, Base):
     reason: Mapped[str] = mapped_column(String(40),nullable=False)
     detail: Mapped[str] = mapped_column(String(1000),default="",nullable=False)
     status: Mapped[str] = mapped_column(String(24),default="OPEN",index=True,nullable=False)
+
+
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
+    __table_args__ = (Index("ix_contact_messages_delivery", "email_status", "email_available_at"),)
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    topic: Mapped[str] = mapped_column(String(24), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    email_status: Mapped[str] = mapped_column(String(24), default="PENDING", nullable=False)
+    email_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    email_available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    email_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AdminAudit(TimestampMixin, Base):

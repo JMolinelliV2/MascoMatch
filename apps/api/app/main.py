@@ -8,7 +8,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.observability import ObservabilityMiddleware
-from app.routers import analysis, auth, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, operations, pets, photos, public_lost_dogs, reviews, upload_admission
+from app.routers import analysis, auth, contact, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, operations, pets, photos, public_lost_dogs, reviews, upload_admission
 
 
 @asynccontextmanager
@@ -19,8 +19,10 @@ async def lifespan(application: FastAPI):
     from app.account_mail import delivery_loop as account_delivery_loop
     from app.photo_reminders import delivery_loop as photo_reminder_loop
     from app.account_management import cleanup_loop
+    from app.contact_mail import delivery_loop as contact_delivery_loop
     tasks = [asyncio.create_task(reconciliation_loop()), asyncio.create_task(delivery_loop()), asyncio.create_task(general_matching_loop()),asyncio.create_task(account_delivery_loop()), asyncio.create_task(photo_reminder_loop())]
     tasks.append(asyncio.create_task(cleanup_loop()))
+    tasks.append(asyncio.create_task(contact_delivery_loop()))
     if settings.ai_enabled or settings.embeddings_enabled:
         from app.analysis.queue import dispatch_loop
         tasks.append(asyncio.create_task(dispatch_loop()))
@@ -66,6 +68,7 @@ app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(map.router, prefix="/api/v1")
 app.include_router(moderation.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
+app.include_router(contact.router, prefix="/api/v1")
 app.include_router(operations.router)
 app.include_router(upload_admission.router)
 

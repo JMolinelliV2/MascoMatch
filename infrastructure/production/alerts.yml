@@ -12,10 +12,10 @@ groups:
         labels: {severity: warning}
         annotations: {summary: "La cola de análisis supera 15 minutos"}
       - alert: MascoMatchEmailFailures
-        expr: mascomatch_email_failed > 0 or mascomatch_account_email_failed > 0
+        expr: mascomatch_email_failed > 0 or mascomatch_account_email_failed > 0 or mascomatch_contact_email_failed > 0
         for: 5m
         labels: {severity: warning}
-        annotations: {summary: "Hay alertas que agotaron sus reintentos de correo"}
+        annotations: {summary: "Hay correos que agotaron sus reintentos de envío"}
       - alert: MascoMatchBackupOverdue
         expr: time() - mascomatch_backup_last_success_unixtime > 93600
         for: 15m

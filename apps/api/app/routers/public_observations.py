@@ -13,6 +13,8 @@ from app.core.image_storage import load_analysis_image
 from app.db.session import get_db
 from app.models import LostCase, Observation, Photo
 from app.routers.public_lost_dogs import active_dogs
+from app.routers.photo_gallery import gallery_photo_response
+from app.schemas import PublicPhotoList, PublicPhotoRead
 
 router = APIRouter(prefix="/public/observations", tags=["public-observations"])
 
@@ -92,3 +94,24 @@ def get_public_observation_photo(observation_id: UUID, db: Session = Depends(get
     except (BotoCoreError, ValueError) as exc:
         raise HTTPException(status_code=503, detail="No pudimos cargar la foto por ahora.") from exc
     return Response(content=payload, media_type=mime_type, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/{observation_id}/photos", response_model=PublicPhotoList)
+def list_public_observation_photos(observation_id: UUID, response: Response, db: Session = Depends(get_db)):
+    observation = db.scalar(visible_observations().where(Observation.id == observation_id))
+    if observation is None:
+        raise HTTPException(status_code=404, detail="El reporte ya no está disponible.")
+    identities = db.scalars(select(Photo.id).where(Photo.owner_type == "observation", Photo.owner_id == observation.id).order_by(Photo.created_at.desc(), Photo.id.desc()))
+    response.headers["Cache-Control"] = "no-store"
+    return PublicPhotoList(items=[PublicPhotoRead(id=identity) for identity in identities])
+
+
+@router.get("/{observation_id}/photos/{photo_id}")
+def get_public_observation_gallery_photo(observation_id: UUID, photo_id: UUID, db: Session = Depends(get_db)):
+    observation = db.scalar(visible_observations().where(Observation.id == observation_id))
+    if observation is None:
+        raise HTTPException(status_code=404, detail="El reporte ya no está disponible.")
+    photo = db.scalar(select(Photo).where(Photo.id == photo_id, Photo.owner_type == "observation", Photo.owner_id == observation.id))
+    if photo is None:
+        raise HTTPException(status_code=404, detail="La foto no está disponible.")
+    return gallery_photo_response(photo)

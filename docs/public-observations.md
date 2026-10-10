@@ -6,6 +6,8 @@ El mapa y su lista muestran fotos de los propios reportes de avistamientos y ani
 
 La lista incluye especie, sexo, tamaño y color cuando fueron informados, zona aproximada, fecha y hora de Uruguay, un extracto de la descripción y **Ver detalles en el mapa**. La foto también abre esos detalles.
 
+Las miniaturas tienen un botón independiente para ampliar la foto dentro de la página. La imagen de los detalles abre directamente esa ventana, con galería cuando existen varias fotos. El cierre regresa a la tarjeta del mapa; ver `photo-viewer.md` para los controles y permisos.
+
 Los puntos abren una tarjeta con foto, características, zona, fecha y hora, y descripción completa. Un avistamiento enviado desde un aviso puede enlazar a esa publicación si sigue activa y visible. La tarjeta aclara que ese vínculo no confirma la identidad del animal; no expone scores ni decisiones privadas de coincidencias.
 
 Los avistamientos y encontrados que comparten coordenadas públicas se agrupan con un contador y un selector. Abrirlos desde la lista selecciona el reporte concreto. El círculo mide 24 px y su área de interacción 44 px; admite clic, toque, Enter y Espacio. Escape cierra los detalles y devuelve el foco al punto. Un grupo mixto muestra coral y verde.
@@ -17,6 +19,7 @@ Si la zona coincide con un aviso perdido, el círculo de avistamientos se dibuja
 - `/api/v1/public/map` agrega características, extracto y presencia de foto mediante una consulta correlacionada, sin consultar una imagen por cada punto.
 - `/api/v1/public/observations/{id}` ofrece una lista explícita de campos públicos, sin autor, correo, teléfono, preferencias de contacto, precisión de GPS, coordenadas exactas ni claves de almacenamiento.
 - `/api/v1/public/observations/{id}/photo` devuelve la foto más reciente del reporte desde el almacenamiento privado, limpiada y convertida a JPEG. No entrega enlaces firmados ni hace público el bucket. Su proceso elimina EXIF y otros metadatos.
+- `/api/v1/public/observations/{id}/photos` lista identificadores de las fotos propias y `/api/v1/public/observations/{id}/photos/{photo_id}` entrega la imagen ampliada de hasta 2048 px. Ambos vuelven a comprobar la visibilidad del reporte y la pertenencia de la foto.
 - Ambos endpoints exigen un reporte visible, de tipo avistamiento o encontrado y con fecha válida para mostrarse. Un reporte oculto, eliminado o ausente devuelve 404. Los resultados usan `no-store`.
 - Las miniaturas se cargan de forma diferida. La tarjeta consulta detalles actuales al abrirse y admite ausencia, indisponibilidad, error y reintento.
 

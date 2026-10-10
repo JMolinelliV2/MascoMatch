@@ -152,6 +152,14 @@ class LostCaseRead(ORMModel):
     updated_at: datetime
 
 
+class PublicPhotoRead(BaseModel):
+    id: UUID
+
+
+class PublicPhotoList(BaseModel):
+    items: list[PublicPhotoRead]
+
+
 class PublicLostDogRead(BaseModel):
     id: UUID
     name: str

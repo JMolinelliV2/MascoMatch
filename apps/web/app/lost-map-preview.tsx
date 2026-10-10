@@ -29,7 +29,7 @@ function LostMapPreview({ point, origin, onLayout, onRefresh }: { point: LostMap
     {missing ? <><h4>Este aviso ya no está disponible</h4><p>Puede que la mascota haya sido encontrada o que el aviso se haya cerrado.</p><button type="button" className="text-button" onClick={onRefresh}>Actualizar mapa</button></>
       : error ? <><h4>{point.title}</h4><p role="alert">{error}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></>
         : !animal ? <><h4>{point.title}</h4><p role="status">Cargando miniatura…</p></>
-          : <><Link href={href} aria-label={`Ver el aviso de ${animal.name}`}><DogPhoto dog={animal} /></Link><span className="lost-status">Sigue perdido</span><h4>{animal.name}</h4><p className="home-map-traits">{[speciesLabel(animal.species), ...dogTraits(animal)].join(" · ")}</p><p>{animal.public_location || "Zona aproximada"}</p><p className="home-map-date">Perdido desde el {lostDate(animal.lost_at)}</p><Link href={href} className="button button-primary">Ver aviso <Icon name="arrow" /></Link></>}
+          : <><DogPhoto dog={animal} href={href} /><span className="lost-status">Sigue perdido</span><h4>{animal.name}</h4><p className="home-map-traits">{[speciesLabel(animal.species), ...dogTraits(animal)].join(" · ")}</p><p>{animal.public_location || "Zona aproximada"}</p><p className="home-map-date">Perdido desde el {lostDate(animal.lost_at)}</p><Link href={href} className="button button-primary">Ver aviso <Icon name="arrow" /></Link></>}
   </div>;
 }
 

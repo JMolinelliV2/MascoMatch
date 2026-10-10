@@ -457,6 +457,30 @@ h1, h2, h3 { color: var(--text-primary); }
   .dog-photo-link { display: block; min-width: 0; overflow: hidden; }
   .dog-photo { aspect-ratio: 1; background: var(--accent-blue-soft); overflow: hidden; }
   .dog-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .report-photo { position: relative; }
+  .report-photo-primary { display: block; position: relative; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+  .report-photo-primary:focus-visible { outline-offset: -4px; }
+  .photo-enlarge-mark, .report-photo-zoom { display: grid; place-items: center; position: absolute; right: 6px; bottom: 6px; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-primary); box-shadow: 0 2px 8px rgb(15 23 42 / 14%); }
+  .photo-enlarge-mark { pointer-events: none; }
+  .report-photo-zoom { cursor: pointer; }
+  .report-photo-zoom:hover, .report-photo-primary:hover .photo-enlarge-mark { background: var(--accent-blue-soft); color: var(--accent-blue); }
+  .photo-viewer { width: min(1180px, calc(100vw - 32px)); height: min(900px, calc(100dvh - 32px)); max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); padding: 0; margin: auto; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--surface); color: var(--text-primary); box-shadow: 0 24px 80px rgb(15 23 42 / 28%); }
+  .photo-viewer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .photo-viewer::backdrop { background: rgb(11 42 74 / 78%); }
+  .photo-viewer-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; }
+  .photo-viewer-header h2 { margin: 0; min-width: 0; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+  .photo-viewer-close, .photo-viewer-navigation { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; padding: 0; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text-primary); cursor: pointer; }
+  .photo-viewer-close:hover, .photo-viewer-navigation:hover:not(:disabled) { background: var(--accent-blue-soft); }
+  .photo-viewer-navigation:disabled { opacity: .35; cursor: default; }
+  .photo-viewer-canvas { display: grid; place-items: center; min-height: 0; min-width: 0; overflow: hidden; background: #102536; }
+  .photo-viewer-image { display: grid; place-items: center; position: relative; width: 100%; height: 100%; min-height: 0; }
+  .photo-viewer-image img { display: block; position: absolute; inset: 0; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; }
+  .photo-viewer-message { max-width: 520px; margin: 0; padding: 24px; color: var(--surface); text-align: center; font-size: 15px; }
+  .photo-viewer-image > .photo-viewer-message { position: absolute; }
+  .photo-viewer-message .button { margin-top: 12px; }
+  .photo-viewer-footer { display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 64px; padding: 10px 16px; }
+  .photo-viewer-footer p { margin: 0; min-width: 100px; text-align: center; font-size: 14px; }
+  .photo-viewer-previous { transform: rotate(180deg); }
   .dog-photo-placeholder { display: flex; height: 100%; align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: var(--text-secondary); font-size: 13px; }
   .dog-photo-placeholder .ui-icon { width: 44px; height: 44px; }
   .lost-dog-content { padding: 20px; }
@@ -570,6 +594,7 @@ h1, h2, h3 { color: var(--text-primary); }
   .notification-reasons { padding-left: 20px; font-size: 13px; color: var(--text-secondary); }
   .notification-photos { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
   .notification-photos img { width: 160px; max-width: 100%; height: 160px; object-fit: contain; background: var(--accent-blue-soft); border-radius: 10px; }
+  .notification-photo-button { position: relative; width: 160px; max-width: 100%; height: 160px; padding: 0; border: 0; border-radius: 10px; background: var(--accent-blue-soft); color: var(--text-primary); cursor: pointer; overflow: hidden; }
   .notification-card .location-map-section { margin-top: 12px; }
   .match-feedback { margin-top: 20px; }
   .match-feedback h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }

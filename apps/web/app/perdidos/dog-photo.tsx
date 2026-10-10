@@ -1,15 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { lostDogsEndpoint } from "@/lib/lost-dogs";
 import type { LostDogNotice } from "@/lib/lost-dogs";
-import { Icon } from "../ui/pictogram";
+import { ReportPhoto } from "../ui/report-photo";
 
-export function DogPhoto({ dog }: { dog: Pick<LostDogNotice, "id" | "name" | "photo_url"> }) {
-  const [failed, setFailed] = useState(false);
-  return <div className="dog-photo">
-    {dog.photo_url && !failed
-      ? <img src={`${lostDogsEndpoint}/${dog.id}/photo`} alt={`Foto de ${dog.name}`} loading="lazy" onError={() => setFailed(true)} />
-      : <div className="dog-photo-placeholder"><Icon name="paw" /><span>{failed ? "Foto no disponible" : "Sin foto"}</span></div>}
-  </div>;
+export function DogPhoto({ dog, href }: { dog: Pick<LostDogNotice, "id" | "name" | "photo_url">; href?: string }) {
+  const endpoint = `${lostDogsEndpoint}/${encodeURIComponent(dog.id)}`;
+  return <ReportPhoto src={dog.photo_url ? `${endpoint}/photo` : null} alt={`Foto de ${dog.name}`} galleryEndpoint={`${endpoint}/photos`} placeholderIcon="paw" href={href} />;
 }

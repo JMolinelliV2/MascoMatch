@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from app.core.image_storage import load_analysis_image
 from app.db.session import get_db
 from app.models import LostCase, Pet, Photo, User
-from app.schemas import PublicLostDogList, PublicLostDogRead
+from app.schemas import PublicLostDogList, PublicLostDogRead, PublicPhotoList, PublicPhotoRead
+from app.routers.photo_gallery import gallery_photo_response
 
 router = APIRouter(prefix="/public/lost-animals", tags=["public-lost-animals"])
 legacy_router = APIRouter(prefix="/public/lost-dogs", include_in_schema=False)
@@ -103,3 +104,28 @@ def get_public_lost_dog_photo(case_id: UUID, db: Session = Depends(get_db)):
     except (BotoCoreError, ValueError) as exc:
         raise HTTPException(status_code=503, detail="Photo temporarily unavailable") from exc
     return Response(content=payload, media_type=mime_type, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/{case_id}/photos", response_model=PublicPhotoList)
+@legacy_router.get("/{case_id}/photos", response_model=PublicPhotoList)
+def list_public_lost_dog_photos(case_id: UUID, response: Response, db: Session = Depends(get_db)):
+    row = db.execute(active_dogs().where(LostCase.id == case_id)).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Public notice not found")
+    case, _ = row
+    identities = db.scalars(select(Photo.id).where(photo_scope(case)).order_by((Photo.owner_type == "lost_case").desc(), Photo.created_at.desc(), Photo.id.desc()))
+    response.headers["Cache-Control"] = "no-store"
+    return PublicPhotoList(items=[PublicPhotoRead(id=identity) for identity in identities])
+
+
+@router.get("/{case_id}/photos/{photo_id}")
+@legacy_router.get("/{case_id}/photos/{photo_id}")
+def get_public_lost_dog_gallery_photo(case_id: UUID, photo_id: UUID, db: Session = Depends(get_db)):
+    row = db.execute(active_dogs().where(LostCase.id == case_id)).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Public notice not found")
+    case, _ = row
+    photo = db.scalar(select(Photo).where(Photo.id == photo_id, photo_scope(case)))
+    if photo is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return gallery_photo_response(photo)

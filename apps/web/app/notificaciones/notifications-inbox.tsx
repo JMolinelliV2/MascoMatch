@@ -11,6 +11,7 @@ import { VerifyEmailNotice } from "../verify-email-notice";
 import { useSessionRefresh } from "../use-session-refresh";
 import { ReviewRequest } from "../review-request";
 import { SightingComparison } from "../ui/sighting-comparison";
+import { PhotoGallery } from "../ui/photo-viewer";
 type User = { email_verified?: boolean; email_verification_required?: boolean; id: string; name: string; email: string; notification_preferences: { email?: boolean } };
 type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; created_at: string; lost_case_id: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; reporter_contact:string|null; linked_to_notice?:boolean; matching_status?:string|null };
 type Inbox = { items: Notice[]; unread_count: number; total: number };
@@ -148,7 +149,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
         <dl className="review-details"><div><dt>Cuándo lo vieron</dt><dd>{date(notice.observed_at)}</dd></div><div><dt>Zona del avistamiento</dt><dd>{notice.public_location || "Lugar indicado en el mapa"}</dd></div></dl>
         {notice.reasons.length > 0 && <ul className="notification-reasons">{notice.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul>}
         {notice.reporter_contact&&<p>La persona autorizó compartir su contacto: <a href={`mailto:${encodeURIComponent(notice.reporter_contact)}`}>{notice.reporter_contact}</a></p>}
-        {notice.photo_ids.length > 0 && <div className="notification-photos">{notice.photo_ids.map(photoId => <img key={photoId} src={`/api/notifications/${notice.id}/photos/${photoId}`} alt={`Foto del posible avistamiento de ${notice.pet_name}`} loading="lazy" />)}</div>}
+        {notice.photo_ids.length > 0 && <PhotoGallery title={`Fotos del avistamiento para ${notice.pet_name}`} photos={notice.photo_ids.map((photoId, index) => ({ id: photoId, thumbnailSrc: `/api/notifications/${encodeURIComponent(notice.id)}/photos/${encodeURIComponent(photoId)}`, src: `/api/notifications/${encodeURIComponent(notice.id)}/photos/${encodeURIComponent(photoId)}/large`, alt: `foto ${index + 1} del avistamiento para ${notice.pet_name}` }))} />}
         <div className="location-actions"><Link href={`/perdidos/${notice.lost_case_id}`} className="text-button">Ver mi aviso</Link>
           {notice.latitude !== null && notice.longitude !== null && <button type="button" className="text-button" aria-expanded={map === notice.id} onClick={() => setMap(current => current === notice.id ? null : notice.id)}>{map === notice.id ? "Ocultar mapa" : "Ver lugar del avistamiento"}</button>}
           {!notice.read_at && <button type="button" className="text-button" disabled={marking === notice.id} onClick={() => void read(notice.id)}>Marcar como leída</button>}

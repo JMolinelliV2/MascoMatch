@@ -13,6 +13,7 @@ const paths = {
   check: <path d="m4 12 5 5L20 6" />,
   menu: <path d="M3 6h18M3 12h18M3 18h18" />,
   close: <path d="m6 6 12 12M6 18 18 6" />,
+  expand: <path d="M9 3H3v6M15 3h6v6M21 15v6h-6M9 21H3v-6" />,
   search: <><circle cx="10.5" cy="10.5" r="7.5" /><path d="m16 16 6 6" /></>,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 6v6l4 2" /></>,
   calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 2v6M17 2v6M3 11h18" /></>,

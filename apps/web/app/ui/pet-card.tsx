@@ -6,7 +6,7 @@ import { Icon } from "./pictogram";
 
 export function PetCard({ animal, compact = false }: { animal: LostDogNotice; compact?: boolean }) {
   return <article className={`lost-dog-card ${compact ? "pet-card-compact" : ""}`}>
-    <Link href={`/perdidos/${animal.id}`} className="dog-photo-link" aria-label={`Ver el aviso de ${animal.name}`}><DogPhoto dog={animal} /></Link>
+    <div className="dog-photo-link"><DogPhoto dog={animal} href={`/perdidos/${animal.id}`} /></div>
     <div className="lost-dog-content">
       <span className="lost-status">Sigue perdido</span>
       <h3><Link href={`/perdidos/${animal.id}`}>{animal.name}</Link></h3>

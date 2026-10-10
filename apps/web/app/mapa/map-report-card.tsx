@@ -12,10 +12,10 @@ const dateLabels = { lost: "Perdido desde el", sighting: "Visto el", found: "Enc
 
 export function MapReportCard({ point, href, onShowOnMap }: { point: MapReportPoint; href?: string; onShowOnMap?: () => void }) {
   const photo = point.layer === "lost"
-    ? <DogPhoto dog={{ id: point.id, name: point.title, photo_url: point.photo_url || null }} />
-    : <ObservationPhoto id={point.id} hasPhoto={Boolean(point.photo_url)} found={point.layer === "found"} />;
+    ? <DogPhoto dog={{ id: point.id, name: point.title, photo_url: point.photo_url || null }} href={href} />
+    : <ObservationPhoto id={point.id} hasPhoto={Boolean(point.photo_url)} found={point.layer === "found"} onOpenReport={onShowOnMap} />;
   return <article className={`map-report-card map-report-${point.layer}`}>
-    {href ? <Link className="map-report-photo" href={href} aria-label={`Ver el aviso de ${point.title}`}>{photo}</Link> : onShowOnMap ? <button type="button" className="map-report-photo map-report-photo-button" onClick={onShowOnMap} aria-label={`Ver foto y detalles del ${point.layer === "found" ? "animal encontrado" : "avistamiento"} en el mapa`}>{photo}</button> : <div className="map-report-photo">{photo}</div>}
+    <div className="map-report-photo">{photo}</div>
     <div className="map-report-content">
       <span className="map-report-type">{reportLabels[point.layer]}</span>
       <h3>{href ? <Link href={href}>{point.title}</Link> : point.title}</h3>

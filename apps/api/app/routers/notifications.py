@@ -12,6 +12,7 @@ from app.db.session import get_db
 from app.dependencies import current_user
 from app.models import LostCase, Match, Notification, Observation, Pet, Photo, User
 from app.schemas import NotificationList, NotificationRead
+from app.routers.photo_gallery import gallery_photo_response
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -86,3 +87,12 @@ def notification_photo(notification_id: UUID, photo_id: UUID, db: Session = Depe
     except (BotoCoreError, ClientError, ValueError) as exc:
         raise HTTPException(status_code=503, detail="Foto no disponible en este momento.") from exc
     return Response(payload, media_type=mime_type, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/{notification_id}/photos/{photo_id}/large")
+def notification_gallery_photo(notification_id: UUID, photo_id: UUID, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    observation = owned_row(db, notification_id, user)[3]
+    photo = db.scalar(select(Photo).where(Photo.id == photo_id, Photo.owner_type == "observation", Photo.owner_id == observation.id))
+    if photo is None:
+        raise HTTPException(status_code=404, detail="Foto no encontrada.")
+    return gallery_photo_response(photo)

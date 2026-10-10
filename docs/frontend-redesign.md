@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+Las fotos ampliadas usan una ventana de hasta 1180 × 900 px, limitada al ancho y alto disponibles con 16 px de margen. La cabecera, el lienzo flexible y el pie ocupan tres filas; la imagen se ajusta completa al lienzo y las acciones siguen visibles en móvil.
+
 Contacto reutiliza el contenedor centrado de 640 px de las páginas de cuenta, sin exigir una sesión. La tarjeta ocupa todo el ancho interior y se ajusta al padding lateral existente en móvil.
 
 Mis avisos usa un contenedor centrado de hasta 640 px al consultar la sesión y mostrar el ingreso sin cuenta, igual que la página Ingresar. El título, la introducción, el formulario y los errores comparten el ancho disponible. Al mostrar una sesión iniciada, el contenedor pasa a 1280 px para los resúmenes y avisos. En móvil conserva el padding lateral de 20 px.
@@ -26,6 +28,8 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 ## Section Order
 
+La ventana de fotos presenta título y cierre, imagen, y posición con controles de anterior y siguiente cuando hay varias. Se abre sobre el contexto actual sin sustituir la ficha ni la tarjeta del mapa.
+
 La revisión de cada aviso reúne **Enviados desde este aviso** y **Posibles coincidencias de otros reportes**. Los primeros permanecen disponibles aunque la comparación automática esté pendiente o sea incompatible. Sus tarjetas muestran miniatura, fecha y hora, zona, descripción, motivos, lugar privado y acciones de revisión.
 
 Contacto presenta regreso al inicio, título e introducción, formulario y dirección de correo alternativa. Los campos aparecen en el orden nombre, correo, tipo de consulta y mensaje; siguen una explicación de privacidad y Enviar mensaje. Al recibir la solicitud, la confirmación reemplaza el formulario y permite escribir otra.
@@ -41,6 +45,8 @@ La portada incorpora las reseñas después de los avisos y el acceso al mapa, an
 El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las tarjetas de avisos activos. Muestra únicamente animales perdidos con ubicación; el enlace **Abrir mapa completo** mantiene el acceso a avistamientos, encontrados y filtros de la página `/mapa`.
 
 ## Navigation
+
+La foto principal abre la ventana con clic, toque o Enter. Las miniaturas con un enlace o acción previa conservan ese destino y agregan un control independiente para ampliar. Cerrar, Escape o pulsar fuera regresa al control de apertura. Las flechas del teclado recorren la galería; Escape dentro de la ventana conserva los detalles del mapa. El diálogo nativo mantiene el foco dentro mientras está abierto.
 
 Contacto y sugerencias está disponible en Explorar, el menú móvil y el pie del inicio. La página conserva el regreso al inicio y el enlace directo a info@mascomatch.com.
 
@@ -64,6 +70,8 @@ Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda 
 
 ## Typography
 
+El título de la ventana de fotos usa Arial de 18 px y peso 700; el contador del pie, 14 px, y los mensajes de carga o error, 15 px. Los títulos largos permiten saltos de línea.
+
 Los estados de carga usan título de 20–24 px, peso 700 y explicación de 15 px con interlineado 1,6. El mensaje distingue preparar la cuenta, abrir los avisos y consultar las publicaciones; los lectores de pantalla reciben un estado cortés y atómico.
 
 Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos de página de 32–46 px y peso 800; portada de hasta 58 px; secciones de 22–26 px; tarjetas de 18–22 px; texto de 14–16 px y ayudas de 12–13 px. El contenido largo permite salto de línea.
@@ -76,6 +84,8 @@ Las reseñas usan texto principal de 15 px con interlineado 1,7, nombre público
 
 ## Color System
 
+La ventana de fotos conserva cabecera y pie blancos con texto navy. El lienzo usa navy oscuro `#102536` y el fondo exterior navy al 78%, para separar la foto de la página. Los controles tienen borde visible y foco azul.
+
 Variables semánticas en `globals.css` y colores equivalentes en el tema Tailwind. Fondo cálido, superficies blancas y texto navy. Coral para acciones principales; azul para información, ubicación y foco; verde para encontrado o compatibilidad alta; amarillo para revisión y advertencias. El coral se oscurece respecto de la referencia para mejorar el contraste del texto blanco. Los estados también llevan texto y no dependen solo del color.
 
 El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Elegido. El resumen usa fondo azul suave. El botón de pagos pendientes es gris y está deshabilitado; no se presenta como una operación en curso.
@@ -83,6 +93,8 @@ El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Ele
 Las estrellas y la puntuación seleccionada usan coral, con texto accesible que informa de 1 a 5 estrellas. La invitación a reseñar usa fondo azul suave, separado de los mensajes de cierre ya guardado.
 
 ## Spacing and Layout Rhythm
+
+La ventana de fotos usa 12 × 16 px en cabecera, 10 × 16 px en pie y 20 px entre sus controles. El cierre y las flechas miden 44 px. Las miniaturas tienen un indicador o botón de ampliar de 44 px, separado 6 px de los bordes.
 
 Separaciones de 8, 12, 16, 20, 24, 28 y 32 px. Tarjetas con 24–28 px de padding en escritorio y 16–20 px en móvil. Campos de al menos 48 px y acciones táctiles de al menos 44 px. Ayudas y revisión conservan una jerarquía separada de los campos.
 
@@ -93,6 +105,8 @@ Los niveles de apoyo usan gaps de 20 px y padding de 24 px; el resumen, 24–28 
 La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducido a 20 px en móvil. La invitación tiene margen superior de 24 px y padding de 20 px. Puntuaciones y acciones conservan objetivos táctiles de 48 px.
 
 ## Image Treatment
+
+Las imágenes ampliadas usan `object-fit: contain`, sin recortes ni deformaciones, y se descargan al seleccionarlas. Las versiones de hasta 2048 px mantienen la resolución original disponible y eliminan metadatos; las miniaturas y el análisis siguen usando 1024 px. Las galerías consultan imágenes que pertenecen al reporte y mantienen las comprobaciones públicas o privadas de acceso.
 
 La espera reutiliza la huella SVG de 30 px dentro de un círculo coral suave de 76 px. Un aro de 3 px rota cada 1,2 segundos y permanece quieto con movimiento reducido. No requiere descargar imágenes. Las formas provisionales se ocultan a los lectores de pantalla y no representan cantidades ni publicaciones reales.
 
@@ -107,6 +121,8 @@ Los marcadores de animales perdidos son círculos de 56 px con foto real recorta
 Las tarjetas de la lista reutilizan `DogPhoto` para animales perdidos y `ObservationPhoto` para fotos propias de avistamientos y encontrados. Las miniaturas se cargan de forma diferida desde endpoints públicos que procesan las imágenes y eliminan metadatos; no se entregan claves ni URLs firmadas del almacenamiento. Sin foto usan ojo o corazón y **Sin foto**, y ante error **Foto no disponible**. En la tarjeta del mapa la foto mide 144 px de alto y usa `object-fit: contain` para ver el animal completo.
 
 ## Cards and Content Blocks
+
+La ventana de fotos es un diálogo nativo con radio de 16 px y sombra, colocado en un portal fuera del mapa para evitar recortes y herencia de sus estilos. Admite carga, ausencia de imágenes, indisponibilidad y reintento. El desplazamiento de la página se bloquea hasta el cierre.
 
 Los avistamientos recibidos tienen una etiqueta independiente de la comparación: azul para pendiente o revisión manual, amarillo para no compatible y verde para posible coincidencia. Las decisiones del dueño tienen su propia etiqueta. Los resultados pendientes o incompatibles no se presentan con un porcentaje. Cada tarjeta privada utiliza una foto de 112 px y una fila flexible que se apila según el espacio disponible; la ubicación exacta se abre dentro de la misma página.
 
@@ -130,6 +146,8 @@ Los avistamientos y encontrados añaden características informadas, fecha y hor
 
 ## Buttons and CTAs
 
+El icono de ampliar reutiliza el sistema SVG existente. En fotos con navegación previa es un botón separado del enlace; en fotos principales es un indicador dentro del botón que ocupa la imagen. Los botones de anterior y siguiente se deshabilitan al llegar a los extremos de la galería, y el contador comunica la posición también a lectores de pantalla.
+
 Acción principal coral, secundaria blanca con borde y terciaria azul con texto. Radios de 10–12 px. En móvil las acciones principales de publicación ocupan el ancho disponible. Todos los controles de cerrar, quitar foto o navegar tienen texto o nombre accesible. Se mantiene el bloqueo de controles durante las operaciones y el feedback de guardado, error y éxito.
 
 Los accesos a animales perdidos y animales encontrados se mantienen en los bloques existentes de la portada y la navegación.
@@ -139,6 +157,8 @@ La portada enlaza a **Conocé cómo apoyar**. En Apoyanos, **Donaciones próxima
 La invitación ofrece **Escribir una reseña** y **Ahora no**. El formulario ofrece **Publicar reseña** y **Cancelar**. El cierre del aviso no depende de estas acciones. Una reseña guardada muestra **Retirar mi reseña de la portada**.
 
 ## Overall Design Feel
+
+Las fotos se amplían dentro de la página y mantienen el contexto del aviso o avistamiento. La ventana se centra en ver el animal completo y conserva el estilo simple de la plataforma. Su implementación y revisión están documentadas en `photo-viewer.md`.
 
 Mi cuenta tiene una página propia de hasta 640 px, con contacto en una tarjeta blanca y eliminación en un desplegable separado. Correo pendiente, confirmación, errores y guardado se explican junto al formulario. Recuperar cuenta reutiliza el ancho, el regreso, el título, los campos y la tarjeta de ingreso y registro; sus resultados y enlaces permanecen dentro de esa tarjeta. El ingreso lleva directamente a Mis avisos o a confirmar el correo, sin la pantalla intermedia de sesión ya iniciada. La portada usa **¿Encontraste una mascota? Reportá un animal encontrado** y Apoyanos explica el procesamiento de IA con revisión humana.
 

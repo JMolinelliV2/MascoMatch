@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+Mis avisos usa un contenedor centrado de hasta 640 px al consultar la sesión y mostrar el ingreso sin cuenta, igual que la página Ingresar. El título, la introducción, el formulario y los errores comparten el ancho disponible. Al mostrar una sesión iniciada, el contenedor pasa a 1280 px para los resúmenes y avisos. En móvil conserva el padding lateral de 20 px.
+
 La espera al ingresar y consultar la sesión usa una tarjeta centrada de hasta 640 px, con altura mínima de 280 px. La carga inicial de Mis avisos ocupa el ancho disponible y agrega una vista provisional de dos bloques de resumen y una tarjeta, limitada a 760 px. En móvil el contenido se ajusta al ancho y la miniatura provisional baja de 80 a 56 px.
 
 Contenedor de 1280 px con márgenes automáticos y 24 px laterales. Portada con texto y foto en dos columnas. Formularios con una columna principal flexible y ayuda lateral de 320 px; bajo 950 px pasan a una columna. Desde 360 px los controles se apilan, el stepper muestra la etapa activa y las fotos se pueden recorrer horizontalmente.
@@ -194,3 +196,7 @@ TypeScript y la sintaxis de las plantillas de correo terminaron sin errores. La 
 ### Confirmación al guardar contacto del 10 de octubre de 2026
 
 TypeScript terminó sin errores. El guardado exitoso del contacto abre un diálogo nativo con el resultado y, cuando corresponde, las instrucciones para confirmar el nuevo correo. Se revisaron la llamada posterior al éxito, la descripción accesible, el foco inicial y las formas de cierre en código. No se ejecutaron pruebas automatizadas ni se modificaron datos de cuentas reales para abrir el modal durante esta entrega.
+
+### Ingreso centrado en Mis avisos del 10 de octubre de 2026
+
+TypeScript terminó sin errores. La vista sin sesión mostró el título y el formulario dentro del mismo contenedor centrado de 640 px, con la tarjeta ocupando los 592 px interiores. No hubo desbordamiento horizontal en la vista de escritorio. Se guardó una captura con los campos vacíos; no se iniciaron sesiones, enviaron formularios ni ejecutaron pruebas automatizadas.

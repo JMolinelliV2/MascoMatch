@@ -269,6 +269,9 @@ h1, h2, h3 { color: var(--text-primary); }
   .support-community p { margin: 0; color: var(--text-secondary); font-size: 14px; }
   .support-community > .button { flex-shrink: 0; }
   .report-page { max-width: 1280px; }
+  .my-reports-page { max-width: 640px; }
+  .my-reports-page:has(> .notifications-account) { max-width: 1280px; }
+  .my-reports-page > .notification-login { max-width: none; }
   .report-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; margin-top: 32px; }
   .report-form { min-width: 0; }
   .form-card, .help-card { padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }

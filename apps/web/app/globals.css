@@ -604,6 +604,15 @@ h1, h2, h3 { color: var(--text-primary); }
   .case-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
   details.case-section { scroll-margin-top: 24px; }
   .case-section h3 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+  .sighting-comparison { display: inline-flex; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.5; }
+  .sighting-comparison-info { color: var(--accent-blue); background: var(--accent-blue-soft); }
+  .sighting-comparison-warning { color: var(--warning); background: var(--warning-soft); }
+  .sighting-comparison-positive { color: var(--success); background: var(--success-soft); }
+  .case-candidates-group > h4 { margin: 24px 0 12px; font-size: 17px; font-weight: 700; }
+  .case-candidate-summary { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+  .case-candidate-summary > div:last-child { flex: 1 1 180px; min-width: 0; }
+  .case-candidate-photo, .case-candidate-photo .dog-photo { width: 112px; height: 112px; border-radius: 10px; }
+  .case-candidate .case-candidate-description { white-space: pre-wrap; overflow-wrap: anywhere; }
   .photo-add-form { margin-top: 16px; }
   .photo-add-form .photo-dropzone { min-height: 140px; }
   .publication-report { margin-top: 20px; }

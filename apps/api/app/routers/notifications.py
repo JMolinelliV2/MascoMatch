@@ -44,6 +44,7 @@ def serialize(db, row):
         email_status=notification.email_status,
         match_id=notification.match_id, match_status=match.status if match else None,
         reporter_contact=author.email if author and author.status=="ACTIVE" and author.email_verified else None,
+        matching_status=observation.matching_status,linked_to_notice=observation.linked_case_id==case.id,
     )
 
 

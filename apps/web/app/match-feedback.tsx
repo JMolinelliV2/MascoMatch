@@ -33,7 +33,7 @@ export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved }
       setCurrent(data.status); setRecovered(wasRecovered);
       setMessage(wasRecovered ? "Tu mascota quedó marcada como encontrada. La búsqueda está cerrada."
         : value === "RESOLVED" ? "Confirmaste el avistamiento. Tu búsqueda sigue activa y la mascota sigue publicada como perdida."
-        : value === "FALSE_MATCH" ? "Descartaste esta coincidencia. Tu búsqueda sigue activa."
+        : value === "FALSE_MATCH" ? "Descartaste este avistamiento. Tu búsqueda sigue activa."
         : "Guardaste este avistamiento como posible coincidencia. Tu búsqueda sigue activa.");
       onSaved?.({ status: data.status as FeedbackStatus, recovered: wasRecovered, caseId });
       window.dispatchEvent(new Event("mascomatch:notifications"));
@@ -42,7 +42,7 @@ export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved }
     finally { setBusy(false); }
   }
 
-  return <section className="match-feedback" aria-label="Revisar coincidencia">
+  return <section className="match-feedback" aria-label="Revisar avistamiento">
     {!caseActive || recovered ? <>
       <p className="field-help">{recovered ? "Tu mascota está encontrada y este aviso ya no aparece en las búsquedas activas." : "La búsqueda de este aviso ya está cerrada."}</p>
       <Link className="text-button" href="/mis-avisos">Ver el estado en Mis avisos</Link>

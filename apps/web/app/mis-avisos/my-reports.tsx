@@ -3,14 +3,14 @@ import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 import type {FormEvent} from "react";
 import {AccountSession} from "../account-session";
-import {MatchFeedback} from "../match-feedback";
 import type {FeedbackSaved} from "../match-feedback";
 import {ReportMatches} from "../report-matches";
 import {EditCase} from "./edit-case";
 import {CaseAvatar} from "./case-avatar";
 import {Icon} from "../ui/pictogram";
 import {PhotoUploader} from "../ui/photo-uploader";
-import {MatchScore} from "../ui/match-score";
+import {CandidateReport} from "./candidate-report";
+import type {Candidate} from "./candidate-report";
 import {LocationMap} from "../location-map";
 import {ReviewRequest} from "../review-request";
 import {AccountLoading} from "../ui/account-loading";
@@ -20,7 +20,6 @@ type Pet={id:string;name:string;species:string;sex:string;primary_color:string;s
 type Case={id:string;pet_id:string;status:string;description:string;public_location:string|null;lost_at:string;latitude:number|null;longitude:number|null};
 type Observation={id:string;description:string;source_type:string;observed_at:string};
 type Dashboard={pets:Pet[];cases:Case[];observations:Observation[]};
-type Candidate={match:{id:string;status:string;explanation:string[];final_score?:number};observation:{description:string;public_location:string|null;observed_at:string}};
 const states:Record<string,string>={ACTIVE:"Sigue perdido",FOUND:"Encontrado",CLOSED:"Cerrado",CANCELLED:"Cancelado"};
 const statusClasses:Record<string,string>={ACTIVE:"status-active",FOUND:"status-found",CLOSED:"status-closed",CANCELLED:"status-cancelled"};
 
@@ -48,14 +47,17 @@ function Reports({userId}:{userId:string}) {
       {pet&&<p className="dog-traits">{speciesLabel(pet.species as LostDogNotice["species"])}{pet.sex!=="unknown"?` · ${sexLabel(pet.sex)}`:""}</p>}
       <div className="case-traits"><span><Icon name="pin"/>{item.public_location||"Zona no indicada"}</span><span><Icon name="calendar"/>Perdido desde el {lostDate(item.lost_at)}</span></div></div></div>
       <p className="case-description">{item.description||"Sin descripción adicional"}</p>
-      <div className="location-actions case-actions">{item.status==="ACTIVE"&&<Link className="button button-primary" href={`/perdidos/${item.id}`}>Ver publicación <Icon name="arrow"/></Link>}<button className="text-button" type="button" onClick={()=>setEditing(item)}><Icon name="edit"/>Editar aviso</button><button className="text-button" type="button" aria-expanded={selected===item.id} onClick={()=>setSelected(selected===item.id?null:item.id)}><Icon name="search"/>{selected===item.id?"Ocultar coincidencias":"Ver coincidencias"}</button>
+      <div className="location-actions case-actions">{item.status==="ACTIVE"&&<Link className="button button-primary" href={`/perdidos/${item.id}`}>Ver publicación <Icon name="arrow"/></Link>}<button className="text-button" type="button" onClick={()=>setEditing(item)}><Icon name="edit"/>Editar aviso</button><button className="text-button" type="button" aria-expanded={selected===item.id} onClick={()=>setSelected(selected===item.id?null:item.id)}><Icon name="search"/>{selected===item.id?"Ocultar avistamientos y coincidencias":"Ver avistamientos y coincidencias"}</button>
       {item.latitude!==null&&item.longitude!==null&&<button className="text-button" type="button" aria-expanded={mapCase===item.id} onClick={()=>setMapCase(mapCase===item.id?null:item.id)}><Icon name="pin"/>{mapCase===item.id?"Ocultar ubicación":"Ver última ubicación"}</button>}
       {item.status==="ACTIVE"?<><button className="text-button" type="button" disabled={busy} onClick={()=>void change(item.id,{status:"FOUND"})}>Marcar como encontrado</button><button className="text-button" type="button" disabled={busy} onClick={()=>void change(item.id,{status:"CLOSED"})}>Cerrar aviso</button></>:<button className="text-button" type="button" disabled={busy} onClick={()=>void change(item.id,{status:"ACTIVE"})}>Reabrir búsqueda</button>}</div>
       {["FOUND","CLOSED","CANCELLED"].includes(item.status)&&<ReviewRequest caseId={item.id} recovered={item.status==="FOUND"}/>}
       {mapCase===item.id&&item.latitude!==null&&item.longitude!==null&&<div className="case-section"><LocationMap latitude={item.latitude} longitude={item.longitude} editable={false} label="Última ubicación guardada en tu aviso"/></div>}
       {editing?.id===item.id&&pet&&<div className="case-section"><EditCase caseId={item.id} description={item.description} lostAt={item.lost_at} pet={pet} onSaved={()=>{setEditing(null);setMessage("Tu aviso quedó actualizado.");setRefresh(value=>value+1);}} onCancel={()=>setEditing(null)}/></div>}
       <details id={`fotos-${item.id}`} className="case-section" open={photoCase===item.id} onToggle={event=>{if(event.currentTarget.open)setPhotoCase(item.id);else setPhotoCase(current=>current===item.id?null:current);}}><summary className="text-button"><Icon name="camera"/>Agregar una foto</summary><form onSubmit={event=>void photo(event,item.id)} className="photo-add-form"><fieldset disabled={busy}><PhotoUploader name="file" label="Foto del aviso" required/><button className="text-button" type="submit" disabled={busy}>Guardar foto</button></fieldset></form></details>
-      {selected===item.id&&<section className="case-section"><h3>Avistamientos compatibles</h3><p className="field-help">Revisá los avistamientos y confirmá si reconocés a tu mascota o si ya la recuperaste.</p>{candidatesBusy?<p role="status">Consultando coincidencias…</p>:!candidates.length&&<p>No hay coincidencias vigentes por ahora.</p>}{candidates.map(candidate=><div className="analysis-result" key={candidate.match.id}><MatchScore score={candidate.match.final_score}/><p>{candidate.observation.description}</p><p className="field-help">{candidate.observation.public_location||"Zona indicada en el reporte"}</p><ul>{candidate.match.explanation.map(reason=><li key={reason}>{reason}</li>)}</ul><MatchFeedback id={candidate.match.id} caseId={item.id} caseActive={item.status==="ACTIVE"} status={candidate.match.status} onSaved={result=>feedbackSaved(candidate.match.id,result)}/></div>)}</section>}
+      {selected===item.id&&<section className="case-section"><h3>Avistamientos y coincidencias</h3><p className="field-help">Los avistamientos enviados desde este aviso llegan para que los revises, aunque la comparación automática no los considere compatibles. Confirmá si reconocés a tu mascota o si ya la recuperaste.</p>{candidatesBusy?<p role="status">Consultando avistamientos y coincidencias…</p>:!candidates.length&&<p>No hay avistamientos ni coincidencias por ahora.</p>}
+        {!!candidates.filter(candidate=>candidate.observation.linked_to_notice).length&&<div className="case-candidates-group"><h4>Enviados desde este aviso</h4>{candidates.filter(candidate=>candidate.observation.linked_to_notice).map(candidate=><CandidateReport key={candidate.match.id} candidate={candidate} caseId={item.id} caseActive={item.status==="ACTIVE"} onSaved={result=>feedbackSaved(candidate.match.id,result)}/>)}</div>}
+        {!!candidates.filter(candidate=>!candidate.observation.linked_to_notice).length&&<div className="case-candidates-group"><h4>Posibles coincidencias de otros reportes</h4>{candidates.filter(candidate=>!candidate.observation.linked_to_notice).map(candidate=><CandidateReport key={candidate.match.id} candidate={candidate} caseId={item.id} caseActive={item.status==="ACTIVE"} onSaved={result=>feedbackSaved(candidate.match.id,result)}/>)}</div>}
+      </section>}
     </article>;})}</div>
     {!!data?.observations.length&&<section className="analysis-section"><h2>Reportes que compartiste</h2>{data.observations.map(item=><article className="analysis-result" key={item.id}><h3>{item.source_type==="FOUND_ANIMAL"?"Animal encontrado":"Avistamiento"}</h3><p>{item.description}</p><button type="button" className="text-button" onClick={()=>setReport(report===item.id?null:item.id)}>Ver posibles coincidencias</button>{report===item.id&&<ReportMatches observationId={item.id}/>}</article>)}</section>}
     <p><Link href="/notificaciones" className="text-button">Ver mis notificaciones</Link></p>

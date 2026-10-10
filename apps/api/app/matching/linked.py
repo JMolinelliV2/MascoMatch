@@ -17,6 +17,8 @@ from app.models import AnalysisJob, FeatureSet, LostCase, Match, Notification, O
 UNKNOWN = {"unknown", "uncertain", "not_visible", ""}
 WEIGHTS = {"species": .35, "primary_color": .3, "size": .1, "coat_length": .1, "coat_pattern": .1, "breed_type": .05}
 LABELS = {"species": "Especie compatible", "primary_color": "Color compatible", "size": "Tamaño compatible", "coat_length": "Pelaje compatible", "coat_pattern": "Patrón del pelaje compatible", "breed_type": "Tipo o raza compatible"}
+REPORTED_STATUSES = {"PENDING", "UNVERIFIED", "POSSIBLE_MATCH", "NOT_COMPATIBLE", "NEEDS_REVIEW"}
+PENDING_REPORT_BODY = "Una persona envió un avistamiento desde tu aviso. La comparación está en curso; ya podés revisar el lugar y las fotos. La identidad está por confirmar."
 
 
 def aware(value):
@@ -82,16 +84,18 @@ def compare_traits(target: dict, observed: dict):
 
 def set_result(db, observation, case, pet, status, reasons, score=None):
     match=db.scalar(select(Match).where(Match.observation_id==observation.id,Match.lost_case_id==case.id))
-    if status in {"UNVERIFIED","POSSIBLE_MATCH"}:
+    if status in REPORTED_STATUSES:
         if match is None:
             match=Match(observation_id=observation.id,lost_case_id=case.id)
             db.add(match)
         match.feature_score=score or 0
         match.visual_score=match.visual_similarity=None
-        match.geo_score=match.temporal_score=1
+        match.geo_score=1 if "Ubicación dentro de la zona de búsqueda" in reasons else 0
+        match.temporal_score=1 if "Fecha compatible con el aviso" in reasons else 0
         match.final_score=score or 0
         match.evidence_coverage=.5 if score is not None else 0
-        match.distance_meters=distance_meters(case.latitude,case.longitude,observation.latitude,observation.longitude)
+        coordinates=(case.latitude,case.longitude,observation.latitude,observation.longitude)
+        match.distance_meters=distance_meters(*coordinates) if all(value is not None and math.isfinite(value) for value in coordinates) else 0
         match.explanation=reasons
         match.is_active=True
         db.flush()
@@ -100,17 +104,24 @@ def set_result(db, observation, case, pet, status, reasons, score=None):
     observation.matching_status = status
     observation.matching_score = score
     observation.matching_reasons = reasons
-    notification = db.scalar(select(Notification).where(Notification.observation_id == observation.id))
-    notify = status in {"UNVERIFIED", "POSSIBLE_MATCH"} and observation.author_id != pet.owner_id and (not match or match.status not in {"FALSE_MATCH","RESOLVED"})
+    notification = db.scalar(select(Notification).where(Notification.observation_id == observation.id, Notification.lost_case_id == case.id))
+    # A report explicitly submitted for this notice reaches its owner independently of AI compatibility.
+    notify = status in REPORTED_STATUSES and observation.author_id != pet.owner_id and (not match or match.status not in {"FALSE_MATCH","RESOLVED"})
     if not notify:
         if notification:
             notification.is_active = False
         return status
-    kind = "REPORTED_SIGHTING" if status == "UNVERIFIED" else "POSSIBLE_MATCH"
-    title = f"Posible avistamiento de {pet.name}"[:180]
-    if status == "UNVERIFIED":
+    kind = "POSSIBLE_MATCH" if status == "POSSIBLE_MATCH" else "REPORTED_SIGHTING"
+    title = (f"Posible coincidencia con {pet.name}" if status == "POSSIBLE_MATCH" else f"Reportaron un avistamiento para {pet.name}")[:180]
+    if status == "PENDING":
+        body = PENDING_REPORT_BODY
+    elif status == "NOT_COMPATIBLE":
+        body = "Una persona envió un avistamiento desde tu aviso. La comparación automática detectó diferencias o datos que no encajan con el aviso. Revisá el lugar, las fotos y los motivos; la identidad necesita revisión humana."
+    elif status == "NEEDS_REVIEW":
+        body = "Una persona envió un avistamiento desde tu aviso. Falta información para compararlo automáticamente; revisá el reporte. La identidad está por confirmar."
+    elif status == "UNVERIFIED":
         has_photo = db.scalar(select(Photo.id).where(Photo.owner_type == "observation", Photo.owner_id == observation.id).limit(1)) is not None
-        body = "Una persona indicó que vio a tu animal cerca de la zona de búsqueda. " + ("Las fotos no aportaron suficientes rasgos para comparar; revisá el reporte. La identidad está por confirmar." if has_photo else "No adjuntó fotos; la identidad está por confirmar.")
+        body = "Una persona envió un avistamiento desde tu aviso. " + ("Las fotos necesitan revisión por una persona. La identidad está por confirmar." if has_photo else "No adjuntó fotos; la identidad está por confirmar.")
     else:
         body = "Las características de la foto son compatibles con tu aviso, junto con la ubicación y la fecha. Podría tratarse de tu animal; revisá el avistamiento."
     if notification is None:
@@ -152,7 +163,7 @@ def evaluate_sighting(db: Session, observation_id: UUID) -> str:
     target, target_jobs = expected
     pending = {"PENDING", "DISPATCHING", "QUEUED", "RUNNING"}
     if any(job.status in pending for job in jobs + target_jobs):
-        return set_result(db, observation, case, pet, "PENDING", ["Analizando las fotos y las características del aviso"])
+        return set_result(db, observation, case, pet, "PENDING", geographic + ["Analizando las fotos y las características del aviso"])
     observed_results = []
     for photo in photos:
         photo_jobs = [job for job in jobs if job.photo_id == photo.id and job.status == "SUCCEEDED"]
@@ -186,7 +197,8 @@ def mark_related_pending(db, owner_type, owner_id):
     identities = related_ids(db, owner_type, owner_id)
     if identities:
         db.execute(update(Observation).where(Observation.id.in_(identities), Observation.linked_case_id.is_not(None)).values(matching_status="PENDING"))
-        db.execute(update(Notification).where(Notification.observation_id.in_(identities)).values(is_active=False))
+        db.execute(update(Match).where(Match.observation_id.in_(identities)).values(explanation=["La comparación está en curso; el avistamiento sigue disponible para revisión"]))
+        db.execute(update(Notification).where(Notification.observation_id.in_(identities)).values(kind="REPORTED_SIGHTING",title="Avistamiento reportado · comparación en curso",body=PENDING_REPORT_BODY))
 
 
 def reconcile_related(owner_type, owner_id, session_factory=None):

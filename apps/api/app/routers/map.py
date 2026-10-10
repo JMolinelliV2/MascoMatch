@@ -25,7 +25,8 @@ def public_map(response:Response,species:str=Query(default="",max_length=40),day
         case_query=case_query.where(LostCase.lost_at>=utcnow()-timedelta(days=days))
         obs_query=obs_query.where(Observation.observed_at>=utcnow()-timedelta(days=days))
     if compatible_only:
-        obs_query=obs_query.where(or_(Observation.id.in_(select(Match.observation_id).where(Match.is_active.is_(True),Match.status.not_in(["FALSE_MATCH","RESOLVED"]))),Observation.matching_status=="POSSIBLE_MATCH"))
+        compatible_matches=select(Match.observation_id).join(Observation,Match.observation_id==Observation.id).where(Match.is_active.is_(True),Match.status.not_in(["FALSE_MATCH","RESOLVED"]),or_(Observation.linked_case_id.is_(None),Observation.matching_status=="POSSIBLE_MATCH",Match.status=="CONFIRMED_RELEVANT")).correlate(None)
+        obs_query=obs_query.where(Observation.id.in_(compatible_matches))
     if latitude is not None:
         if db.bind.dialect.name=="postgresql":
             case_query=case_query.where(text("ST_DWithin(ST_SetSRID(ST_MakePoint(lost_cases.longitude,lost_cases.latitude),4326)::geography,ST_SetSRID(ST_MakePoint(:lon,:lat),4326)::geography,:radius)")).params(lon=longitude,lat=latitude,radius=radius_km*1000)

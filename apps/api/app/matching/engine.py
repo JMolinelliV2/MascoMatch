@@ -24,8 +24,9 @@ def request_matching(db, owner_type, owner_id):
         scope = True
         affected = Match.lost_case_id == owner_id if owner_type == "lost_case" else Match.lost_case_id.in_(select(LostCase.id).where(LostCase.pet_id == owner_id))
     db.execute(update(Observation).where(scope, Observation.linked_case_id.is_(None)).values(matching_status="PENDING", matching_checked_at=None))
-    db.execute(update(Match).where(affected).values(is_active=False))
-    db.execute(update(Notification).where(Notification.match_id.in_(select(Match.id).where(affected))).values(is_active=False))
+    general_affected = and_(affected, Match.observation_id.in_(select(Observation.id).where(Observation.linked_case_id.is_(None))))
+    db.execute(update(Match).where(general_affected).values(is_active=False))
+    db.execute(update(Notification).where(Notification.match_id.in_(select(Match.id).where(general_affected))).values(is_active=False))
 
 
 def evidence(db, owner_type, owner_id, declared):

@@ -26,6 +26,8 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 ## Section Order
 
+La revisión de cada aviso reúne **Enviados desde este aviso** y **Posibles coincidencias de otros reportes**. Los primeros permanecen disponibles aunque la comparación automática esté pendiente o sea incompatible. Sus tarjetas muestran miniatura, fecha y hora, zona, descripción, motivos, lugar privado y acciones de revisión.
+
 Contacto presenta regreso al inicio, título e introducción, formulario y dirección de correo alternativa. Los campos aparecen en el orden nombre, correo, tipo de consulta y mensaje; siguen una explicación de privacidad y Enviar mensaje. Al recibir la solicitud, la confirmación reemplaza el formulario y permite escribir otra.
 
 Mi cuenta reúne contacto, notificaciones por correo y eliminación de cuenta, en ese orden. Notificaciones mantiene la bandeja de alertas y enlaza a la configuración en Mi cuenta. La sección de preferencias tiene título, casilla, explicación, feedback de guardado y enlace para consultar las alertas.
@@ -105,6 +107,8 @@ Los marcadores de animales perdidos son círculos de 56 px con foto real recorta
 Las tarjetas de la lista reutilizan `DogPhoto` para animales perdidos y `ObservationPhoto` para fotos propias de avistamientos y encontrados. Las miniaturas se cargan de forma diferida desde endpoints públicos que procesan las imágenes y eliminan metadatos; no se entregan claves ni URLs firmadas del almacenamiento. Sin foto usan ojo o corazón y **Sin foto**, y ante error **Foto no disponible**. En la tarjeta del mapa la foto mide 144 px de alto y usa `object-fit: contain` para ver el animal completo.
 
 ## Cards and Content Blocks
+
+Los avistamientos recibidos tienen una etiqueta independiente de la comparación: azul para pendiente o revisión manual, amarillo para no compatible y verde para posible coincidencia. Las decisiones del dueño tienen su propia etiqueta. Los resultados pendientes o incompatibles no se presentan con un porcentaje. Cada tarjeta privada utiliza una foto de 112 px y una fila flexible que se apila según el espacio disponible; la ubicación exacta se abre dentro de la misma página.
 
 El formulario de contacto reutiliza la tarjeta blanca, el borde discreto y el radio de 16 px de Ingresar y Mi cuenta. Tiene un mensaje de hasta 4000 caracteres con contador, ayuda debajo del correo y errores junto a los campos o al formulario. Durante el envío bloquea sus controles; al recibir éxito muestra el check verde existente y lleva el foco al título de agradecimiento. No afirma que el correo ya haya llegado a la bandeja.
 
@@ -222,3 +226,7 @@ TypeScript y la sintaxis Python terminaron sin errores. La API inició con la mi
 ### Detalles y fotos de avistamientos del 10 de octubre de 2026
 
 TypeScript y la sintaxis Python terminaron sin errores. La consulta del mapa mostró los dos avisos perdidos y tres avistamientos existentes, dos con foto propia. La foto pública respondió como JPEG y el detalle no incluyó datos de contacto ni coordenadas. La lista mostró ambas miniaturas y el estado sin foto; abrir el reporte del caniche mostró su foto, características, zona, fecha y hora de Uruguay, y descripción. No hubo desbordamiento horizontal en escritorio. No se ejecutaron pruebas automatizadas ni se publicaron reportes o fotos de muestra, se modificaron cuentas o enviaron correos.
+
+### Recepción de reportes vinculados del 10 de octubre de 2026
+
+TypeScript y la sintaxis Python terminaron sin errores. Se recuperó el avistamiento real omitido de Pablo, con una alerta de recepción activa y correo aceptado por SMTP, sin cambiar el resultado incompatible ni marcar al animal como encontrado. Mis avisos y Notificaciones muestran por separado la recepción y el resultado de la comparación. No se agregaron ni ejecutaron pruebas automatizadas; se mantuvieron las comprobaciones existentes actualizando sus expectativas. La revisión de la reparación consultó estados y cantidades sin exponer contacto ni coordenadas.

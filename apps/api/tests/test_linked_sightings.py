@@ -88,14 +88,14 @@ def test_sighting_and_notification_are_idempotent(client, auth_headers, db_facto
 
 
 @pytest.mark.parametrize("changes,status", [({"latitude": "nan"}, 422), ({"longitude": "181"}, 422), ({"observed_at": "2099-01-01T00:00:00Z"}, 422), ({"latitude": "-33"}, 201), ({"observed_at": "2020-01-01T00:00:00Z"}, 201)])
-def test_invalid_or_incompatible_locations_and_dates_do_not_notify(client, auth_headers, changes, status):
+def test_invalid_payloads_are_rejected_and_accepted_incompatible_reports_notify(client, auth_headers, changes, status):
     _, case = lost_notice(client, auth_headers)
     response = submit(client, case, data(**changes))
     assert response.status_code == status
     if status == 201:
         assert response.json()["status"] == "NOT_COMPATIBLE"
-        assert response.json()["owner_notified"] is False
-    assert client.get("/api/v1/notifications", headers=auth_headers).json()["total"] == 0
+        assert response.json()["owner_notified"] is True
+    assert client.get("/api/v1/notifications", headers=auth_headers).json()["total"] == int(status == 201)
 
 
 def test_closed_notice_rejects_new_sightings_and_hides_existing_notifications(client, auth_headers, db_factory):
@@ -151,7 +151,7 @@ def test_only_independent_photo_traits_generate_a_possible_match(client, auth_he
     linked.reconcile_related("observation", UUID(response.json()["id"]), db_factory)
     with db_factory() as db:
         assert db.get(Observation, UUID(response.json()["id"])).matching_status == expected
-        assert db.scalar(select(func.count()).select_from(Notification)) == int(expected in {"POSSIBLE_MATCH", "UNVERIFIED"})
+        assert db.scalar(select(func.count()).select_from(Notification)) == 1
     if expected == "POSSIBLE_MATCH":
         notice = client.get("/api/v1/notifications", headers=auth_headers).json()["items"][0]
         assert notice["kind"] == "POSSIBLE_MATCH"
@@ -159,7 +159,7 @@ def test_only_independent_photo_traits_generate_a_possible_match(client, auth_he
         assert "Color compatible" in notice["reasons"]
 
 
-def test_photo_alert_waits_for_all_images_and_hides_unrelated_photos(client, auth_headers, db_factory, monkeypatch):
+def test_photo_comparison_waits_for_all_images_and_hides_unrelated_photos(client, auth_headers, db_factory, monkeypatch):
     _, case = lost_notice(client, auth_headers)
     mock_storage(monkeypatch)
     monkeypatch.setattr(settings, "ai_enabled", True)

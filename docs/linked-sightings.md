@@ -2,7 +2,15 @@
 
 > Documento de una etapa anterior. Ver el [estado actual del MVP](mvp-phase-3-8.md), que incorpora comparación visual local, matching general, mapa y paneles.
 
-Entrega del 7 de octubre de 2026.
+Entrega original del 7 de octubre de 2026; recepción de avistamientos actualizada el 10 de octubre de 2026.
+
+## Recepción independiente de la comparación
+
+Un avistamiento aceptado desde un aviso activo y visible genera una notificación para su dueño al guardarse, incluso si la comparación está pendiente, faltan datos o el resultado es `NOT_COMPATIBLE`. La comparación y sus motivos se conservan para revisión humana. Los registros de recepción no se presentan como coincidencias positivas ni muestran un porcentaje cuando la comparación es inconclusa, pendiente o incompatible.
+
+Mis avisos muestra **Ver avistamientos y coincidencias**, con un grupo **Enviados desde este aviso** y otro de coincidencias automáticas de reportes generales. El primero incluye foto propia, fecha y hora de Uruguay, zona, ubicación privada, motivos y acciones de revisión. La bandeja distingue comparación en curso, identidad por confirmar y no compatible. El mensaje de quien envía refleja si se generó la alerta.
+
+La notificación y el registro de revisión se reutilizan cuando termina la comparación. Una nueva revisión no oculta el avistamiento ni genera otro correo ya enviado. Se respetan los descartes o confirmaciones del dueño, el cierre del aviso, la moderación, la verificación del correo y las preferencias de envío. Los reportes propios del dueño no producen una alerta para él mismo.
 
 ## Función disponible
 
@@ -18,17 +26,17 @@ Se puede enviar sin crear una cuenta. La referencia al aviso se conserva en `Obs
 
 El servicio `app/matching/linked.py` compara este avistamiento con el aviso seleccionado:
 
-1. El aviso debe estar activo y el avistamiento ser posterior a la pérdida, con hasta un minuto de tolerancia del reloj.
+1. Para comparar automáticamente, el avistamiento debe ser posterior a la pérdida, con hasta un minuto de tolerancia del reloj. Un reporte aceptado para el aviso se notifica aunque su fecha resulte incompatible.
 2. La ubicación debe estar dentro de `search_radius_meters` del aviso, más hasta 1 km de tolerancia GPS de cada punto.
 3. Sin foto, genera un **avistamiento por confirmar**. Las fotos inconclusas o un análisis fallido también permiten revisión humana con esa etiqueta.
 4. Con resultados visuales disponibles, compara especie, color, tamaño, pelaje, patrón y tipo/raza. Usa atributos de confianza mínima 0,7, al menos 0,5 de peso compatible y puntuación normalizada de 0,75 por defecto.
-5. Una especie o color claramente diferente, una fecha incompatible o una ubicación fuera del radio impiden generar la alerta. Las fotografías compatibles se presentan como **posible coincidencia**, nunca como identificación segura.
+5. Una especie o color diferente, una fecha incompatible o una ubicación fuera del radio quedan como **Comparación: no compatible**. La notificación de recepción se mantiene disponible para el dueño. Las fotografías compatibles se presentan como **posible coincidencia**, nunca como identificación segura.
 
 Pesos: especie 0,35; color 0,30; tamaño, longitud del pelaje y patrón 0,10 cada uno; tipo/raza 0,05. La puntuación es una regla de compatibilidad y no una probabilidad de identidad. Se utilizan resultados vigentes del proveedor/modelo/versión actuales. Las declaraciones del dueño tienen prioridad como descripción del animal buscado.
 
 Cada avistamiento tiene como máximo una notificación. La persona autenticada que creó el aviso no recibe una alerta de su propio reporte. Las peticiones repetidas conservan el mismo UUID y hash de datos para evitar duplicaciones; reutilizar el UUID con datos diferentes devuelve 409.
 
-Los cambios de aviso, mascota o fotos vuelven a poner la comparación en pendiente e invalidan las alertas previas mientras se revisa. Un reconciliador recupera pendientes cada 5 segundos. El worker ejecuta la comparación al terminar el análisis de IA; la detección funciona sin que el dueño visite la página.
+Los cambios de aviso, mascota o fotos vuelven a poner la comparación en pendiente. Los reportes enviados directamente conservan su registro y alerta de recepción durante esa revisión; las coincidencias automáticas de reportes generales siguen invalidando sus resultados anteriores. Un reconciliador recupera pendientes cada 5 segundos. El worker ejecuta la comparación al terminar el análisis de IA; la detección funciona sin que el dueño visite la página.
 
 ## Bandeja privada
 
@@ -36,7 +44,7 @@ Los cambios de aviso, mascota o fotos vuelven a poner la comparación en pendien
 
 La sesión usa una cookie `HttpOnly`, `SameSite=Lax`, con `Secure` en producción. Los cambios desde la web comprueban el origen. La web consulta la API interna usando esa cookie; la clave SMTP se utiliza exclusivamente en el backend. Una sesión vencida no impide enviar un avistamiento como visitante.
 
-Las fotos permanecen en el bucket privado y la ruta de cada alerta verifica el dueño del aviso, el avistamiento y la foto. La ubicación precisa del avistamiento se comparte solo en la alerta privada. El correo contiene fecha y localidad, sin coordenadas precisas ni fotos adjuntas. Los avistamientos públicos mantienen coordenadas aproximadas.
+Las fotos permanecen en el bucket privado y la ruta de cada alerta verifica el dueño del aviso, el avistamiento y la foto. El mapa también ofrece miniaturas procesadas de reportes visibles, según `public-observations.md`. La ubicación precisa se comparte solo con el dueño mediante sus endpoints privados de alerta o revisión del aviso. El correo contiene fecha y localidad, sin coordenadas precisas ni fotos adjuntas. Los avistamientos públicos mantienen coordenadas aproximadas.
 
 ## Correo y Brevo Free
 
@@ -63,7 +71,7 @@ Usar una **clave SMTP**, no una clave de API de IA. Guardarla solo en `.env`, qu
 docker compose --profile ai-local up -d api worker web
 ```
 
-La instalación actual mantiene `MAIL_DELIVERY_MODE=disabled` hasta completar la configuración. Las alertas quedan guardadas en la bandeja y los correos pendientes. La API y el worker tienen que permanecer encendidos; un despliegue público requiere una URL accesible para abrir los lugares y fotos desde otros dispositivos.
+Con `MAIL_DELIVERY_MODE=disabled`, las alertas quedan guardadas en la bandeja y los correos pendientes. La API y el worker tienen que permanecer encendidos; un despliegue público requiere una URL accesible para abrir los lugares y fotos desde otros dispositivos.
 
 ### Pruebas locales de correo
 
@@ -85,6 +93,14 @@ La prueba de integración configura el modo local únicamente para su base de da
 - Nuevas variables: `LINKED_MATCH_THRESHOLD`, `LINKED_FEATURE_CONFIDENCE`, `API_INTERNAL_URL`, `MAIL_DELIVERY_MODE`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_TLS_MODE`, `PUBLIC_SITE_URL`.
 
 ## Comprobaciones
+
+### Corrección de recepción del 10 de octubre de 2026
+
+La consulta del avistamiento anónimo de Pablo mostró `NOT_COMPATIBLE` por diferencias de especie o color, sin registro de revisión ni notificación. Se recuperó ese reporte existente con la nueva política: un registro activo y una notificación `REPORTED_SIGHTING`, conservando `NOT_COMPATIBLE` y el aviso en `ACTIVE`. El correo quedó en `SENT`, aceptado por SMTP. El filtro público de posibles coincidencias no incluye ese reporte incompatible. No se creó otro avistamiento ni se cambiaron fotos, preferencias, decisiones del dueño o el estado de la búsqueda.
+
+TypeScript y la sintaxis Python terminaron sin errores. Se actualizaron las expectativas de las comprobaciones existentes al cambio de contrato; no se agregaron casos ni se ejecutaron pruebas automatizadas. Los resultados de pruebas que siguen corresponden a la entrega original.
+
+### Entrega original del 7 de octubre de 2026
 
 - API: **104 pruebas aprobadas y 2 integraciones optativas omitidas** en la ejecución normal.
 - Frontend: **22 pruebas aprobadas**; TypeScript sin errores y compilación correcta.

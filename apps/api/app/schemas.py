@@ -305,6 +305,8 @@ class NotificationRead(BaseModel):
     match_id: UUID | None = None
     match_status: str | None = None
     reporter_contact: str | None = None
+    matching_status: str | None = None
+    linked_to_notice: bool = False
 
 
 class MatchRead(ORMModel):

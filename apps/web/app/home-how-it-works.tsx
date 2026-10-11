@@ -1,47 +1,46 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./ui/pictogram";
 import "./home-how-it-works.css";
 
 const steps = [
   {
-    id: "notice", hint: "El primer paso", tone: "coral", icon: "camera",
+    id: "notice", tone: "coral", icon: "camera",
     image: { src: "/images/how-notice-manypixels.svg", width: 500, height: 500, kind: "library" },
     title: "Publicá su aviso.",
-    description: "Contanos cómo es tu mascota, dónde la viste por última vez y cuándo. Una foto clara ayuda a reconocerla y hace que su aviso sea más fácil de compartir.",
-    detailTitle: "Antes de publicar",
-    detail: "Creá una cuenta y confirmá tu correo. Las fotos son opcionales: si todavía no tenés una, podés publicar y agregarla después desde Mis avisos.",
-    action: "Publicar una mascota perdida", href: "/perdi",
+    description: [
+      "Creá una cuenta y confirmá tu correo para publicar. Contanos cómo es tu mascota, dónde la viste por última vez y cuándo.",
+      "Una foto clara ayuda a reconocerla y facilita compartir el aviso. Las fotos son opcionales: podés agregarlas después desde Mis avisos.",
+    ],
   },
   {
-    id: "sighting", hint: "La comunidad se suma", tone: "blue", icon: "pin",
+    id: "sighting", tone: "blue", icon: "pin",
     image: { src: "/images/how-sighting-reference.webp", width: 1536, height: 1024, kind: "adapted" },
     title: "Cada pista suma.",
-    description: "Alguien reconoce a una mascota en la calle. Desde su aviso puede indicar dónde y cuándo la vio, y sumar una foto si tiene. Ese avistamiento breve se puede enviar sin cuenta.",
-    detailTitle: "Si todavía no hay un aviso",
-    detail: "Con una cuenta, podés crear un reporte desde “Vi una mascota”. Si el animal está a salvo con vos, elegí “Encontré una mascota” para que su familia pueda encontrarlo.",
-    action: "Ver animales perdidos", href: "/perdidos",
+    description: [
+      "Si reconocés a una mascota publicada, enviá un avistamiento desde su aviso indicando dónde y cuándo la viste. Sumá una foto si tenés; ese reporte breve se puede enviar sin cuenta.",
+      "Si todavía no hay un aviso, con una cuenta podés reportarla desde “Vi una mascota”. Si el animal está a salvo con vos, usá “Encontré una mascota” para que su familia pueda encontrarlo.",
+    ],
   },
   {
-    id: "review", hint: "Cada detalle cuenta", tone: "blue", icon: "spark",
+    id: "review", tone: "blue", icon: "spark",
     image: { src: "/images/how-review-reference.webp", width: 1685, height: 933, kind: "adapted" },
     title: "La tecnología conecta. Vos revisás.",
-    description: "MascoMatch compara fotos, características, zona y fecha para acercarte posibles coincidencias. Las pistas llegan a tu cuenta y también pueden llegar por correo, según tus preferencias.",
-    detailTitle: "Cómo llegan las pistas",
-    detail: "La IA sugiere coincidencias y cada familia revisa los detalles. Un avistamiento enviado desde tu aviso también llega como pista, aunque la comparación esté pendiente o no resulte compatible.",
-    action: "Explorar el mapa", href: "/mapa",
+    description: [
+      "La IA de MascoMatch compara fotos, características, zona y fecha para sugerir posibles coincidencias. Vos revisás las imágenes y los detalles para evaluar si se trata de tu mascota.",
+      "Las alertas llegan a tu cuenta y, según tus preferencias, también por correo. Los avistamientos enviados desde tu aviso siempre llegan como pistas, aunque la comparación esté pendiente o no resulte compatible.",
+    ],
   },
   {
-    id: "reunion", hint: "De vuelta en casa", tone: "green", icon: "heart",
+    id: "reunion", tone: "green", icon: "heart",
     image: { src: "/images/how-reunion-reference.webp", width: 1222, height: 1287, kind: "adapted" },
     title: "El reencuentro cierra la búsqueda.",
-    description: "Cuando tu mascota ya esté con vos, marcá “Ya la recuperé” desde Mis avisos. Su aviso deja de aparecer entre los animales perdidos y podés compartir una reseña sobre tu experiencia.",
-    detailTitle: "¿Y si confirmé un avistamiento?",
-    detail: "Confirmar que es tu mascota registra una pista y mantiene la búsqueda abierta. Marcá la recuperación cuando efectivamente haya vuelto con vos.",
-    action: "Seguir ayudando", href: "/perdidos",
+    description: [
+      "Confirmar que un avistamiento corresponde a tu mascota registra una pista y mantiene la búsqueda abierta.",
+      "Cuando ya esté con vos, marcá “Ya la recuperé” desde Mis avisos. El aviso deja de aparecer entre los animales perdidos y podés compartir una reseña sobre tu experiencia.",
+    ],
   },
 ] as const;
 
@@ -119,7 +118,6 @@ export function HomeHowItWorks() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
-    list.addEventListener("toggle", onResize, true);
     // Recalculate after fonts settle, including browsers without ResizeObserver.
     document.fonts?.ready.then(() => { if (!disposed) schedule(true); });
     schedule(true);
@@ -131,7 +129,6 @@ export function HomeHowItWorks() {
       enterObserver?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
-      list.removeEventListener("toggle", onResize, true);
     };
   }, []);
 
@@ -150,10 +147,8 @@ export function HomeHowItWorks() {
 
   return <section id="como-funciona" className="how-it-works" aria-labelledby="how-title">
     <header className="how-heading">
-      <p className="eyebrow">Una red para volver a casa</p>
       <h2 id="how-title">Cómo funciona <span className="title-accent">MascoMatch</span></h2>
       <p className="how-intro">Desde el primer aviso hasta el reencuentro,<br className="how-desktop-break" /> cada persona puede sumar una pista.</p>
-      <a href="#how-notice" className="how-start-link">Seguí el recorrido <Icon name="arrow" /></a>
     </header>
 
     <ol ref={journey} className="how-journey" data-route-ready={route !== null} aria-label="Los cuatro pasos de MascoMatch">
@@ -168,14 +163,10 @@ export function HomeHowItWorks() {
           <span className="how-illustration-stamp"><Icon name={step.icon} /></span>
         </div>
         <div className="how-step-copy">
-          <p className="how-step-eyebrow"><span className="sr-only">Paso {index + 1}: </span>{step.hint}</p>
-          <h3>{step.title}</h3>
-          <p className="how-step-description">{step.description}</p>
-          <details className="how-step-detail">
-            <summary>{step.detailTitle}<Icon name="chevron" /></summary>
-            <p>{step.detail}</p>
-          </details>
-          <Link href={step.href} className={`how-step-action${index === 0 ? " button button-primary" : ""}`}>{step.action}<Icon name="arrow" /></Link>
+          <h3><span className="sr-only">Paso {index + 1}: </span>{step.title}</h3>
+          <div className="how-step-description">
+            {step.description.map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}
+          </div>
         </div>
       </li>)}
     </ol>

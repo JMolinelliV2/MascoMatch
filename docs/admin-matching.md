@@ -33,7 +33,7 @@ Cerrar, recuperar u ocultar una búsqueda conserva su seguimiento. Eliminar sus 
 
 La migración recupera la respuesta vigente de los casos anteriores cuando existe `feedback_at`. Marca el historial recuperado como anterior, sin inventar transiciones o recuperaciones. Puede reconstruir las recomendaciones generales y las vinculadas que aún están como `POSSIBLE_MATCH`; otras sugerencias antiguas ya recalculadas no se pueden reconstruir con certeza. Los puntajes y fechas anteriores se marcan como datos recuperados del estado disponible. El filtro de registros permite excluirlos.
 
-Filtros: últimos 7, 30 o 90 días, o todo el período; origen general o desde una ficha; registros nuevos o anteriores; y estado para la lista. El período se refiere a la generación de la recomendación, no a la fecha de la respuesta. El filtro de estado solo afecta la lista: los indicadores conservan el conjunto seleccionado por período, origen y tipo de registro. Se muestran 25 recomendaciones por página y las últimas 50 respuestas al abrir un historial. Los horarios se presentan en Uruguay.
+Filtros: fecha y hora de Uruguay con extremos de minuto y atajos de 7, 30 o 90 días, o todo el período; origen general o desde una ficha; registros nuevos o anteriores; y estado para la lista. El período se refiere a la generación de la recomendación, no a la fecha de la respuesta. El filtro de estado solo afecta la lista: los indicadores conservan el conjunto seleccionado por período, origen y tipo de registro. Se muestran 25 recomendaciones por página y las últimas 50 respuestas al abrir un historial. Los horarios se presentan en Uruguay. La ampliación de usuarios, trabajos, correos y moderación se describe en [admin-operations.md](admin-operations.md).
 
 Rutas privadas: `GET /api/v1/admin/matching` y `GET /api/v1/admin/matching/{id}/history`. Todas las respuestas usan `Cache-Control: no-store`; los proxies web conservan la autorización de la cookie y solo aceptan las rutas y parámetros previstos.
 
@@ -47,7 +47,7 @@ Título e introducción, sesión, selector de sección, filtros, indicadores, pr
 
 ## Navigation
 
-Dos botones permiten alternar entre seguimiento de coincidencias y gestión. Los filtros reinician la paginación. La lista tiene anterior y siguiente; cada historial se abre en la propia tarjeta. Mi cuenta ofrece el acceso solo a la cuenta autorizada.
+Tres botones permiten alternar entre operación, seguimiento de coincidencias y denuncias/correcciones. Los filtros reinician la paginación. La lista tiene anterior y siguiente; cada historial se abre en la propia tarjeta. Mi cuenta ofrece el acceso solo a la cuenta autorizada.
 
 ## Typography
 

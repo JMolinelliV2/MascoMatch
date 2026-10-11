@@ -1,6 +1,6 @@
 from datetime import timedelta
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy import update
@@ -32,7 +32,7 @@ def issue_session(db, user):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(payload: RegisterRequest, request: Request, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",email) or not payload.name.strip():
         raise HTTPException(status_code=422, detail="A valid email address is required")
@@ -48,11 +48,13 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409,detail="An account with this email already exists") from exc
     from app.account_mail import issue_token
     issue_token(db,user,"VERIFY_EMAIL")
-    return issue_session(db, user)
+    result = issue_session(db, user)
+    request.state.activity_user_id = user.id
+    return result
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     check_login_budget(email)
     user = db.scalar(select(User).where(User.email == email))
@@ -62,7 +64,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="This account is unavailable")
     if password_needs_upgrade(user.password_hash):
         user.password_hash = hash_password(payload.password)
-    return issue_session(db, user)
+    result = issue_session(db, user)
+    request.state.activity_user_id = user.id
+    return result
 
 
 @router.post("/logout", status_code=204)

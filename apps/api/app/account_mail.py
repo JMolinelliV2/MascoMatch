@@ -16,6 +16,7 @@ from app.matching.linked import aware
 from app.mail_templates import add_password_reset_content, add_email_verification_content, add_email_change_content
 from app.models import AccountToken, AuthSession, Notification, User
 from app.notifications.email import send_message
+from app.operational_tracking import record_mail
 
 AAD = b"mascomatch-account-token-v1"
 
@@ -111,8 +112,10 @@ def deliver_pending(factory=None):
                         add_email_verification_content(message,url)
                     send_message(message)
                     ticket.email_status="PREVIEWED" if settings.mail_delivery_mode=="preview" else "SENT"
+                    record_mail(db, ticket.kind, "account_token", [ticket.id], user.id, ticket.email_status)
                     sent+=1
                 except Exception:
+                    record_mail(db, ticket.kind, "account_token", [ticket.id], user.id, "FAILED")
                     ticket.email_status="FAILED" if ticket.email_attempts>=5 else "PENDING"
                     ticket.email_available_at=utcnow()+timedelta(seconds=min(3600,30*2**ticket.email_attempts))
                     logging.getLogger("mascomatch.accounts").warning("account_mail_failed")

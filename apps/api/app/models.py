@@ -49,6 +49,7 @@ class User(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(24), default="ACTIVE", nullable=False)
     role: Mapped[str] = mapped_column(String(24), default="USER", server_default="USER", nullable=False)
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     pets: Mapped[list["Pet"]] = relationship(back_populates="owner")
     administrator_assignment: Mapped["AdminAccess | None"] = relationship(back_populates="owner", uselist=False, passive_deletes=True)
 
@@ -78,6 +79,33 @@ class AuthSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class OperationalTracking(Base):
+    __tablename__ = "operational_tracking"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_single_operational_tracking"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class UserActivity(Base):
+    """One authenticated activity bucket per account and UTC minute; no browsing details."""
+    __tablename__ = "user_activity"
+    user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True, index=True)
+
+
+class EmailDeliveryLog(Base):
+    """One SMTP attempt, including grouped alerts. Never persist email content or tokens."""
+    __tablename__ = "email_delivery_log"
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    kind: Mapped[str] = mapped_column(String(24), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    source_ids: Mapped[list] = mapped_column(JSON, nullable=False)
+    recipient_user_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    status: Mapped[str] = mapped_column(String(24), index=True, nullable=False)
+    item_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True, nullable=False)
 
 
 class AccountToken(Base):
@@ -217,6 +245,7 @@ class Photo(TimestampMixin, Base):
 
 class AnalysisJob(TimestampMixin, Base):
     __tablename__ = "analysis_jobs"
+    __table_args__ = (Index("ix_analysis_jobs_created_at", "created_at"), Index("ix_analysis_jobs_finished_at", "finished_at"))
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     deduplication_key: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)

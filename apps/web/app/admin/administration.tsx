@@ -1,24 +1,67 @@
 "use client";
-import {useEffect,useState} from "react";
-import {AccountSession} from "../account-session";
-import {AdminRecords} from "./admin-records";
-import {MatchingDashboard} from "./matching-dashboard";
-type Report={id:string;target_type:string;target_id:string;title:string;reason:string;detail:string;status:string;visibility:string|null;publication?:{description:string;photo_ids:string[]}};
-type Overview={counts:Record<string,number>;ai_failures:{id:string;source:string;error_code:string|null}[];audit:{action:string;target_type:string;target_id:string;created_at:string}[]};
-const names:Record<string,string>={users:"Usuarios",pets:"Animales",lost_cases:"Avisos",observations:"Avistamientos",matches:"Coincidencias",moderation_reports:"Denuncias",case_reviews:"Reseñas"};
-function PlatformManagement(){const [reports,setReports]=useState<Report[]>([]);const [overview,setOverview]=useState<Overview|null>(null);const [status,setStatus]=useState("OPEN");const [error,setError]=useState("");const [refresh,setRefresh]=useState(0);const [busy,setBusy]=useState<string|null>(null);
-  useEffect(()=>{const controller=new AbortController();void Promise.all([fetch(`/api/admin/reports?status=${status}`,{cache:"no-store",signal:controller.signal}),fetch("/api/admin/overview",{cache:"no-store",signal:controller.signal})]).then(async ([reportResponse,overviewResponse])=>{if(!reportResponse.ok||!overviewResponse.ok)throw new Error("No pudimos consultar la administración. Revisá tu sesión y permisos.");const [data,summary]=await Promise.all([reportResponse.json(),overviewResponse.json()]);if(!controller.signal.aborted){setReports(data.items);setOverview(summary);setError("");}}).catch(cause=>{if(!controller.signal.aborted)setError(cause.message);});return()=>controller.abort();},[status,refresh]);
-  async function action(id:string,value:string){setBusy(id);setError("");try{const response=await fetch(`/api/admin/reports/${id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:value})});if(!response.ok)throw new Error("No pudimos aplicar la acción.");setRefresh(value=>value+1);}catch(cause){setError(cause instanceof Error?cause.message:"No pudimos aplicar la acción.");}finally{setBusy(null);}}
-  return <>{error&&<p className="notice notice-warning" role="alert">{error}</p>}{overview&&<dl className="review-details">{Object.entries(overview.counts).map(([name,total])=><div key={name}><dt>{names[name]||name}</dt><dd>{total}</dd></div>)}</dl>}
-    <h2>Denuncias</h2><label className="field-label">Estado<select className="form-input" value={status} onChange={event=>setStatus(event.target.value)}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></label>
-    {!reports.length&&<p>No hay denuncias en este estado.</p>}{reports.map(report=><article key={report.id} className="notification-card"><h3>{report.title}</h3><p>{report.reason} · {report.visibility==="HIDDEN"?"Publicación oculta":"Publicación visible"}</p><p>{report.detail||"Sin detalles adicionales"}</p>{report.publication&&<details><summary>Ver publicación denunciada</summary><p>{report.publication.description}</p><div className="notification-photos">{report.publication.photo_ids.map(id=><img key={id} src={`/api/admin/reports/${report.id}/photos/${id}`} alt="Foto de la publicación denunciada" loading="lazy"/>)}</div></details>}<div className="location-actions"><button className="text-button" type="button" disabled={busy===report.id} onClick={()=>void action(report.id,"HIDE")}>Ocultar publicación</button><button className="text-button" type="button" disabled={busy===report.id} onClick={()=>void action(report.id,"RESTORE")}>Restaurar publicación</button><button className="text-button" type="button" disabled={busy===report.id} onClick={()=>void action(report.id,"DISMISS")}>Descartar denuncia</button></div><details><summary>Bloquear al autor</summary><p className="field-help">Bloquea el acceso de la cuenta y oculta sus publicaciones. Las acciones quedan registradas.</p><button className="button button-secondary" type="button" disabled={busy===report.id} onClick={()=>void action(report.id,"BLOCK_AUTHOR")}>Confirmar bloqueo del autor</button></details></article>)}
-    <AdminRecords/>
-    <h2>Fallos de análisis</h2>{overview?.ai_failures.length? <ul>{overview.ai_failures.map(job=><li key={job.id}>{job.source}: {job.error_code||"Fallo sin código"}</li>)}</ul>:<p>No hay fallos registrados.</p>}
-    <h2>Acciones recientes</h2>{overview?.audit.length?<ul>{overview.audit.map((item,index)=><li key={`${item.target_id}-${index}`}>{item.action} · {item.target_type} · {new Date(item.created_at).toLocaleString("es-UY")}</li>)}</ul>:<p>Todavía no hay acciones administrativas.</p>}
-  </>;
+import { useEffect, useState } from "react";
+import { AccountSession } from "../account-session";
+import { ReportId } from "../ui/report-id";
+import { AdminRecords } from "./admin-records";
+import { MatchingDashboard } from "./matching-dashboard";
+import { OperationsDashboard } from "./operations-dashboard";
+import { AdminDateRange, adminDate, emptyPeriod, periodQuery } from "./date-range";
+import type { AdminPeriod } from "./date-range";
+type Report = { id: string; target_type: string; target_id: string; public_id: string | null; title: string;
+  reason: string; detail: string; status: string; created_at: string; visibility: string | null;
+  publication?: { description: string; photo_ids: string[] } };
+type ReportData = { items: Report[]; total: number; limit: number };
+const reasons: Record<string, string> = { SPAM: "Spam", FALSE_INFORMATION: "Información falsa", INAPPROPRIATE_PHOTO: "Foto inapropiada", OTHER: "Otro motivo" };
+
+function PlatformManagement() {
+  const [data, setData] = useState<ReportData | null>(null);
+  const [status, setStatus] = useState("OPEN");
+  const [period, setPeriod] = useState<AdminPeriod>(emptyPeriod);
+  const [offset, setOffset] = useState(0);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
+  const [refresh, setRefresh] = useState(0);
+  const [busy, setBusy] = useState<string | null>(null);
+  useEffect(() => {
+    const controller = new AbortController(); setData(null); setError("");
+    const params = new URLSearchParams({ status, offset: String(offset), ...periodQuery(period) });
+    void fetch(`/api/admin/reports?${params}`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]) }).then(async response => {
+      if (!response.ok) throw new Error("No pudimos consultar las denuncias. Revisá tu sesión y permisos.");
+      const next: ReportData = await response.json(); if (!controller.signal.aborted) setData(next);
+    }).catch(cause => { if (!controller.signal.aborted) setError(cause.message); });
+    return () => controller.abort();
+  }, [status, period, offset, refresh]);
+  async function action(id: string, value: string) {
+    setBusy(id); setError(""); setSaved("");
+    try {
+      const response = await fetch(`/api/admin/reports/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: value }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : "No pudimos aplicar la acción.");
+      setSaved("Acción aplicada y registrada en la auditoría."); setRefresh(value => value + 1);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos aplicar la acción."); }
+    finally { setBusy(null); }
+  }
+  return <section aria-labelledby="admin-reports-title">
+    <div className="admin-section-heading"><div><h2 id="admin-reports-title">Denuncias</h2><p>Revisá las publicaciones denunciadas y registrá la acción correspondiente.</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
+    <AdminDateRange value={period} onApply={next => { setPeriod(next); setOffset(0); }} />
+    <p className="field-help">El período se aplica a la recepción de la denuncia. Las correcciones del final conservan su listado de registros recientes.</p>
+    <label className="field-label">Estado de la denuncia<select className="form-input" value={status} onChange={event => { setStatus(event.target.value); setOffset(0); }}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></label>
+    {error && <p className="notice notice-warning" role="alert">{error}</p>}{saved && <p className="notice" role="status">{saved}</p>}
+    {!data && !error && <p role="status">Cargando denuncias…</p>}
+    {data && <><p className="field-help">{data.total} denuncias con estos filtros.</p>{!data.items.length && <p>No hay denuncias con estos filtros.</p>}
+      {data.items.map(report => <article key={report.id} className="notification-card"><h3>{report.title}</h3>{report.public_id && <ReportId publicId={report.public_id} />}<p>{reasons[report.reason] || report.reason} · {report.visibility === "HIDDEN" ? "Publicación oculta" : report.visibility ? "Publicación visible" : "Publicación eliminada"}</p><p className="field-help">Recibida: {adminDate(report.created_at)}</p><p className="admin-contact-message">{report.detail || "Sin detalles adicionales"}</p>
+        {report.publication && <details><summary>Ver publicación denunciada</summary><p>{report.publication.description}</p><div className="notification-photos">{report.publication.photo_ids.map(id => <img key={id} src={`/api/admin/reports/${report.id}/photos/${id}`} alt="Foto de la publicación denunciada" loading="lazy" />)}</div></details>}
+        <div className="location-actions"><button className="text-button" type="button" disabled={busy !== null || !report.visibility} onClick={() => void action(report.id, "HIDE")}>Ocultar publicación</button><button className="text-button" type="button" disabled={busy !== null || !report.visibility} onClick={() => void action(report.id, "RESTORE")}>Restaurar publicación</button><button className="text-button" type="button" disabled={busy !== null} onClick={() => void action(report.id, "DISMISS")}>Descartar denuncia</button></div>
+        {report.visibility && <details><summary>Bloquear al autor</summary><p className="field-help">Cierra las sesiones de la cuenta y oculta todos sus avisos y reportes. Las acciones quedan registradas.</p><button className="button button-secondary" type="button" disabled={busy !== null} onClick={() => void action(report.id, "BLOCK_AUTHOR")}>Confirmar bloqueo del autor</button></details>}
+      </article>)}
+      {data.total > data.limit && <nav className="lost-dogs-pagination" aria-label="Páginas de denuncias"><button type="button" className="button button-secondary" disabled={!offset} onClick={() => setOffset(value => Math.max(0, value - data.limit))}>Anterior</button><span>Página {Math.floor(offset / data.limit) + 1} de {Math.ceil(data.total / data.limit)}</span><button type="button" className="button button-secondary" disabled={offset + data.limit >= data.total} onClick={() => setOffset(value => value + data.limit)}>Siguiente</button></nav>}
+    </>}
+    <AdminRecords />
+  </section>;
 }
-function AdminPanel(){
-  const [section,setSection]=useState("matching");
-  return <><nav className="admin-panel-navigation" aria-label="Secciones de administración"><button type="button" aria-pressed={section==="matching"} onClick={()=>setSection("matching")}>Seguimiento de coincidencias</button><button type="button" aria-pressed={section==="management"} onClick={()=>setSection("management")}>Gestión de la plataforma</button></nav>{section==="matching"?<MatchingDashboard/>:<PlatformManagement/>}</>;
+
+function AdminPanel() {
+  const [section, setSection] = useState("operations");
+  return <><nav className="admin-panel-navigation" aria-label="Secciones de administración"><button type="button" aria-pressed={section === "operations"} onClick={() => setSection("operations")}>Operación</button><button type="button" aria-pressed={section === "matching"} onClick={() => setSection("matching")}>Seguimiento de coincidencias</button><button type="button" aria-pressed={section === "management"} onClick={() => setSection("management")}>Denuncias y correcciones</button></nav>{section === "operations" ? <OperationsDashboard /> : section === "matching" ? <MatchingDashboard /> : <PlatformManagement />}</>;
 }
-export function Administration(){return <AccountSession>{user=>user.admin_access?<AdminPanel/>:<div className="notice notice-warning"><h2>Acceso restringido</h2><p>Este panel está reservado a la cuenta administradora con su correo confirmado. Tu sesión actual no tiene acceso.</p></div>}</AccountSession>;}
+export function Administration() { return <AccountSession>{user => user.admin_access ? <AdminPanel /> : <div className="notice notice-warning"><h2>Acceso restringido</h2><p>Este panel está reservado a la cuenta administradora con su correo confirmado. Tu sesión actual no tiene acceso.</p></div>}</AccountSession>; }

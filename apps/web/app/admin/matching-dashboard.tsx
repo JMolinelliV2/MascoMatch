@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../ui/pictogram";
 import { ReportId } from "../ui/report-id";
+import { AdminDateRange, emptyPeriod, periodQuery } from "./date-range";
+import type { AdminPeriod } from "./date-range";
 
 type Outcome = "positive" | "false" | "uncertain" | "pending";
 type Counts = Record<Outcome, number> & { total: number; decided: number; reviewed: number; positive_rate: number | null; review_rate: number | null };
@@ -48,7 +50,7 @@ function ResponseHistory({ id }: { id: string }) {
 }
 
 export function MatchingDashboard() {
-  const [days, setDays] = useState("30");
+  const [period, setPeriod] = useState<AdminPeriod>(emptyPeriod);
   const [source, setSource] = useState("all");
   const [dataset, setDataset] = useState("all");
   const [result, setResult] = useState("all");
@@ -60,20 +62,21 @@ export function MatchingDashboard() {
   useEffect(() => {
     const controller = new AbortController();
     setData(null); setError(""); setHistory(null);
-    const query = new URLSearchParams({ days, source, dataset, result, offset: String(offset) });
+    const query = new URLSearchParams({ days: "0", ...periodQuery(period), source, dataset, result, offset: String(offset) });
     void fetch(`/api/admin/matching?${query}`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]) }).then(async response => {
       if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "Tu sesión no tiene acceso al panel. Ingresá con la cuenta administradora y su correo confirmado." : "No pudimos cargar las recomendaciones.");
       const next: Dashboard = await response.json();
       if (!controller.signal.aborted) setData(next);
     }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error && cause.name !== "TimeoutError" ? cause.message : "No pudimos cargar el seguimiento. Revisá tu sesión e intentá nuevamente."); });
     return () => controller.abort();
-  }, [days, source, dataset, result, offset, refresh]);
+  }, [period, source, dataset, result, offset, refresh]);
   function filter(setter: (value: string) => void, value: string) { setter(value); setOffset(0); }
   const counts = data?.summary;
   return <section className="admin-matching" aria-labelledby="admin-matching-title">
     <div className="admin-section-heading"><div><h2 id="admin-matching-title">Resultados de las coincidencias</h2><p>Seguimiento de las recomendaciones del sistema y las respuestas de los dueños.</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}><Icon name="clock" />Actualizar</button></div>
+    <AdminDateRange value={period} onApply={next => { setPeriod(next); setOffset(0); }} />
+    <p className="field-help">El período se aplica a la fecha en que se generó la recomendación.</p>
     <div className="admin-matching-filters">
-      <label className="field-label">Recomendaciones generadas<select className="form-input" value={days} onChange={event => filter(setDays, event.target.value)}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="0">Todo el período</option></select></label>
       <label className="field-label">Origen<select className="form-input" value={source} onChange={event => filter(setSource, event.target.value)}><option value="all">Todos los orígenes</option><option value="GENERAL">Búsqueda general</option><option value="LINKED">Desde un aviso</option></select></label>
       <label className="field-label">Registro<select className="form-input" value={dataset} onChange={event => filter(setDataset, event.target.value)}><option value="all">Todos los registros</option><option value="live">Desde el inicio del seguimiento</option><option value="legacy">Registros anteriores</option></select></label>
     </div>

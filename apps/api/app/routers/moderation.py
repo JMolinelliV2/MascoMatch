@@ -2,12 +2,15 @@ from typing import Literal
 from uuid import UUID
 from fastapi import APIRouter,Depends,HTTPException,Response,Query
 from pydantic import BaseModel,ConfigDict,Field
-from sqlalchemy import select
+from pydantic import AwareDatetime
+from sqlalchemy import func,select
+from app.admin_period import period_filters
 from app.db.session import get_db
 from app.dependencies import optional_user
 from app.models import AdminAudit,CaseReview,LostCase,ModerationReport,Observation,Pet,User,Notification,AnalysisJob,Match,Photo
 from app.matching.linked import mark_related_pending
 from app.admin_access import administrator as admin
+from app.admin_moderation import publication_author, set_account_status, set_visibility
 router=APIRouter(tags=["moderation"])
 
 
@@ -30,8 +33,15 @@ class CorrectionInput(BaseModel):
 
 
 class UserStatusInput(BaseModel):
-    model_config=ConfigDict(extra="forbid")
+    model_config=ConfigDict(extra="forbid",str_strip_whitespace=True)
     status:Literal["ACTIVE","BLOCKED"]
+    reason:str=Field(default="",max_length=1000)
+
+
+class VisibilityInput(BaseModel):
+    model_config=ConfigDict(extra="forbid",str_strip_whitespace=True)
+    status:Literal["VISIBLE","HIDDEN"]
+    reason:str=Field(min_length=3,max_length=1000)
 
 
 @router.post("/reports",status_code=201)
@@ -44,21 +54,25 @@ def create_report(payload:ReportInput,db=Depends(get_db),user=Depends(optional_u
 
 
 @router.get("/admin/reports")
-def reports(response:Response,status:str=Query(default="OPEN",max_length=24),db=Depends(get_db),user=Depends(admin)):
+def reports(response:Response,status:Literal["OPEN","ACTION_TAKEN","DISMISSED",""]="OPEN",
+            from_at:AwareDatetime|None=None,to_at:AwareDatetime|None=None,
+            limit:int=Query(default=25,ge=1,le=100),offset:int=Query(default=0,ge=0,le=100000),db=Depends(get_db),user=Depends(admin)):
     response.headers["Cache-Control"]="no-store"
-    query=select(ModerationReport).order_by(ModerationReport.created_at.desc())
+    query=select(ModerationReport).where(*period_filters(ModerationReport.created_at,from_at,to_at)).order_by(ModerationReport.created_at.desc(),ModerationReport.id)
     if status:query=query.where(ModerationReport.status==status)
     items=[]
-    for report in db.scalars(query.limit(100)):
+    total=db.scalar(select(func.count()).select_from(query.order_by(None).subquery())) or 0
+    for report in db.scalars(query.offset(offset).limit(limit)):
         target=db.get(LostCase if report.target_type=="lost_case" else Observation,report.target_id)
-        title=db.get(Pet,target.pet_id).name if isinstance(target,LostCase) else "Avistamiento" if target else "Publicación eliminada"
-        items.append({"id":report.id,"target_type":report.target_type,"target_id":report.target_id,"title":title,"reason":report.reason,"detail":report.detail,"status":report.status,"created_at":report.created_at,"visibility":target.moderation_status if target else None})
+        pet=db.get(Pet,target.pet_id) if isinstance(target,LostCase) else None
+        title=pet.name if pet else "Avistamiento" if target else "Publicación eliminada"
+        items.append({"id":report.id,"target_type":report.target_type,"target_id":report.target_id,"public_id":target.public_id if target else None,"title":title,"reason":report.reason,"detail":report.detail,"status":report.status,"created_at":report.created_at,"visibility":target.moderation_status if target else None})
         if target:
             from sqlalchemy import and_,or_
             scope=Photo.owner_id==target.id
             scope=or_(and_(Photo.owner_type=="lost_case",Photo.owner_id==target.id),and_(Photo.owner_type=="pet",Photo.owner_id==target.pet_id)) if isinstance(target,LostCase) else and_(Photo.owner_type=="observation",Photo.owner_id==target.id)
             items[-1]["publication"]={"description":target.description,"photo_ids":list(db.scalars(select(Photo.id).where(scope)))}
-    return {"items":items}
+    return {"items":items,"total":total,"limit":limit,"offset":offset}
 
 
 @router.patch("/admin/reports/{report_id}")
@@ -69,20 +83,15 @@ def review(report_id:UUID,payload:ReviewInput,db=Depends(get_db),user=Depends(ad
     if payload.action!="DISMISS" and target is None:raise HTTPException(status_code=404,detail="Publicación no encontrada.")
     if payload.action=="DISMISS":report.status="DISMISSED"
     else:
-        target.moderation_status="VISIBLE" if payload.action=="RESTORE" else "HIDDEN"
-        db.flush()
-        mark_related_pending(db,report.target_type,target.id)
         if payload.action=="BLOCK_AUTHOR":
-            author_id=db.get(Pet,target.pet_id).owner_id if isinstance(target,LostCase) else target.author_id
-            if author_id==user.id:raise HTTPException(status_code=409,detail="No podés bloquear tu propia cuenta.")
+            author_id=publication_author(db,target)
             if author_id:
-                author=db.get(User,author_id);author.status="BLOCKED"
-                for case in db.scalars(select(LostCase).join(Pet).where(Pet.owner_id==author_id)):
-                    case.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"lost_case",case.id)
-                for obs in db.scalars(select(Observation).where(Observation.author_id==author_id)):
-                    obs.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"observation",obs.id)
+                set_account_status(db,author_id,"BLOCKED",user.id)
+            else:raise HTTPException(status_code=409,detail="Este reporte no tiene una cuenta asociada. Podés ocultarlo.")
+        else:
+            set_visibility(db,report.target_type,target.id,"VISIBLE" if payload.action=="RESTORE" else "HIDDEN")
         report.status="ACTION_TAKEN"
-    db.add(AdminAudit(actor_id=user.id,action=payload.action,target_type=report.target_type,target_id=report.target_id,report_id=report.id))
+    db.add(AdminAudit(actor_id=user.id,action=payload.action,target_type=report.target_type,target_id=report.target_id,report_id=report.id,details={"reason":f"Denuncia: {report.reason}"}))
     db.commit()
     return {"id":report.id,"status":report.status}
 
@@ -122,17 +131,17 @@ def correct(kind:Literal["lost_case","observation"],identity:UUID,payload:Correc
 
 @router.patch("/admin/users/{identity}/status")
 def user_status(identity:UUID,payload:UserStatusInput,db=Depends(get_db),user=Depends(admin)):
-    target=db.get(User,identity)
-    if target is None:raise HTTPException(status_code=404,detail="Cuenta no encontrada.")
-    if identity==user.id and payload.status!="ACTIVE":raise HTTPException(status_code=409,detail="No podés bloquear tu propia cuenta.")
-    target.status=payload.status
-    if payload.status=="BLOCKED":
-        for case in db.scalars(select(LostCase).join(Pet).where(Pet.owner_id==identity)):
-            case.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"lost_case",case.id)
-        for obs in db.scalars(select(Observation).where(Observation.author_id==identity)):
-            obs.moderation_status="HIDDEN";db.flush();mark_related_pending(db,"observation",obs.id)
-    db.add(AdminAudit(actor_id=user.id,action="BLOCK_USER" if payload.status=="BLOCKED" else "UNBLOCK_USER",target_type="user",target_id=identity))
+    target,previous=set_account_status(db,identity,payload.status,user.id)
+    db.add(AdminAudit(actor_id=user.id,action="BLOCK_USER" if payload.status=="BLOCKED" else "UNBLOCK_USER",target_type="user",target_id=identity,details={"previous_status":previous,"status":payload.status,"reason":payload.reason.strip()}))
     db.commit();return {"id":target.id,"status":target.status}
+
+
+@router.patch("/admin/publications/{kind}/{identity}/visibility")
+def publication_visibility(kind:Literal["lost_case","observation"],identity:UUID,payload:VisibilityInput,db=Depends(get_db),user=Depends(admin)):
+    target,previous=set_visibility(db,kind,identity,payload.status)
+    db.add(AdminAudit(actor_id=user.id,action="HIDE_PUBLICATION" if payload.status=="HIDDEN" else "RESTORE_PUBLICATION",target_type=kind,target_id=identity,details={"previous_status":previous,"status":payload.status,"reason":payload.reason.strip()}))
+    db.commit()
+    return {"id":target.id,"public_id":target.public_id,"status":target.moderation_status}
 
 
 @router.get("/admin/reports/{report_id}/photos/{photo_id}")

@@ -4,12 +4,13 @@ from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.background import BackgroundTasks
 
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.observability import ObservabilityMiddleware
 from app.routers import analysis, auth, contact, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, operations, pets, photos, public_lost_dogs, public_observations, reviews, upload_admission
-from app.routers import admin_matching
+from app.routers import admin_matching, admin_operations
 
 
 @asynccontextmanager
@@ -24,6 +25,8 @@ async def lifespan(application: FastAPI):
     tasks = [asyncio.create_task(reconciliation_loop()), asyncio.create_task(delivery_loop()), asyncio.create_task(general_matching_loop()),asyncio.create_task(account_delivery_loop()), asyncio.create_task(photo_reminder_loop())]
     tasks.append(asyncio.create_task(cleanup_loop()))
     tasks.append(asyncio.create_task(contact_delivery_loop()))
+    from app.operational_tracking import cleanup_loop as tracking_cleanup_loop
+    tasks.append(asyncio.create_task(tracking_cleanup_loop()))
     if settings.ai_enabled or settings.embeddings_enabled:
         from app.analysis.queue import dispatch_loop
         tasks.append(asyncio.create_task(dispatch_loop()))
@@ -54,6 +57,22 @@ app.add_middleware(
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=[value.strip() for value in settings.allowed_hosts.split(",") if value.strip()])
 app.add_middleware(ObservabilityMiddleware)
+
+
+@app.middleware("http")
+async def activity_tracking(request, call_next):
+    response = await call_next(request)
+    identity = getattr(request.state, "activity_user_id", None)
+    from app.db.session import get_db
+    if identity and response.status_code < 400 and settings.app_env != "test" and get_db not in app.dependency_overrides:
+        from app.operational_tracking import record_activity
+        tasks = BackgroundTasks()
+        if response.background is not None:
+            tasks.add_task(response.background)
+        tasks.add_task(record_activity, identity)
+        response.background = tasks
+    return response
+
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(pets.router, prefix="/api/v1")
 app.include_router(lost_cases.router, prefix="/api/v1")
@@ -70,6 +89,7 @@ app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(map.router, prefix="/api/v1")
 app.include_router(moderation.router, prefix="/api/v1")
 app.include_router(admin_matching.router, prefix="/api/v1")
+app.include_router(admin_operations.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(contact.router, prefix="/api/v1")
 app.include_router(operations.router)

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
-def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db), request: Request = None) -> User:
     try:
         claims = decode_token_claims(token)
         user_id = UUID(claims["sub"])
@@ -27,11 +27,13 @@ def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
     user = db.get(User, user_id)
     if user is None or user.status != "ACTIVE":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User is unavailable", headers={"WWW-Authenticate": "Bearer"})
+    if request is not None:
+        request.state.activity_user_id = user.id
     return user
 
 
-def optional_user(token: str | None = Depends(optional_oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
-    return current_user(token, db) if token else None
+def optional_user(token: str | None = Depends(optional_oauth2_scheme), db: Session = Depends(get_db), request: Request = None) -> User | None:
+    return current_user(token, db, request) if token else None
 
 
 def verified_user(user: User = Depends(current_user)) -> User:

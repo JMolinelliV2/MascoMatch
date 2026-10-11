@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.matching.linked import aware
 from app.models import LostCase, Notification, Observation, User
+from app.operational_tracking import record_mail
 
 
 def build_message(notification, owner, observation=None, related=None):
@@ -69,7 +70,12 @@ def deliver_pending(session_factory=None):
             notification = db.get(Notification, identity)
             if notification is None or not notification.is_active or notification.read_at is not None or notification.archived_at is not None or notification.email_status != "PENDING" or aware(notification.email_available_at) > utcnow():
                 continue
-            # Match evaluators and delivery both lock the case before related records.
+            # Account before case, matching account deletion/blocking. NO KEY UPDATE
+            # permits matching's user foreign keys while serializing account changes.
+            owner = db.scalar(select(User).where(User.id == notification.owner_id)
+                .with_for_update(skip_locked=True, key_share=True).execution_options(populate_existing=True))
+            if owner is None:
+                continue
             case = db.scalar(select(LostCase).where(LostCase.id==notification.lost_case_id).with_for_update(skip_locked=True))
             if case is None:
                 continue
@@ -78,8 +84,7 @@ def deliver_pending(session_factory=None):
             if not group:
                 continue
             notification=group[0]
-            owner = db.get(User, notification.owner_id)
-            if not owner or owner.status != "ACTIVE" or not case or case.status != "ACTIVE":
+            if not owner or owner.status != "ACTIVE" or not case or case.status != "ACTIVE" or case.moderation_status != "VISIBLE":
                 for item in group:item.email_status = "CANCELLED"
             elif owner.notification_preferences.get("email", True) is False:
                 for item in group:item.email_status = "SKIPPED"
@@ -92,8 +97,10 @@ def deliver_pending(session_factory=None):
                     for item in group:
                         item.email_status = "PREVIEWED" if settings.mail_delivery_mode == "preview" else "SENT"
                         item.email_sent_at = utcnow()
+                    record_mail(db, "ALERT", "notification", [item.id for item in group], owner.id, notification.email_status)
                     sent += 1
                 except (OSError, smtplib.SMTPException, ValueError):
+                    record_mail(db, "ALERT", "notification", [item.id for item in group], owner.id, "FAILED")
                     for item in group:
                         item.email_status = "FAILED" if item.email_attempts >= 5 else "PENDING"
                         item.email_available_at = utcnow() + timedelta(seconds=min(3600, 30 * 2 ** item.email_attempts))

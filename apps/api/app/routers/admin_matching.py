@@ -4,6 +4,8 @@ from typing import Literal
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import case, func, select
+from pydantic import AwareDatetime
+from app.admin_period import period_filters
 from app.admin_access import administrator
 from app.analysis.service import utcnow
 from app.db.session import get_db
@@ -24,9 +26,11 @@ outcome = case(
     else_="pending")
 
 
-def scope(days, source, dataset):
+def scope(days, source, dataset, from_at=None, to_at=None):
     filters = [Match.recommended_at.is_not(None)]
-    if days:
+    if from_at is not None or to_at is not None:
+        filters.extend(period_filters(Match.recommended_at, from_at, to_at))
+    elif days:
         filters.append(Match.recommended_at >= utcnow() - timedelta(days=days))
     if source != "all":
         filters.append(Match.recommendation_source == source)
@@ -51,10 +55,11 @@ def counters(db, filters):
 @router.get("")
 def dashboard(response: Response, days: int = Query(default=30, ge=0, le=3650),
               source: SOURCE = "all", dataset: DATASET = "all", result: OUTCOME = "all",
+              from_at: AwareDatetime | None = None, to_at: AwareDatetime | None = None,
               limit: int = Query(default=25, ge=1, le=100), offset: int = Query(default=0, ge=0, le=100000),
               db=Depends(get_db), user=Depends(administrator)):
     response.headers["Cache-Control"] = "no-store"
-    filters = scope(days, source, dataset)
+    filters = scope(days, source, dataset, from_at, to_at)
     summary = counters(db, filters)
     sources = [{"source": name, **counters(db, [*filters, Match.recommendation_source == name])} for name in ("GENERAL", "LINKED")]
     legacy_count = db.scalar(select(func.count()).select_from(Match).where(*filters, Match.recommendation_snapshot["legacy"].as_boolean().is_(True))) or 0

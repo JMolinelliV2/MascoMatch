@@ -13,6 +13,7 @@ from app.db.session import SessionLocal
 from app.mail_templates import add_photo_reminder_content
 from app.models import LostCase, Pet, Photo, PhotoReminder, User
 from app.notifications.email import send_message
+from app.operational_tracking import record_mail
 
 
 def has_photo(db, case):
@@ -59,6 +60,11 @@ def deliver_pending(session_factory=None):
     sent = 0
     for identity in identities:
         with factory() as db:
+            owner_id = db.scalar(select(Pet.owner_id).join(LostCase, LostCase.pet_id == Pet.id).where(LostCase.id == identity))
+            owner = db.scalar(select(User).where(User.id == owner_id)
+                .with_for_update(skip_locked=True, key_share=True).execution_options(populate_existing=True)) if owner_id else None
+            if owner is None:
+                continue
             case = db.scalar(select(LostCase).where(LostCase.id == identity).with_for_update(skip_locked=True, key_share=True))
             if case is None:
                 continue
@@ -68,7 +74,6 @@ def deliver_pending(session_factory=None):
             if reminder is None:
                 continue
             pet = db.get(Pet, case.pet_id)
-            owner = db.get(User, pet.owner_id) if pet else None
             if case.status != "ACTIVE" or case.moderation_status != "VISIBLE" or not owner or owner.status != "ACTIVE" or has_photo(db, case):
                 reminder.status = "CANCELLED"
             elif owner.notification_preferences.get("email", True) is False:
@@ -81,8 +86,10 @@ def deliver_pending(session_factory=None):
                     send_message(build_message(case, pet, owner))
                     reminder.status = "PREVIEWED" if settings.mail_delivery_mode == "preview" else "SENT"
                     reminder.sent_at = utcnow()
+                    record_mail(db, "PHOTO_REMINDER", "photo_reminder", [case.id], owner.id, reminder.status)
                     sent += 1
                 except Exception:
+                    record_mail(db, "PHOTO_REMINDER", "photo_reminder", [case.id], owner.id, "FAILED")
                     reminder.status = "FAILED" if reminder.attempts >= 5 else "PENDING"
                     reminder.available_at = utcnow() + timedelta(seconds=min(3600, 30 * 2 ** reminder.attempts))
                     logging.getLogger("mascomatch.photos").warning("photo_reminder_delivery_failed")

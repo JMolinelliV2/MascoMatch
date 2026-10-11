@@ -18,6 +18,7 @@ from app.matching.linked import aware
 from app.mail_templates import LOGO_PATH
 from app.models import ContactMessage
 from app.notifications.email import send_message
+from app.operational_tracking import record_mail
 
 CONTACT_RECIPIENT = "info@mascomatch.com"
 TOPICS = {"improvement": "Sugerencia de mejora", "problem": "Problema con la página", "other": "Consulta"}
@@ -64,8 +65,10 @@ def deliver_pending(factory=None):
                 send_message(build_message(contact))
                 contact.email_status = "PREVIEWED" if settings.mail_delivery_mode == "preview" else "SENT"
                 contact.email_sent_at = utcnow()
+                record_mail(db, "CONTACT_FORWARD", "contact", [contact.id], None, contact.email_status)
                 sent += 1
             except (OSError, smtplib.SMTPException, ValueError):
+                record_mail(db, "CONTACT_FORWARD", "contact", [contact.id], None, "FAILED")
                 contact.email_status = "FAILED" if contact.email_attempts >= 5 else "PENDING"
                 contact.email_available_at = utcnow() + timedelta(seconds=min(3600, 30 * 2 ** contact.email_attempts))
                 log_event("contact_email_failed", level=logging.WARNING, message_id=str(identity), attempts=contact.email_attempts)

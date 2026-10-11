@@ -150,6 +150,28 @@ h1, h2, h3 { color: var(--text-primary); }
   .admin-response-history ol { padding-left: 20px; }
   .admin-response-history li { margin: 12px 0; }
   .admin-response-history time, .admin-response-history .field-help { display: block; margin-top: 4px; }
+  .admin-operations-navigation { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .admin-operations-navigation button { padding: 10px 16px; min-height: 44px; border: 1px solid transparent; border-radius: 10px; color: var(--text-secondary); background: transparent; font-weight: 700; cursor: pointer; }
+  .admin-operations-navigation button[aria-pressed="true"] { color: var(--primary); background: var(--danger-soft); border-color: var(--primary); }
+  .admin-date-range { padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .admin-date-range fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+  .admin-date-range legend { padding: 0; margin-bottom: 16px; font-weight: 700; }
+  .admin-date-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); align-items: end; gap: 16px; }
+  .admin-date-fields .form-input { min-width: 0; width: 100%; }
+  .admin-period-presets { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0 8px; }
+  .admin-period-presets button { min-height: 36px; }
+  .admin-operations-filters { margin-top: 16px; }
+  .admin-record-search { display: flex; gap: 8px; align-items: end; min-width: 0; flex-wrap: wrap; }
+  .admin-record-search > label { min-width: 140px; flex: 1; }
+  .admin-state-totals { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .admin-state-totals > span { padding: 8px 12px; background: var(--accent-blue-soft); border-radius: 10px; font-size: 14px; }
+  .admin-operation-record { overflow-wrap: anywhere; }
+  .admin-operation-record h3 { margin: 0; font-size: 20px; }
+  .admin-contact-message { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+  .admin-private-contact { color: var(--text-secondary); overflow-wrap: anywhere; }
+  .admin-moderation-dialog .field-label { text-align: left; }
+  .admin-dialog-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+  .admin-dialog-actions .button { width: auto; flex: 1 1 140px; }
 
   .home-hero { max-width: 1280px; margin: 0 auto; padding: 40px 24px 24px; display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 40px; }
   .hero-content { padding: 16px 0; min-width: 0; }

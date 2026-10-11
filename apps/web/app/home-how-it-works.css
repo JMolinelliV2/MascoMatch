@@ -28,8 +28,8 @@
 .how-illustration { position: relative; isolation: isolate; grid-column: 1; grid-row: 1; justify-self: end; width: 100%; max-width: 360px; min-width: 0; }
 .how-illustration::before { content: ""; position: absolute; z-index: -1; inset: 10% 3% 8% 7%; border-radius: 58% 42% 47% 53% / 45% 40% 60% 55%; background: var(--how-soft); transform: rotate(-6deg); }
 .how-illustration[data-image-kind="adapted"]::before { display: none; }
-.how-illustration img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; transition: transform .35s ease; }
-.how-illustration-stamp { position: absolute; right: 7%; bottom: 5%; display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid var(--how-accent); border-radius: 50%; background: var(--background); color: var(--how-accent); transform: rotate(8deg); transition: transform .35s ease; }
+.how-illustration img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; }
+.how-illustration-stamp { position: absolute; right: 7%; bottom: 5%; display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid var(--how-accent); border-radius: 50%; background: var(--background); color: var(--how-accent); transform: rotate(8deg); }
 .how-illustration-stamp .ui-icon { width: 23px; height: 23px; }
 .how-step-copy { grid-column: 3; grid-row: 1; justify-self: start; width: 100%; max-width: 410px; min-width: 0; }
 .how-journey-step:nth-of-type(even) .how-illustration { grid-column: 3; justify-self: start; }
@@ -50,14 +50,8 @@
 .how-step-action:hover .ui-icon { transform: translateX(4px); }
 .how-step-action:not(.button):hover { text-decoration: underline; text-underline-offset: 5px; }
 
-@media (hover: hover) {
-  .how-journey-step:hover .how-illustration img { transform: translateY(-4px) rotate(-1deg); }
-  .how-journey-step:hover .how-illustration-stamp { transform: rotate(-8deg); }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .how-journey-step[data-entered="true"] .how-step-copy { animation: how-journey-enter .6s ease-out; }
-  .how-journey-step[data-entered="true"] .how-illustration { animation: how-journey-enter .75s ease-out; }
 }
 
 @media (max-width: 1000px) {
@@ -90,9 +84,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .how-journey-step .how-step-copy, .how-journey-step .how-illustration { animation: none; }
-  .how-illustration img, .how-illustration-stamp, .how-step-action .ui-icon, .how-step-detail summary .ui-icon, .how-checkpoint { transition: none; }
-  .how-journey-step:hover .how-illustration img { transform: none; }
-  .how-journey-step:hover .how-illustration-stamp { transform: rotate(8deg); }
+  .how-journey-step .how-step-copy { animation: none; }
+  .how-step-action .ui-icon, .how-step-detail summary .ui-icon, .how-checkpoint { transition: none; }
   .how-step-action:hover .ui-icon { transform: none; }
 }

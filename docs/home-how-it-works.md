@@ -54,7 +54,7 @@ Los desplegables informan sobre correo confirmado, fotos opcionales, avistamient
 
 La sección utiliza una composición editorial con aire, escenas elegidas a partir de las referencias del usuario, texto alternado y un camino numerado. La primera imagen se conserva y las otras tres siguen los motivos solicitados. El tono es cálido y lúdico, con títulos directos e información funcional accesible.
 
-El camino se colorea con el avance por la página. IntersectionObserver activa una entrada suave de 600 ms para el texto y 750 ms para la ilustración, una única vez por escena. El contenido permanece visible antes de esas animaciones. El hover mueve la imagen 4 px y rota un grado; la preferencia de movimiento reducido elimina animaciones y transformaciones de hover.
+El camino se colorea con el avance por la página. IntersectionObserver activa una entrada suave de 600 ms para el texto, una única vez por escena. El contenido permanece visible antes de esa animación. Las ilustraciones y sus sellos permanecen estáticos al desplazarse y al pasar el puntero. La preferencia de movimiento reducido elimina la animación del texto y las transiciones de los controles.
 
 ## Implementación y alcance
 

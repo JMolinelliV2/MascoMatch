@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.observability import ObservabilityMiddleware
 from app.routers import analysis, auth, contact, dashboard, linked_sightings, lost_cases, map, matches, moderation, notifications, observations, operations, pets, photos, public_lost_dogs, public_observations, reviews, upload_admission
+from app.routers import admin_matching
 
 
 @asynccontextmanager
@@ -68,6 +69,7 @@ app.include_router(matches.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(map.router, prefix="/api/v1")
 app.include_router(moderation.router, prefix="/api/v1")
+app.include_router(admin_matching.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(contact.router, prefix="/api/v1")
 app.include_router(operations.router)

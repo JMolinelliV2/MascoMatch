@@ -4,9 +4,10 @@ from fastapi import APIRouter,Depends,HTTPException,Response,Query
 from pydantic import BaseModel,ConfigDict,Field
 from sqlalchemy import select
 from app.db.session import get_db
-from app.dependencies import current_user,optional_user
+from app.dependencies import optional_user
 from app.models import AdminAudit,CaseReview,LostCase,ModerationReport,Observation,Pet,User,Notification,AnalysisJob,Match,Photo
 from app.matching.linked import mark_related_pending
+from app.admin_access import administrator as admin
 router=APIRouter(tags=["moderation"])
 
 
@@ -31,11 +32,6 @@ class CorrectionInput(BaseModel):
 class UserStatusInput(BaseModel):
     model_config=ConfigDict(extra="forbid")
     status:Literal["ACTIVE","BLOCKED"]
-
-
-def admin(user=Depends(current_user)):
-    if user.role!="ADMIN":raise HTTPException(status_code=403,detail="Acceso reservado a administradores.")
-    return user
 
 
 @router.post("/reports",status_code=201)

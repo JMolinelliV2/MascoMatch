@@ -11,6 +11,7 @@ from app.analysis.logging import log_event
 from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
 from app.analysis.service import is_current, utcnow
 from app.core.config import settings
+from app.matching.tracking import record_recommendation
 from app.db.session import SessionLocal
 from app.models import AnalysisJob, FeatureSet, LostCase, Match, Notification, Observation, Pet, Photo
 
@@ -98,6 +99,8 @@ def set_result(db, observation, case, pet, status, reasons, score=None):
         match.distance_meters=distance_meters(*coordinates) if all(value is not None and math.isfinite(value) for value in coordinates) else 0
         match.explanation=reasons
         match.is_active=True
+        if status == "POSSIBLE_MATCH":
+            record_recommendation(match, "LINKED")
         db.flush()
     elif match:
         match.is_active=False

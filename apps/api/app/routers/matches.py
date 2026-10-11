@@ -10,6 +10,7 @@ from app.models import AnalysisJob, LostCase, Match, Notification, Observation, 
 from app.routers.lost_cases import owned_case
 from app.routers.public_lost_dogs import notice, photo_scope
 from app.schemas import MatchRead, MatchFeedback
+from app.matching.tracking import record_feedback
 from app.services.access import owner_has_access
 
 router = APIRouter(tags=["matches"])
@@ -52,6 +53,7 @@ def feedback(match_id: UUID, payload: MatchFeedback, response: Response, db=Depe
         raise HTTPException(status_code=404, detail="Coincidencia no encontrada.")
     if payload.recovered and case.status not in {"ACTIVE", "FOUND"}:
         raise HTTPException(status_code=409, detail="La búsqueda ya está cerrada. Revisá el estado en Mis avisos.")
+    record_feedback(db, match, user, payload)
     match.status, match.feedback_at = payload.status, utcnow()
     if payload.recovered:
         case.status = "FOUND"

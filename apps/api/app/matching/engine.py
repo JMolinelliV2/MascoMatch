@@ -10,6 +10,7 @@ from app.db.session import SessionLocal
 from app.embeddings.provider import model_id, VERSION
 from app.matching.linked import aware, distance_meters
 from app.matching.scoring import WEIGHTS, known, feature_similarity, combine, cosine
+from app.matching.tracking import record_recommendation
 from app.models import AnalysisJob, Embedding, FeatureSet, LostCase, Match, Notification, Observation, Pet, Photo, User
 
 PENDING = {"PENDING", "DISPATCHING", "QUEUED", "RUNNING"}
@@ -152,6 +153,7 @@ def evaluate_observation(db, identity):
         for field, value in {"feature_score": feature, "visual_score": visual, "visual_similarity": raw_visual, "geo_score": geo,
             "temporal_score": temporal, "final_score": score, "evidence_coverage": coverage, "distance_meters": distance, "explanation": reasons, "is_active": True}.items():
             setattr(match,field,value)
+        record_recommendation(match, "GENERAL")
         db.flush()
         ranked.append(match)
         if score >= settings.matching_notify_threshold and match.status not in {"FALSE_MATCH", "RESOLVED"} and observation.author_id != pet.owner_id:

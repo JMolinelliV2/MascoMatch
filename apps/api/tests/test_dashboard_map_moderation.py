@@ -2,7 +2,7 @@ from datetime import timedelta
 from uuid import UUID
 from sqlalchemy import select
 from app.analysis.service import utcnow
-from app.models import AdminAudit,Notification,User
+from app.models import AdminAccess,AdminAudit,Notification,User
 
 
 def publication(client,headers):
@@ -49,7 +49,8 @@ def test_moderation_requires_admin_and_hiding_is_reversible(client,auth_headers,
     assert client.get("/api/v1/admin/reports",headers=auth_headers).status_code==403
     session=client.get("/api/v1/auth/me",headers=auth_headers).json()
     with db_factory() as db:
-        db.get(User,UUID(session["id"])).role="ADMIN";db.commit()
+        account=db.get(User,UUID(session["id"]));account.role="ADMIN";account.email_verified_at=utcnow()
+        db.add(AdminAccess(id=1,owner=account));db.commit()
     assert client.get("/api/v1/admin/reports",headers=auth_headers).json()["items"][0]["id"]==rid
     assert client.patch(f"/api/v1/admin/reports/{rid}",headers=auth_headers,json={"action":"HIDE"}).status_code==200
     assert client.get(f"/api/v1/public/lost-animals/{case['id']}").status_code==404
@@ -64,7 +65,9 @@ def test_moderation_requires_admin_and_hiding_is_reversible(client,auth_headers,
 def test_admin_correction_preserves_original_and_never_exposes_credentials(client,auth_headers,db_factory):
     _,case=publication(client,auth_headers)
     user=client.get("/api/v1/auth/me",headers=auth_headers).json()
-    with db_factory() as db:db.get(User,UUID(user["id"])).role="ADMIN";db.commit()
+    with db_factory() as db:
+        account=db.get(User,UUID(user["id"]));account.role="ADMIN";account.email_verified_at=utcnow()
+        db.add(AdminAccess(id=1,owner=account));db.commit()
     result=client.patch(f"/api/v1/admin/publications/lost_case/{case['id']}",headers=auth_headers,json={"description":"Corrected description"})
     assert result.status_code==200
     with db_factory() as db:

@@ -10,6 +10,7 @@ from app.analysis.service import utcnow
 from app.db.session import get_db
 from app.dependencies import current_user, verified_user
 from app.models import AdminAudit, CaseReview, LostCase, Pet, User
+from app.admin_access import administrator
 
 router = APIRouter(tags=["reviews"])
 RETIRED_STATUSES = {"FOUND", "CLOSED", "CANCELLED"}
@@ -99,9 +100,7 @@ def withdraw_review(case_id: UUID, db=Depends(get_db), user=Depends(current_user
 
 
 @router.patch("/admin/reviews/{review_id}")
-def review_visibility(review_id: UUID, payload: VisibilityInput, response: Response, db=Depends(get_db), user=Depends(current_user)):
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Acceso reservado a administradores.")
+def review_visibility(review_id: UUID, payload: VisibilityInput, response: Response, db=Depends(get_db), user=Depends(administrator)):
     item = db.scalar(select(CaseReview).where(CaseReview.id == review_id).with_for_update())
     if item is None:
         raise HTTPException(status_code=404, detail="Reseña no encontrada.")

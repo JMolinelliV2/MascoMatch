@@ -73,13 +73,13 @@ La web utiliza proxies con rutas permitidas, comprobación de origen y cargas li
 
 ## Administrador local
 
-No existe una cuenta ni contraseña administrativa predeterminada. Una cuenta registrada obtiene permisos mediante un comando del operador local:
+No existe una cuenta ni contraseña administrativa predeterminada. El operador reserva el acceso para una única cuenta mediante un comando privado, incluso antes de que se registre:
 
 ```powershell
 docker compose exec api python -m app.admin
 ```
 
-El comando pide el correo por entrada interactiva y no lo agrega al historial de comandos. Luego ingresar en `/admin`. Una cuenta normal no puede asignarse ese rol mediante el registro o una petición pública.
+El comando pide el correo por entrada interactiva y no lo agrega al historial de comandos. Si la cuenta aún no existe o no confirmó su correo, se reserva el acceso; se activa al confirmar esa dirección. Luego ingresar en `/admin`, también accesible desde Mi cuenta para la cuenta autorizada. El rol por sí solo no habilita acceso: la API exige la asignación única y el correo confirmado. Una cuenta normal no puede reservar ni transferir la administración mediante el registro o una petición pública. Ver [seguimiento y acceso exclusivo](admin-matching.md).
 
 ## Configuración nueva
 

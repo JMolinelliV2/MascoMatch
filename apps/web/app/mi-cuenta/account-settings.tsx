@@ -94,6 +94,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
   }
 
   return <>
+    {user.admin_access && <Link href="/admin" className="button button-secondary">Abrir panel de administración</Link>}
     {savedConfirmation && <SavedChangesDialog description={savedConfirmation} onClose={() => { setMessage(savedConfirmation); setSavedConfirmation(null); }} />}
     <section className="notification-login account-form account-settings" aria-labelledby="contact-title">
       <h2 id="contact-title">Datos de contacto</h2>

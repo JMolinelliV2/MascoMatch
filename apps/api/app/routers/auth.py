@@ -16,6 +16,7 @@ from app.analysis.service import utcnow
 from app.db.session import get_db
 from app.dependencies import current_user, oauth2_scheme
 from app.models import User, AuthSession, Notification, AccountToken
+from app.admin_access import claim_reserved_access
 from app.schemas import LoginRequest, NotificationPreferences, RegisterRequest, TokenResponse, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -118,6 +119,7 @@ def verify_email(payload:VerificationCode,db=Depends(get_db)):
             user.pending_email=None
             db.execute(update(AccountToken).where(AccountToken.user_id==user.id,AccountToken.consumed_at.is_(None)).values(consumed_at=utcnow(),email_status="CANCELLED"))
             db.execute(update(AuthSession).where(AuthSession.user_id==user.id,AuthSession.revoked_at.is_(None)).values(revoked_at=utcnow()))
+        claim_reserved_access(db, user)
         db.execute(update(Notification).where(Notification.owner_id==user.id,Notification.email_status=="PENDING").values(email_available_at=utcnow()))
         db.commit()
     except IntegrityError as exc:
@@ -147,6 +149,7 @@ def reset_password(payload:ResetPassword,db=Depends(get_db)):
         raise HTTPException(status_code=400,detail="El enlace venció o ya fue usado. Pedí uno nuevo.")
     user.password_hash=hash_password(payload.password)
     user.email_verified_at=utcnow()
+    claim_reserved_access(db, user)
     db.execute(update(AuthSession).where(AuthSession.user_id==user.id,AuthSession.revoked_at.is_(None)).values(revoked_at=utcnow()))
     db.execute(update(Notification).where(Notification.owner_id==user.id,Notification.email_status=="PENDING").values(email_available_at=utcnow()))
     db.commit()

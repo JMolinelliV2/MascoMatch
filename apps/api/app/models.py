@@ -50,10 +50,24 @@ class User(TimestampMixin, Base):
     role: Mapped[str] = mapped_column(String(24), default="USER", server_default="USER", nullable=False)
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     pets: Mapped[list["Pet"]] = relationship(back_populates="owner")
+    administrator_assignment: Mapped["AdminAccess | None"] = relationship(back_populates="owner", uselist=False, passive_deletes=True)
+
+    @property
+    def admin_access(self) -> bool:
+        return self.status == "ACTIVE" and self.role == "ADMIN" and self.email_verified and self.administrator_assignment is not None
 
     @property
     def email_verified(self):
         return self.email_verified_at is not None
+
+
+class AdminAccess(Base):
+    __tablename__ = "admin_access"
+    __table_args__ = (CheckConstraint("id = 1", name="ck_single_admin_access"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    user_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), unique=True)
+    pending_email: Mapped[str | None] = mapped_column(String(320))
+    owner: Mapped["User | None"] = relationship(back_populates="administrator_assignment")
 
 
 class AuthSession(Base):
@@ -263,6 +277,24 @@ class Match(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(32), default="NEW", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
     feedback_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    recommended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    recommendation_source: Mapped[str | None] = mapped_column(String(24))
+    recommended_score: Mapped[float | None] = mapped_column(Float)
+    recommendation_snapshot: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}", nullable=False)
+
+
+class MatchFeedbackEvent(Base):
+    __tablename__ = "match_feedback_events"
+    __table_args__ = (Index("ix_match_feedback_latest", "match_id", "created_at", "id"),)
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    match_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("matches.id", ondelete="CASCADE"), index=True, nullable=False)
+    actor_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    previous_status: Mapped[str | None] = mapped_column(String(32))
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    recovered: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    score: Mapped[float | None] = mapped_column(Float)
+    legacy: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class CaseReview(TimestampMixin, Base):

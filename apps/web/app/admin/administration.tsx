@@ -2,10 +2,11 @@
 import {useEffect,useState} from "react";
 import {AccountSession} from "../account-session";
 import {AdminRecords} from "./admin-records";
+import {MatchingDashboard} from "./matching-dashboard";
 type Report={id:string;target_type:string;target_id:string;title:string;reason:string;detail:string;status:string;visibility:string|null;publication?:{description:string;photo_ids:string[]}};
 type Overview={counts:Record<string,number>;ai_failures:{id:string;source:string;error_code:string|null}[];audit:{action:string;target_type:string;target_id:string;created_at:string}[]};
 const names:Record<string,string>={users:"Usuarios",pets:"Animales",lost_cases:"Avisos",observations:"Avistamientos",matches:"Coincidencias",moderation_reports:"Denuncias",case_reviews:"Reseñas"};
-function AdminPanel(){const [reports,setReports]=useState<Report[]>([]);const [overview,setOverview]=useState<Overview|null>(null);const [status,setStatus]=useState("OPEN");const [error,setError]=useState("");const [refresh,setRefresh]=useState(0);const [busy,setBusy]=useState<string|null>(null);
+function PlatformManagement(){const [reports,setReports]=useState<Report[]>([]);const [overview,setOverview]=useState<Overview|null>(null);const [status,setStatus]=useState("OPEN");const [error,setError]=useState("");const [refresh,setRefresh]=useState(0);const [busy,setBusy]=useState<string|null>(null);
   useEffect(()=>{const controller=new AbortController();void Promise.all([fetch(`/api/admin/reports?status=${status}`,{cache:"no-store",signal:controller.signal}),fetch("/api/admin/overview",{cache:"no-store",signal:controller.signal})]).then(async ([reportResponse,overviewResponse])=>{if(!reportResponse.ok||!overviewResponse.ok)throw new Error("No pudimos consultar la administración. Revisá tu sesión y permisos.");const [data,summary]=await Promise.all([reportResponse.json(),overviewResponse.json()]);if(!controller.signal.aborted){setReports(data.items);setOverview(summary);setError("");}}).catch(cause=>{if(!controller.signal.aborted)setError(cause.message);});return()=>controller.abort();},[status,refresh]);
   async function action(id:string,value:string){setBusy(id);setError("");try{const response=await fetch(`/api/admin/reports/${id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:value})});if(!response.ok)throw new Error("No pudimos aplicar la acción.");setRefresh(value=>value+1);}catch(cause){setError(cause instanceof Error?cause.message:"No pudimos aplicar la acción.");}finally{setBusy(null);}}
   return <>{error&&<p className="notice notice-warning" role="alert">{error}</p>}{overview&&<dl className="review-details">{Object.entries(overview.counts).map(([name,total])=><div key={name}><dt>{names[name]||name}</dt><dd>{total}</dd></div>)}</dl>}
@@ -16,4 +17,8 @@ function AdminPanel(){const [reports,setReports]=useState<Report[]>([]);const [o
     <h2>Acciones recientes</h2>{overview?.audit.length?<ul>{overview.audit.map((item,index)=><li key={`${item.target_id}-${index}`}>{item.action} · {item.target_type} · {new Date(item.created_at).toLocaleString("es-UY")}</li>)}</ul>:<p>Todavía no hay acciones administrativas.</p>}
   </>;
 }
-export function Administration(){return <AccountSession>{user=>user.role==="ADMIN"?<AdminPanel/>:<p>Esta sección requiere permisos de administrador.</p>}</AccountSession>;}
+function AdminPanel(){
+  const [section,setSection]=useState("matching");
+  return <><nav className="admin-panel-navigation" aria-label="Secciones de administración"><button type="button" aria-pressed={section==="matching"} onClick={()=>setSection("matching")}>Seguimiento de coincidencias</button><button type="button" aria-pressed={section==="management"} onClick={()=>setSection("management")}>Gestión de la plataforma</button></nav>{section==="matching"?<MatchingDashboard/>:<PlatformManagement/>}</>;
+}
+export function Administration(){return <AccountSession>{user=>user.admin_access?<AdminPanel/>:<div className="notice notice-warning"><h2>Acceso restringido</h2><p>Este panel está reservado a la cuenta administradora con su correo confirmado. Tu sesión actual no tiene acceso.</p></div>}</AccountSession>;}

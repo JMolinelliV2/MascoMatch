@@ -33,6 +33,7 @@ class UserRead(ORMModel):
     notification_preferences: dict
     status: str
     role: str
+    admin_access: bool = False
     email_verified: bool
     created_at: datetime
 

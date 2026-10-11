@@ -12,7 +12,7 @@ export function SupportOptions() {
   const level = supportLevels.find(item => item.id === selected);
   const custom = selected === "custom";
   const parsed = Number(customAmount);
-  const customValid = customAmount.trim() !== "" && Number.isInteger(parsed) && parsed >= 1 && parsed <= 100000;
+  const customValid = customAmount.trim() !== "" && Number.isSafeInteger(parsed) && parsed >= 1;
   const amount = custom ? customValid ? parsed : null : level?.amount ?? null;
   const name = custom ? "Aporte personalizado" : level?.name;
   const amountError = custom && customTouched && !customValid;
@@ -41,7 +41,7 @@ export function SupportOptions() {
       </div>
       <div className={`support-custom ${custom ? "is-selected" : ""}`}>
         <label className="support-custom-choice"><input type="radio" name={`${groupId}-level`} value="custom" checked={custom} onChange={() => setSelected("custom")} /><span><strong>Otro monto</strong><span>Elegí un aporte que se ajuste a vos.</span></span></label>
-        <label className="field-label" htmlFor={`${groupId}-amount`}>Importe en pesos uruguayos<input id={`${groupId}-amount`} className="form-input" type="number" min={1} max={100000} step={1} inputMode="numeric" placeholder="Por ejemplo, 500" value={customAmount} disabled={!custom} aria-invalid={amountError || undefined} aria-describedby={`${groupId}-amount-help`} onChange={event => setCustomAmount(event.target.value)} onBlur={() => setCustomTouched(true)} /><span className="field-help" id={`${groupId}-amount-help`}>{amountError ? "Ingresá un monto entero entre $U 1 y $U 100.000." : "Monto sugerido en pesos, sin centésimos."}</span></label>
+        <label className="field-label" htmlFor={`${groupId}-amount`}>Importe en pesos uruguayos<input id={`${groupId}-amount`} className="form-input" type="number" min={1} step={1} inputMode="numeric" placeholder="Por ejemplo, 500" value={customAmount} disabled={!custom} aria-invalid={amountError || undefined} aria-describedby={`${groupId}-amount-help`} onChange={event => setCustomAmount(event.target.value)} onBlur={() => setCustomTouched(true)} /><span className="field-help" id={`${groupId}-amount-help`}>{amountError ? "Ingresá un monto entero de al menos $U 1, sin centésimos." : "Monto sugerido en pesos, sin centésimos."}</span></label>
       </div>
     </fieldset>
     <div className="support-selection">

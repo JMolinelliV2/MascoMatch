@@ -49,8 +49,6 @@
 .how-step-action .ui-icon { width: 18px; height: 18px; transition: transform .2s; }
 .how-step-action:hover .ui-icon { transform: translateX(4px); }
 .how-step-action:not(.button):hover { text-decoration: underline; text-underline-offset: 5px; }
-.how-closing { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 48px 0 0; padding: 24px 0 0; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 15px; text-align: center; }
-.how-closing .ui-icon { color: var(--primary); }
 
 @media (hover: hover) {
   .how-journey-step:hover .how-illustration img { transform: translateY(-4px) rotate(-1deg); }
@@ -89,7 +87,6 @@
   .how-step-description { margin-top: 14px; font-size: 15px; line-height: 1.7; }
   .how-step-detail { margin-bottom: 12px; }
   .how-step-action.button { width: 100%; padding: 12px; }
-  .how-closing { margin-top: 36px; font-size: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

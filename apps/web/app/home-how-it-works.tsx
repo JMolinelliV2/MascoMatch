@@ -179,6 +179,5 @@ export function HomeHowItWorks() {
         </div>
       </li>)}
     </ol>
-    <p className="how-closing"><Icon name="heart" />Una foto, una mirada, una pista. Cada ayuda cuenta.</p>
   </section>;
 }

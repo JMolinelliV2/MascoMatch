@@ -8,7 +8,7 @@ A 1000 px o menos, el centro baja a 112 px, el espacio entre columnas a 12 px y 
 
 ## Section Order
 
-La sección sigue después de la portada y antes de los animales perdidos. Presenta título, introducción y un enlace al comienzo del recorrido. Los pasos son: publicar el aviso, sumar un avistamiento, revisar pistas y cerrar la búsqueda tras el reencuentro. Una frase breve cierra el bloque. Las ilustraciones son conceptuales y no muestran reportes reales.
+La sección sigue después de la portada y antes de los animales perdidos. Presenta título, introducción y un enlace al comienzo del recorrido. Los pasos son: publicar el aviso, sumar un avistamiento, revisar pistas y cerrar la búsqueda tras el reencuentro. Las ilustraciones son conceptuales y no muestran reportes reales.
 
 ## Navigation
 
@@ -30,7 +30,7 @@ La primera ilustración conserva su adaptación coral de ManyPixels. Las otras t
 
 La sección tiene 88 px superiores, 76 px inferiores y 24 px laterales. La cabecera se separa 52 px del recorrido; las filas, 32 px entre sí. El título de cada paso sigue a una etiqueta de 12 px, con 12 px de separación. El párrafo empieza 18 px después del título. Las aclaraciones y enlaces tienen áreas de interacción de al menos 44 y 48 px respectivamente.
 
-En tablet el padding superior baja a 64 px. En móvil la sección usa 56 px verticales y 20 px laterales; la cabecera se separa 32 px del recorrido. Las filas tienen 44 px de separación; las dos columnas, 18 px, y la ilustración se separa 18 px del texto. La frase final se separa 48 px del recorrido en escritorio y 36 px en móvil.
+En tablet el padding superior baja a 64 px. En móvil la sección usa 56 px verticales y 20 px laterales; la cabecera se separa 32 px del recorrido. Las filas tienen 44 px de separación; las dos columnas, 18 px, y la ilustración se separa 18 px del texto.
 
 ## Image Treatment
 

@@ -6,7 +6,7 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 Términos usa un contenedor centrado de 920 px, con cabecera, resumen, índice desplegable y artículo de lectura continua. El artículo tiene 40 px laterales en escritorio y 20 px en móvil; el índice abierto usa dos columnas y pasa a una a 640 px o menos.
 
-El pie compartido usa un contenedor de 1280 px con 24 px laterales. En escritorio distribuye marca, Explorar, Ayudar a encontrar y Comunidad en cuatro columnas flexibles; a 950 px o menos pasa a dos. A 640 px o menos, marca y comunidad ocupan ambas columnas y los dos grupos de enlaces quedan lado a lado.
+El pie compartido usa un contenedor de 1280 px con 24 px laterales. En escritorio distribuye marca, Explorar, Ayudar a encontrar, Legales y Comunidad en cinco columnas flexibles; a 1100 px o menos pasa a dos y Comunidad ocupa ambas. A 640 px o menos, marca, Legales y comunidad ocupan ambas columnas y los dos grupos de enlaces generales quedan lado a lado.
 
 La bandeja de notificaciones suma un grupo flexible de tres filtros, Sin leer, Todas y Archivadas. La barra de cantidades reúne las acciones de lectura y actualización, con salto de línea en pantallas estrechas.
 
@@ -36,7 +36,7 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 Términos presenta regreso al inicio, título e introducción, fecha de última actualización, resumen de participación responsable, índice cerrado inicialmente y trece secciones de condiciones. El pie compartido sigue al contenido.
 
-El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública y contacto/apoyo; una línea inferior reúne el año, la marca y el acceso a los términos. El inicio elimina su antiguo pie interno para evitar duplicarlo.
+El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública, Legales y contacto/apoyo; una línea inferior muestra el año y la marca. El inicio elimina su antiguo pie interno para evitar duplicarlo.
 
 Notificaciones muestra cuenta y acceso a preferencias, filtros, explicación de lectura y archivo, contador y acciones, confirmaciones, tarjetas y paginación. Un detalle abierto desde una alerta conserva su regreso a la bandeja y omite los filtros de listado.
 
@@ -58,7 +58,7 @@ El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las ta
 
 ## Navigation
 
-Términos y condiciones se enlaza en la franja inferior del pie compartido. Registro, revisión de los formularios y avistamiento breve muestran enlaces informativos que abren otra pestaña y anuncian ese comportamiento a lectores de pantalla. El índice nativo permite saltar a los encabezados con anclas; no se cambia la navegación ni la validación de los formularios.
+Términos y condiciones se enlaza dentro de la sección Legales del pie compartido, con título propio y navegación asociada mediante `aria-labelledby`. Reutiliza los estilos de los otros grupos y el área de interacción de 44 px. Registro, revisión de los formularios y avistamiento breve muestran enlaces informativos que abren otra pestaña y anuncian ese comportamiento a lectores de pantalla. El índice nativo permite saltar a los encabezados con anclas; no se cambia la navegación ni la validación de los formularios.
 
 El pie enlaza las rutas existentes de animales perdidos, mapa, Cómo funciona, los tres tipos de reporte, Contacto y Apoyanos. Los grupos públicos usan landmarks `nav` con encabezados asociados; no se agregan accesos permanentes a Mis avisos o Notificaciones. Los enlaces admiten teclado, muestran el foco existente y tienen al menos 44 px de altura.
 
@@ -126,7 +126,7 @@ Las estrellas y la puntuación seleccionada usan coral, con texto accesible que 
 
 La página legal separa resumen, índice y artículo con 24–28 px. El artículo tiene 36 px superiores/inferiores y separa las secciones por 28 px y una línea suave. En móvil usa 24 px interiores verticales y 20 px laterales.
 
-El pie tiene 48 px de espacio superior, columnas separadas por 36 px y 36 px antes de la línea inferior. En tablet los gaps son 28 px verticales y 40 px horizontales. En móvil usa 32 px arriba, 20 px laterales, gaps de 24 × 16 px y 28 px antes de la franja inferior.
+El pie tiene 48 px de espacio superior, columnas separadas por 28 px y 36 px antes de la línea inferior. En tablet los gaps son 28 px verticales y 40 px horizontales. En móvil usa 32 px arriba, 20 px laterales, gaps de 24 × 16 px y 28 px antes de la franja inferior.
 
 Los filtros de la bandeja usan objetivos de 44 px, padding de 10 × 16 px y separación de 8 px. Las acciones de la barra se separan 16 px y permiten salto de línea. El estado de lectura se separa 12 px del contenido de la alerta.
 
@@ -144,7 +144,7 @@ La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducid
 
 Términos reutiliza el escudo y el chevron SVG existentes, sin imágenes adicionales ni nuevas descargas.
 
-El pie reutiliza la huella SVG de la marca dentro de un bloque coral de 40 px y los iconos de corazón y flecha existentes. Su franja inferior reúne la marca y el acceso a los términos; la portada utiliza una imagen generada y no incorpora un crédito de fotografía externa.
+El pie reutiliza la huella SVG de la marca dentro de un bloque coral de 40 px y los iconos de corazón y flecha existentes. Su franja inferior muestra el año y la marca; el acceso a los términos pertenece a Legales. La portada utiliza una imagen generada y no incorpora un crédito de fotografía externa.
 
 Las imágenes ampliadas usan `object-fit: contain`, sin recortes ni deformaciones, y se descargan al seleccionarlas. Las versiones de hasta 2048 px mantienen la resolución original disponible y eliminan metadatos; las miniaturas y el análisis siguen usando 1024 px. Las galerías consultan imágenes que pertenecen al reporte y mantienen las comprobaciones públicas o privadas de acceso.
 

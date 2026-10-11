@@ -20,6 +20,13 @@ const navigation = [
       { href: "/encontre", label: "Encontré una mascota" },
     ],
   },
+  {
+    id: "footer-legal-title",
+    title: "Legales",
+    links: [
+      { href: "/terminos", label: "Términos y condiciones" },
+    ],
+  },
 ] as const;
 
 export function SiteFooter() {
@@ -50,7 +57,6 @@ export function SiteFooter() {
         </div>
         <div className="footer-bottom">
           <p>© {new Date().getFullYear()} MascoMatch</p>
-          <nav aria-label="Información legal"><Link href="/terminos">Términos y condiciones</Link></nav>
         </div>
       </div>
     </footer>

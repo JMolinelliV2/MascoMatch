@@ -2,7 +2,7 @@
 
 ## Página y acceso
 
-`/terminos` presenta las condiciones de uso de MascoMatch con una fecha de última actualización, el 11 de octubre de 2026. Está disponible sin cuenta desde el pie compartido de todas las páginas. También se enlaza en Crear cuenta, la revisión de los tres formularios generales y el avistamiento breve desde una ficha. Los enlaces dentro de formularios abren otra pestaña para conservar los campos y las fotos en la página original.
+`/terminos` presenta las condiciones de uso de MascoMatch con una fecha de última actualización, el 11 de octubre de 2026. Está disponible sin cuenta desde la sección **Legales** del pie compartido de todas las páginas. También se enlaza en Crear cuenta, la revisión de los tres formularios generales y el avistamiento breve desde una ficha. Los enlaces dentro de formularios abren otra pestaña para conservar los campos y las fotos en la página original.
 
 La página tiene resumen, índice desplegable y trece secciones. Los títulos del índice llevan a anclas reales; usa controles nativos y no consulta sesiones ni servicios externos.
 

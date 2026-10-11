@@ -58,4 +58,6 @@ El camino se colorea con el avance por la página. IntersectionObserver activa u
 
 `HomeHowItWorks` y su CSS conservan su ubicación independiente de la página principal. El recorrido usa APIs nativas, sin nuevas dependencias. Su estado controla únicamente la decoración del camino. El texto mantiene la publicación con correo confirmado, el avistamiento breve sin cuenta, la recepción de pistas vinculadas, la revisión humana de coincidencias y el cierre del aviso tras recuperar al animal.
 
+El primer paso aclara que publicar un aviso es gratis y que MascoMatch se financia con donaciones, integrado en la explicación existente.
+
 TypeScript terminó sin errores. No se añadieron ni ejecutaron pruebas automatizadas para esta modificación.

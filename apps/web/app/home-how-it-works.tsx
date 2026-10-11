@@ -19,7 +19,7 @@ const steps = [
   {
     id: "sighting", hint: "La comunidad se suma", tone: "blue", icon: "pin",
     image: { src: "/images/how-sighting-reference.webp", width: 1536, height: 1024, kind: "adapted" },
-    title: "Cada pista suma",
+    title: "Cada pista suma.",
     description: "Alguien reconoce a una mascota en la calle. Desde su aviso puede indicar dónde y cuándo la vio, y sumar una foto si tiene. Ese avistamiento breve se puede enviar sin cuenta.",
     detailTitle: "Si todavía no hay un aviso",
     detail: "Con una cuenta, podés crear un reporte desde “Vi una mascota”. Si el animal está a salvo con vos, elegí “Encontré una mascota” para que su familia pueda encontrarlo.",

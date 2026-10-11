@@ -35,7 +35,7 @@ def case_matches(case_id: UUID, response: Response, db=Depends(get_db), user=Dep
     has_photo = exists().where(Photo.owner_type == "observation", Photo.owner_id == Observation.id).correlate(Observation)
     rows = db.execute(select(Match, Observation, has_photo).join(Observation, Match.observation_id == Observation.id).where(
         Match.lost_case_id == case_id, Match.is_active.is_(True), Observation.moderation_status == "VISIBLE").order_by((Observation.linked_case_id == case_id).desc().nullslast(), Observation.observed_at.desc(), Match.final_score.desc(), Match.id).limit(100))
-    return {"items": [{"match": MatchRead.model_validate(match), "observation": {"id": observation.id, "description": observation.description,
+    return {"items": [{"match": MatchRead.model_validate(match), "observation": {"id": observation.id, "public_id": observation.public_id, "description": observation.description,
         "observed_at": observation.observed_at, "public_location": observation.public_location, "latitude":observation.latitude,"longitude":observation.longitude,
         "source_type":observation.source_type,"photo_url":f"/api/v1/public/observations/{observation.id}/photo" if photo else None,
         "matching_status":observation.matching_status,"linked_to_notice":observation.linked_case_id==case_id}} for match, observation, photo in rows]}

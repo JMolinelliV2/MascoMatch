@@ -1,7 +1,7 @@
 import type { LayerGroup, Map as LeafletMap, Popup } from "leaflet";
 import { lostDogsEndpoint } from "./lost-dogs";
 
-export type LostMapPoint = { id: string; title: string; latitude: number; longitude: number; photo_url?: string | null };
+export type LostMapPoint = { id: string; public_id?: string; title: string; latitude: number; longitude: number; photo_url?: string | null };
 export type LostMapSelection = { points: LostMapPoint[]; content: HTMLDivElement; popup: Popup; onLayout: () => void };
 
 export function lostMapLocations(points: LostMapPoint[]): LostMapPoint[][] {

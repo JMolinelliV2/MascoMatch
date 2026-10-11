@@ -11,6 +11,7 @@ import type { SightingResult } from "@/lib/linked-sightings";
 import { LocationPicker } from "./location-picker";
 import { DogPhoto } from "./perdidos/dog-photo";
 import { PhotoUploader } from "./ui/photo-uploader";
+import { ReportId } from "./ui/report-id";
 
 export function LinkedSightingForm({ caseId }: { caseId: string }) {
   const [target, setTarget] = useState<LostDogNotice | null>(null);
@@ -105,6 +106,7 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
       : result ? <>
         <h1 ref={heading} tabIndex={-1}>Avistamiento guardado</h1>
         <p className="page-intro">Gracias por ayudar a encontrar a {target.name}.</p>
+        <ReportId id={result.id} publicId={result.public_id} label="ID del reporte" copyable />
         <p role="status" className="notice notice-success sighting-result">{sightingMessage(result, photos.length > 0)}</p>
         {statusError && <p className="notice notice-warning" role="alert">{statusError}</p>}
         {(paused || statusError) && <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Actualizar revisión</button>}
@@ -112,7 +114,7 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
       </> : <>
         <h1>¿Viste a {target.name}?</h1>
         <p className="page-intro">Indicá el lugar y adjuntá fotos si tenés. Tu avistamiento quedará vinculado a este aviso.</p>
-        <div className="sighting-target"><DogPhoto dog={target} /><div><strong>{target.name}</strong><p>{speciesLabel(target.species)} · Aviso de animal perdido</p></div></div>
+        <div className="sighting-target"><DogPhoto dog={target} /><div><strong>{target.name}</strong><ReportId id={target.id} publicId={target.public_id} /><p>{speciesLabel(target.species)} · Aviso de animal perdido</p></div></div>
         <form onSubmit={submit} className="linked-sighting-form" aria-busy={busy}>
           <fieldset disabled={busy} className="form-controls section-fields">
             <div><h2>¿Dónde lo viste?</h2><LocationPicker value={location} required onChange={place => { changed(); setLocation(place); setLocationError(""); }} />{locationError && <p role="alert" className="notice notice-error">{locationError}</p>}</div>

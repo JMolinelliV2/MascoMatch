@@ -11,6 +11,7 @@ import { Stepper } from "./ui/stepper";
 import { PhotoUploader } from "./ui/photo-uploader";
 import { SexSelector } from "./ui/sex-selector";
 import { Icon } from "./ui/pictogram";
+import { ReportId } from "./ui/report-id";
 import type { SessionUser } from "./account-session";
 import { VerifyEmailNotice } from "./verify-email-notice";
 
@@ -82,7 +83,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const pendingFocus = useRef<{ name: string; native: boolean } | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [review, setReview] = useState<Review | null>(null);
-  const [savedReport, setSavedReport] = useState<{ ownerType: "lost_case" | "observation"; ownerId: string } | null>(null);
+  const [savedReport, setSavedReport] = useState<{ ownerType: "lost_case" | "observation"; ownerId: string; publicId?: string } | null>(null);
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState("");
   const [success, setSuccess] = useState("");
@@ -294,7 +295,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         longitude: location.longitude,
         ...(location.accuracyMeters === undefined ? {} : { location_accuracy_meters: location.accuracyMeters }),
       } : {};
-      let report: { id: string };
+      let report: { id: string; public_id?: string };
       let ownerType: "lost_case" | "observation";
       if (kind === "lost") {
         const pet = await send<{ id: string }>("/pets", {
@@ -319,7 +320,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         catch { setPhotoWarning(kind === "lost" ? "El aviso se guardó, pero la foto no pudo subirse. Podés agregarla desde Mis avisos para que más personas reconozcan a tu mascota." : "El reporte se guardó, pero la foto no pudo subirse. La información que compartiste quedó registrada."); }
       }
       setSuccess(kind === "lost" ? `El aviso de ${text("petName")} quedó guardado.` : "Gracias por ayudar. Tu reporte quedó guardado.");
-      setSavedReport({ ownerType, ownerId: report.id });
+      setSavedReport({ ownerType, ownerId: report.id, publicId: report.public_id });
       formElement.reset();
       setLocation(null);
       setPhoto(null);
@@ -341,6 +342,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         <span className="success-mark" aria-hidden="true">✓</span>
         <h1>Tu reporte quedó guardado</h1>
         <p role="status" className="page-intro">{success}</p>
+        {savedReport && <ReportId id={savedReport.ownerId} publicId={savedReport.publicId} label={savedReport.ownerType === "lost_case" ? "ID del aviso" : "ID del reporte"} copyable />}
         {photoWarning && <p role="alert" className="notice notice-warning">{photoWarning}</p>}
         {savedReport && <ReportAnalysis {...savedReport} />}
         {savedReport?.ownerType === "observation" && <ReportMatches observationId={savedReport.ownerId} />}

@@ -89,6 +89,14 @@ h1, h2, h3 { color: var(--text-primary); }
   .text-button:hover { text-decoration: underline; }
   .text-button:disabled { opacity: .6; cursor: wait; }
 
+  .report-reference { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 8px 0; min-width: 0; }
+  .report-id { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; max-width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 7px; background: var(--accent-blue-soft); color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+  .report-id strong { color: var(--text-primary); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; user-select: all; }
+  .report-id-copy { min-height: 44px; padding: 8px 4px; font-size: 13px; }
+  .report-id-message { flex-basis: 100%; color: var(--text-secondary); font-size: 13px; }
+  .report-id-message:empty { display: none; }
+  .success-page > .report-reference { justify-content: center; }
+
   .home-hero { max-width: 1280px; margin: 0 auto; padding: 40px 24px 24px; display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 40px; }
   .hero-content { padding: 16px 0; min-width: 0; }
   .eyebrow { margin: 0 0 16px; color: var(--text-secondary); font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }

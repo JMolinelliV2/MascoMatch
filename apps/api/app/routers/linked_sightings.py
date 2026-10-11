@@ -23,7 +23,7 @@ router = APIRouter(prefix="/public/lost-animals", tags=["linked-sightings"])
 
 def result(db, observation):
     notified = db.scalar(select(Notification.id).where(Notification.observation_id == observation.id, Notification.is_active.is_(True))) is not None
-    return LinkedSightingRead(id=observation.id, status=observation.matching_status, owner_notified=notified)
+    return LinkedSightingRead(id=observation.id, public_id=observation.public_id, status=observation.matching_status, owner_notified=notified)
 
 
 @router.post("/{case_id}/sightings", response_model=LinkedSightingRead, status_code=201)

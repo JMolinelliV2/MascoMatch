@@ -6,6 +6,7 @@ import { dogTraits, lostDate, lostDogsEndpoint, sexLabel, speciesLabel } from "@
 import type { LostDogNotice } from "@/lib/lost-dogs";
 import { DogPhoto } from "./dog-photo";
 import { ReportPublication } from "../report-publication";
+import { ReportId } from "../ui/report-id";
 
 export function DogDetail({ id, fromMap = false, fromHomeMap = false }: { id: string; fromMap?: boolean; fromHomeMap?: boolean }) {
   const [dog, setDog] = useState<LostDogNotice | null>(null);
@@ -40,6 +41,7 @@ export function DogDetail({ id, fromMap = false, fromHomeMap = false }: { id: st
         <div className="dog-detail-info">
           <span className="lost-status">Sigue perdido</span>
           <h1>{dog.name}</h1>
+          <ReportId id={dog.id} publicId={dog.public_id} copyable />
           <p className="dog-traits">{[speciesLabel(dog.species), ...dogTraits(dog)].join(" · ")}</p>
           <dl className="review-details">
             <div><dt>Sexo</dt><dd>{sexLabel(dog.sex)}</dd></div>

@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from botocore.exceptions import BotoCoreError, ClientError
@@ -39,7 +40,7 @@ def public_area(case: LostCase) -> str | None:
 def notice(case: LostCase, pet: Pet, has_photo: bool) -> PublicLostDogRead:
     # Explicit allowlist: never serialize the owner, microchip, storage key or GPS point.
     return PublicLostDogRead(
-        id=case.id, name=pet.name, species=pet.species, sex=pet.sex, breed=pet.breed, size=pet.size,
+        id=case.id, public_id=case.public_id, name=pet.name, species=pet.species, sex=pet.sex, breed=pet.breed, size=pet.size,
         primary_color=pet.primary_color, description=case.description,
         public_location=public_area(case), lost_at=case.lost_at,
         photo_url=f"/api/v1/public/lost-animals/{case.id}/photo" if has_photo else None,
@@ -59,7 +60,11 @@ def list_public_lost_dogs(
     query = active_dogs()
     term = q.strip().lower()
     if term:
+        code_match = re.fullmatch(r"mm-([0-9]{1,19})", term)
+        number = int(code_match.group(1)) if code_match else 0
+        code_filter = LostCase.public_number == number if 0 < number <= 9223372036854775807 else False
         query = query.where(or_(
+            code_filter,
             func.lower(Pet.name).contains(term, autoescape=True),
             func.lower(LostCase.description).contains(term, autoescape=True),
             func.lower(LostCase.public_location).contains(term, autoescape=True),

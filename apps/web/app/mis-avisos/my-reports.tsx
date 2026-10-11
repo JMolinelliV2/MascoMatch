@@ -14,11 +14,12 @@ import type {Candidate} from "./candidate-report";
 import {LocationMap} from "../location-map";
 import {ReviewRequest} from "../review-request";
 import {AccountLoading} from "../ui/account-loading";
+import {ReportId} from "../ui/report-id";
 import {lostDate,sexLabel,speciesLabel} from "@/lib/lost-dogs";
 import type {LostDogNotice} from "@/lib/lost-dogs";
 type Pet={id:string;name:string;species:string;sex:string;primary_color:string;size:string};
-type Case={id:string;pet_id:string;status:string;description:string;public_location:string|null;lost_at:string;latitude:number|null;longitude:number|null};
-type Observation={id:string;description:string;source_type:string;observed_at:string};
+type Case={id:string;public_id?:string;pet_id:string;status:string;description:string;public_location:string|null;lost_at:string;latitude:number|null;longitude:number|null};
+type Observation={id:string;public_id?:string;description:string;source_type:string;observed_at:string};
 type Dashboard={pets:Pet[];cases:Case[];observations:Observation[]};
 const states:Record<string,string>={ACTIVE:"Sigue perdido",FOUND:"Encontrado",CLOSED:"Cerrado",CANCELLED:"Cancelado"};
 const statusClasses:Record<string,string>={ACTIVE:"status-active",FOUND:"status-found",CLOSED:"status-closed",CANCELLED:"status-cancelled"};
@@ -44,6 +45,7 @@ function Reports({userId}:{userId:string}) {
     {data?.cases.length===0&&<div className="lost-dogs-empty"><h2>Todavía no publicaste un aviso de pérdida</h2><p>Podés registrar una mascota perdida o consultar los reportes que compartiste.</p><Link className="button button-primary" href="/perdi">Publicar un aviso</Link></div>}
     <div className="case-list">{data?.cases.map(item=>{const pet=data.pets.find(pet=>pet.id===item.pet_id);return <article id={`aviso-${item.id}`} className="notification-card" key={item.id}>
       <div className="case-summary"><CaseAvatar id={item.id} active={item.status==="ACTIVE"} refresh={refresh}/><div><span className={`lost-status ${statusClasses[item.status]||""}`}>{states[item.status]||item.status}</span><h2>{pet?.name||"Mi animal"}</h2>
+      <ReportId id={item.id} publicId={item.public_id} copyable />
       {pet&&<p className="dog-traits">{speciesLabel(pet.species as LostDogNotice["species"])}{pet.sex!=="unknown"?` · ${sexLabel(pet.sex)}`:""}</p>}
       <div className="case-traits"><span><Icon name="pin"/>{item.public_location||"Zona no indicada"}</span><span><Icon name="calendar"/>Perdido desde el {lostDate(item.lost_at)}</span></div></div></div>
       <p className="case-description">{item.description||"Sin descripción adicional"}</p>
@@ -59,7 +61,7 @@ function Reports({userId}:{userId:string}) {
         {!!candidates.filter(candidate=>!candidate.observation.linked_to_notice).length&&<div className="case-candidates-group"><h4>Posibles coincidencias de otros reportes</h4>{candidates.filter(candidate=>!candidate.observation.linked_to_notice).map(candidate=><CandidateReport key={candidate.match.id} candidate={candidate} caseId={item.id} caseActive={item.status==="ACTIVE"} onSaved={result=>feedbackSaved(candidate.match.id,result)}/>)}</div>}
       </section>}
     </article>;})}</div>
-    {!!data?.observations.length&&<section className="analysis-section"><h2>Reportes que compartiste</h2>{data.observations.map(item=><article className="analysis-result" key={item.id}><h3>{item.source_type==="FOUND_ANIMAL"?"Animal encontrado":"Avistamiento"}</h3><p>{item.description}</p><button type="button" className="text-button" onClick={()=>setReport(report===item.id?null:item.id)}>Ver posibles coincidencias</button>{report===item.id&&<ReportMatches observationId={item.id}/>}</article>)}</section>}
+    {!!data?.observations.length&&<section className="analysis-section"><h2>Reportes que compartiste</h2>{data.observations.map(item=><article className="analysis-result" key={item.id}><h3>{item.source_type==="FOUND_ANIMAL"?"Animal encontrado":"Avistamiento"}</h3><ReportId id={item.id} publicId={item.public_id} label="ID del reporte" copyable /><p>{item.description}</p><button type="button" className="text-button" onClick={()=>setReport(report===item.id?null:item.id)}>Ver posibles coincidencias</button>{report===item.id&&<ReportMatches observationId={item.id}/>}</article>)}</section>}
     <p><Link href="/notificaciones" className="text-button">Ver mis notificaciones</Link></p>
   </>;
 }

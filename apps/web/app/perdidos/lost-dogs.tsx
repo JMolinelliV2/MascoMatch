@@ -47,8 +47,8 @@ export function LostDogs() {
 
   return <>
     <form className="lost-dogs-search" role="search" onSubmit={submit}>
-      <label className="field-label" htmlFor="lost-dogs-query">Buscar por nombre, zona o descripción
-        <input id="lost-dogs-query" name="q" type="search" maxLength={120} placeholder="Por ejemplo: Luna, El Pinar o marrón" value={query} onChange={event => setQuery(event.target.value)} className="form-input" />
+      <label className="field-label" htmlFor="lost-dogs-query">Buscar por nombre, zona, descripción o ID
+        <input id="lost-dogs-query" name="q" type="search" maxLength={120} placeholder="Por ejemplo: Luna, El Pinar o MM-000123" value={query} onChange={event => setQuery(event.target.value)} className="form-input" />
       </label>
       <button type="submit" className="button button-primary">Buscar</button>
       {search && <button type="button" className="text-button" onClick={() => { setQuery(""); setSearch(""); setOffset(0); }}>Ver todos</button>}

@@ -5,6 +5,7 @@ import type { MapReportPoint } from "@/lib/public-observations";
 import { DogPhoto } from "../perdidos/dog-photo";
 import { Icon } from "../ui/pictogram";
 import { ObservationPhoto } from "../ui/observation-photo";
+import { ReportId } from "../ui/report-id";
 
 export type { MapReportPoint } from "@/lib/public-observations";
 const reportLabels = { lost: "Animal perdido", sighting: "Avistamiento", found: "Animal encontrado" };
@@ -19,6 +20,7 @@ export function MapReportCard({ point, href, onShowOnMap }: { point: MapReportPo
     <div className="map-report-content">
       <span className="map-report-type">{reportLabels[point.layer]}</span>
       <h3>{href ? <Link href={href}>{point.title}</Link> : point.title}</h3>
+      <ReportId id={point.id} publicId={point.public_id} label={point.layer === "lost" ? "ID del aviso" : "ID del reporte"} />
       <p className="map-report-species">{observationTraits(point)}</p>
       <p className="map-report-area"><Icon name="pin" />{point.area || "Zona aproximada"}</p>
       <p className="map-report-date"><Icon name="calendar" /><span>{dateLabels[point.layer]} <time dateTime={point.when}>{point.layer === "lost" ? lostDate(point.when) : observationDate(point.when)}</time></span></p>

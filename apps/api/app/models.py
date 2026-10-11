@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Text, Uuid, UniqueConstraint, func
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Text, Uuid, UniqueConstraint, func, insert
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,6 +11,29 @@ from app.db.base import Base
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class PublicationNumber(Base):
+    """Shared allocator; retain issued numbers after deleting a publication."""
+    __tablename__ = "publication_numbers"
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer(), "sqlite"), primary_key=True, autoincrement=True)
+
+
+def allocate_publication_number(context) -> int:
+    # The database allocates atomically on the publication's own transaction.
+    return context.connection.execute(insert(PublicationNumber.__table__).values()).inserted_primary_key[0]
+
+
+class PublicationIdentityMixin:
+    public_number: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("publication_numbers.id"), unique=True, nullable=False,
+        default=allocate_publication_number,
+    )
+
+    @property
+    def public_id(self) -> str:
+        return f"MM-{self.public_number:06d}"
 
 
 class User(TimestampMixin, Base):
@@ -80,7 +103,7 @@ class Pet(TimestampMixin, Base):
     lost_cases: Mapped[list["LostCase"]] = relationship(back_populates="pet")
 
 
-class LostCase(TimestampMixin, Base):
+class LostCase(PublicationIdentityMixin, TimestampMixin, Base):
     __tablename__ = "lost_cases"
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
@@ -117,7 +140,7 @@ class PhotoDeletion(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
-class Observation(TimestampMixin, Base):
+class Observation(PublicationIdentityMixin, TimestampMixin, Base):
     __tablename__ = "observations"
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

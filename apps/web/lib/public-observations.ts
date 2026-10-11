@@ -9,10 +9,10 @@ export type MapReportPoint = LostMapPoint & {
   sex?: string; primary_color?: string; size?: string; description_excerpt?: string;
 };
 export type PublicObservation = {
-  id: string; species: string; sex: string; primary_color: string; size: string;
+  id: string; public_id?: string; species: string; sex: string; primary_color: string; size: string;
   description: string; source_type: "USER_SIGHTING" | "FOUND_ANIMAL";
   public_location: string | null; observed_at: string; photo_url: string | null;
-  related_notice: { id: string; name: string } | null;
+  related_notice: { id: string; public_id?: string; name: string } | null;
 };
 
 export function observationTraits(animal: { species: string; sex?: string; size?: string; primary_color?: string }): string {

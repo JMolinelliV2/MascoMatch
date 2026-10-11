@@ -12,8 +12,9 @@ import { useSessionRefresh } from "../use-session-refresh";
 import { ReviewRequest } from "../review-request";
 import { SightingComparison } from "../ui/sighting-comparison";
 import { PhotoGallery } from "../ui/photo-viewer";
+import { ReportId } from "../ui/report-id";
 type User = { email_verified?: boolean; email_verification_required?: boolean; id: string; name: string; email: string; notification_preferences: { email?: boolean } };
-type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; archived_at: string | null; created_at: string; lost_case_id: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; reporter_contact:string|null; linked_to_notice?:boolean; matching_status?:string|null };
+type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; archived_at: string | null; created_at: string; lost_case_id: string; lost_case_public_id?: string; observation_public_id?: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; reporter_contact:string|null; linked_to_notice?:boolean; matching_status?:string|null };
 type Inbox = { items: Notice[]; unread_count: number; total: number };
 type InboxView = "unread" | "all" | "archived";
 type NoticeAction = "read" | "archive" | "restore";
@@ -209,6 +210,8 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
         <p className="notification-read-status">{notice.archived_at ? "Archivada" : notice.read_at ? "Leída" : "Sin leer"}{notice.read_at && <span> · <time dateTime={notice.read_at}>{date(notice.read_at)}</time></span>}</p>
         {notice.linked_to_notice ? <SightingComparison status={notice.matching_status} reviewStatus={notice.match_status} /> : <span className="lost-status">{notice.match_status === "RESOLVED" ? "Avistamiento confirmado · búsqueda activa" : notice.kind === "POSSIBLE_MATCH" ? "Posible coincidencia" : notice.photo_ids.length ? "Con fotos · por confirmar" : "Sin foto · por confirmar"}</span>}
         <h2>{notice.title}</h2><p>{notice.body}</p>
+        <ReportId id={notice.lost_case_id} publicId={notice.lost_case_public_id} />
+        <ReportId publicId={notice.observation_public_id} label="ID del avistamiento" />
         <dl className="review-details"><div><dt>Cuándo lo vieron</dt><dd>{date(notice.observed_at)}</dd></div><div><dt>Zona del avistamiento</dt><dd>{notice.public_location || "Lugar indicado en el mapa"}</dd></div></dl>
         {notice.reasons.length > 0 && <ul className="notification-reasons">{notice.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul>}
         {notice.reporter_contact&&<p>La persona autorizó compartir su contacto: <a href={`mailto:${encodeURIComponent(notice.reporter_contact)}`}>{notice.reporter_contact}</a></p>}

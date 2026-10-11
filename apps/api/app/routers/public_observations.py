@@ -21,11 +21,13 @@ router = APIRouter(prefix="/public/observations", tags=["public-observations"])
 
 class RelatedNotice(BaseModel):
     id: UUID
+    public_id: str
     name: str
 
 
 class PublicObservationRead(BaseModel):
     id: UUID
+    public_id: str
     species: str
     sex: str
     primary_color: str
@@ -65,11 +67,11 @@ def get_public_observation(observation_id: UUID, response: Response, db: Session
         related = db.execute(active_dogs().where(LostCase.id == observation.linked_case_id)).first()
         if related:
             case, pet = related
-            related_notice = RelatedNotice(id=case.id, name=pet.name)
+            related_notice = RelatedNotice(id=case.id, public_id=case.public_id, name=pet.name)
     response.headers["Cache-Control"] = "no-store"
     # Explicit allowlist: no author, contact preferences, matching scores, storage keys or precise location.
     return PublicObservationRead(
-        id=observation.id, species=observation.species, sex=observation.sex,
+        id=observation.id, public_id=observation.public_id, species=observation.species, sex=observation.sex,
         primary_color=observation.primary_color, size=observation.size,
         description=observation.description, source_type=observation.source_type,
         public_location=observation.public_location, observed_at=observation.observed_at,

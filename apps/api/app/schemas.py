@@ -137,6 +137,7 @@ class LostCaseUpdate(BaseModel):
 
 class LostCaseRead(ORMModel):
     id: UUID
+    public_id: str
     pet_id: UUID
     status: str
     moderation_status: str
@@ -162,6 +163,7 @@ class PublicPhotoList(BaseModel):
 
 class PublicLostDogRead(BaseModel):
     id: UUID
+    public_id: str
     name: str
     species: Species
     sex: str
@@ -233,6 +235,7 @@ class ObservationUpdate(BaseModel):
 
 class ObservationRead(ORMModel):
     id: UUID
+    public_id: str
     species: str
     sex: str
     primary_color: str
@@ -290,6 +293,7 @@ class PhotoUploadRead(BaseModel):
 
 class LinkedSightingRead(BaseModel):
     id: UUID
+    public_id: str
     status: str
     owner_notified: bool
 
@@ -303,6 +307,8 @@ class NotificationRead(BaseModel):
     archived_at: datetime | None = None
     created_at: datetime
     lost_case_id: UUID
+    lost_case_public_id: str
+    observation_public_id: str
     pet_name: str
     observed_at: datetime
     public_location: str | None

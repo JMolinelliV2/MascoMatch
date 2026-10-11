@@ -40,6 +40,7 @@ def serialize(db, row):
     return NotificationRead(
         id=notification.id, kind=notification.kind, title=notification.title, body=notification.body,
         read_at=notification.read_at, created_at=aware(notification.created_at), lost_case_id=case.id,
+        lost_case_public_id=case.public_id, observation_public_id=observation.public_id,
         archived_at=notification.archived_at,
         pet_name=pet.name, observed_at=aware(observation.observed_at), public_location=observation.public_location,
         latitude=observation.latitude, longitude=observation.longitude,

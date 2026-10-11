@@ -6,6 +6,7 @@ import type { PublicObservation } from "@/lib/public-observations";
 import type { ObservationMapSelection } from "@/lib/observation-map-marker";
 import { ObservationPhoto } from "../ui/observation-photo";
 import { Icon } from "../ui/pictogram";
+import { ReportId } from "../ui/report-id";
 
 function ObservationPreview({ id, onLayout, onRefresh }: { id: string; onLayout: () => void; onRefresh: () => void }) {
   const [report, setReport] = useState<PublicObservation | null>(null);
@@ -32,12 +33,13 @@ function ObservationPreview({ id, onLayout, onRefresh }: { id: string; onLayout:
     <ObservationPhoto id={report.id} hasPhoto={Boolean(report.photo_url)} found={found} onLoad={onLayout} />
     <span className="map-report-type">{found ? "Animal encontrado" : "Avistamiento"}</span>
     <h3>{observationTraits(report)}</h3>
+    <ReportId id={report.id} publicId={report.public_id} label="ID del reporte" copyable />
     <p className="map-report-area"><Icon name="pin" />{report.public_location || "Zona aproximada"}</p>
     <p className="map-report-date"><Icon name="calendar" /><span>{found ? "Encontrado el" : "Visto el"} <time dateTime={report.observed_at}>{observationDate(report.observed_at)}</time></span></p>
     <p className="observation-map-help">Hora de Uruguay · Ubicación aproximada</p>
     <h4>Detalles del reporte</h4>
     <p className="observation-map-description">{report.description}</p>
-    {report.related_notice && <div className="observation-map-related"><p>Enviado para el aviso de <strong>{report.related_notice.name}</strong>. El vínculo no confirma que sea la misma mascota.</p><Link className="text-button" href={`/perdidos/${encodeURIComponent(report.related_notice.id)}?origen=mapa`}>Ver aviso relacionado <Icon name="arrow" /></Link></div>}
+    {report.related_notice && <div className="observation-map-related"><p>Enviado para el aviso de <strong>{report.related_notice.name}</strong>. El vínculo no confirma que sea la misma mascota.</p><ReportId id={report.related_notice.id} publicId={report.related_notice.public_id} /><Link className="text-button" href={`/perdidos/${encodeURIComponent(report.related_notice.id)}?origen=mapa`}>Ver aviso relacionado <Icon name="arrow" /></Link></div>}
   </div>;
 }
 
@@ -45,7 +47,7 @@ export function ObservationLocationPreview({ selection, onRefresh }: { selection
   const [selectedId, setSelectedId] = useState(selection.selectedId);
   const point = selection.points.find(item => item.id === selectedId) || selection.points[0];
   return <div className="observation-map-popup-content">
-    {selection.points.length > 1 && <label className="field-label">{selection.points.length} reportes en esta zona<select className="form-input" value={point.id} onChange={event => setSelectedId(event.target.value)}>{selection.points.map(item => <option key={item.id} value={item.id}>{item.title} · {observationTraits(item)} · {observationDate(item.when)}</option>)}</select></label>}
+    {selection.points.length > 1 && <label className="field-label">{selection.points.length} reportes en esta zona<select className="form-input" value={point.id} onChange={event => setSelectedId(event.target.value)}>{selection.points.map(item => <option key={item.id} value={item.id}>{item.title}{item.public_id && ` · ${item.public_id}`} · {observationTraits(item)} · {observationDate(item.when)}</option>)}</select></label>}
     <ObservationPreview key={point.id} id={point.id} onLayout={selection.onLayout} onRefresh={onRefresh} />
   </div>;
 }

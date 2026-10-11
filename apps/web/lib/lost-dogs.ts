@@ -1,5 +1,5 @@
 export type LostDogNotice = {
-  id: string; name: string; species: "dog" | "cat" | "rabbit" | "bird" | "other" | "unknown"; sex: string; breed: string; size: string;
+  id: string; public_id?: string; name: string; species: "dog" | "cat" | "rabbit" | "bird" | "other" | "unknown"; sex: string; breed: string; size: string;
   primary_color: string; description: string; public_location: string | null;
   lost_at: string; photo_url: string | null;
 };

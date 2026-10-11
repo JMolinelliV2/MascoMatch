@@ -1,4 +1,4 @@
-export type SightingResult = { id: string; status: string; owner_notified: boolean };
+export type SightingResult = { id: string; public_id?: string; status: string; owner_notified: boolean };
 
 export function sightingMessage(result: SightingResult, hasPhoto = false): string {
   switch (result.status) {

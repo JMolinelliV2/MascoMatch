@@ -34,7 +34,7 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 ## Section Order
 
-Términos presenta regreso al inicio, título e introducción, fecha y estado preliminar del piloto, resumen de participación responsable, índice cerrado inicialmente y trece secciones de condiciones. El pie compartido sigue al contenido.
+Términos presenta regreso al inicio, título e introducción, fecha de última actualización, resumen de participación responsable, índice cerrado inicialmente y trece secciones de condiciones. El pie compartido sigue al contenido.
 
 El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública y contacto/apoyo; una línea inferior separa el año y la marca de la atribución de la fotografía de portada. El inicio elimina su antiguo pie interno para evitar duplicarlo.
 
@@ -210,7 +210,7 @@ La invitación ofrece **Escribir una reseña** y **Ahora no**. El formulario ofr
 
 ## Overall Design Feel
 
-La página de condiciones prioriza lectura clara y reconoce su carácter preliminar para el piloto. Explica los comportamientos reales de MascoMatch, emplea lenguaje formal en tercera persona y deja la identificación legal definitiva documentada en `legal-terms.md`.
+La página de condiciones prioriza lectura clara y una presentación adecuada para el uso público, sin menciones a un piloto o a una versión preliminar. Explica los comportamientos de MascoMatch y emplea lenguaje formal en tercera persona. Los datos legales pendientes se documentan internamente en `legal-terms.md`.
 
 El pie crea un cierre claro y cercano con más espacio para la marca y las acciones públicas. Mantiene visible la gratuidad de publicar y buscar y ofrece participación mediante reportes, sugerencias y apoyo. Su estructura compartida da continuidad entre páginas sin cambiar formularios o servicios.
 

@@ -79,7 +79,6 @@ const sections = [
     content: <>
       <p>El servicio utiliza los datos necesarios para gestionar cuentas, publicar reportes, almacenar fotografías, comparar posibles coincidencias, enviar comunicaciones y atender consultas. La información pública y los datos privados de cuenta y contacto tienen finalidades diferentes. La publicación de un reporte no autoriza otros usos de los datos personales.</p>
       <p>Las personas usuarias podrán actualizar sus datos de contacto y preferencias desde la sección Mi cuenta. Las solicitudes de acceso, rectificación o supresión de datos personales y las consultas sobre su utilización podrán dirigirse a <a href="mailto:info@mascomatch.com">info@mascomatch.com</a> o presentarse mediante el <Link href="/contacto">formulario de contacto</Link>. MascoMatch podrá solicitar la información mínima necesaria para verificar que la solicitud corresponde a la persona titular de los datos.</p>
-      <p>Las presentes condiciones de uso no sustituyen la información de privacidad que deberá acompañar la recolección y el tratamiento de datos personales.</p>
     </>,
   },
   {
@@ -103,8 +102,8 @@ const sections = [
     id: "aportes",
     title: "11. Gratuidad y aportes voluntarios",
     content: <>
-      <p>Actualmente, la publicación de avisos, el registro de avistamientos y la consulta de búsquedas son gratuitos. Los niveles disponibles en la sección Apoyanos constituyen propuestas de aportes voluntarios en pesos uruguayos. La plataforma aún no recibe pagos ni genera cobros por la selección de un importe o una frecuencia.</p>
-      <p>Cuando se habilite la recepción de aportes, se informarán previamente las condiciones de cobro, la frecuencia, las opciones de cancelación y los datos del receptor. La realización de aportes no otorgará prioridad sobre otras búsquedas ni garantizará resultados.</p>
+      <p>La publicación de avisos, el registro de avistamientos y la consulta de búsquedas son gratuitos. Los aportes vinculados a la sección Apoyanos tienen carácter voluntario y se expresan en pesos uruguayos.</p>
+      <p>La realización de aportes no otorga prioridad sobre otras búsquedas ni garantiza resultados.</p>
     </>,
   },
   {
@@ -117,9 +116,9 @@ const sections = [
   },
   {
     id: "versiones",
-    title: "13. Versiones del documento y contacto",
+    title: "13. Actualizaciones y contacto",
     content: <>
-      <p>El presente documento constituye una versión preliminar para el piloto. Antes de la puesta en marcha pública se completarán la identificación legal del responsable y la información de privacidad. Las futuras versiones indicarán su fecha y los cambios correspondientes. El silencio de las personas usuarias no se considerará aceptación de nuevas obligaciones.</p>
+      <p>Las actualizaciones de las presentes condiciones indicarán su fecha y los cambios correspondientes. El silencio de las personas usuarias no se considerará aceptación de nuevas obligaciones.</p>
       <p>Las consultas relacionadas con estas condiciones, las publicaciones o los datos personales podrán dirigirse a <a href="mailto:info@mascomatch.com">info@mascomatch.com</a> o presentarse mediante la sección <Link href="/contacto">Contacto y sugerencias</Link>.</p>
     </>,
   },
@@ -132,7 +131,7 @@ export default function TermsPage() {
       <p className="eyebrow">Uso de la plataforma</p>
       <h1>Términos y condiciones</h1>
       <p className="page-intro">Condiciones aplicables a la publicación de avisos, el registro de avistamientos y la participación en MascoMatch.</p>
-      <p className="legal-version">Versión preliminar del piloto · Actualizada el <time dateTime="2026-10-11">11 de octubre de 2026</time></p>
+      <p className="legal-version">Última actualización: <time dateTime="2026-10-11">11 de octubre de 2026</time></p>
     </header>
     <aside className="legal-summary" aria-labelledby="legal-summary-title">
       <Icon name="shield" />

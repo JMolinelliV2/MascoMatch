@@ -10,6 +10,8 @@ La página tiene resumen, índice desplegable y trece secciones. Los títulos de
 
 Describe el alcance de la herramienta, acceso y correo confirmado, uso responsable, fotos/textos/reseñas, coincidencias de IA, ubicación y seguridad, notificaciones, información básica de datos personales, cierre y eliminación, moderación, gratuidad/aportes, disponibilidad y versiones/contacto.
 
+Por solicitud del usuario, el documento utiliza lenguaje formal y tercera persona, tanto en sus trece secciones como en la introducción y el resumen. Se refiere a las personas usuarias, la administración y la plataforma; conserva los alcances y las decisiones funcionales de la versión preliminar.
+
 El texto conserva las decisiones del producto:
 
 - Los avistamientos breves siguen disponibles sin cuenta.

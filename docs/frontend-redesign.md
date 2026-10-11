@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+Términos usa un contenedor centrado de 920 px, con cabecera, resumen, índice desplegable y artículo de lectura continua. El artículo tiene 40 px laterales en escritorio y 20 px en móvil; el índice abierto usa dos columnas y pasa a una a 640 px o menos.
+
 El pie compartido usa un contenedor de 1280 px con 24 px laterales. En escritorio distribuye marca, Explorar, Ayudar a encontrar y Comunidad en cuatro columnas flexibles; a 950 px o menos pasa a dos. A 640 px o menos, marca y comunidad ocupan ambas columnas y los dos grupos de enlaces quedan lado a lado.
 
 La bandeja de notificaciones suma un grupo flexible de tres filtros, Sin leer, Todas y Archivadas. La barra de cantidades reúne las acciones de lectura y actualización, con salto de línea en pantallas estrechas.
@@ -32,6 +34,8 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 ## Section Order
 
+Términos presenta regreso al inicio, título e introducción, fecha y estado preliminar del piloto, resumen de participación responsable, índice cerrado inicialmente y trece secciones de condiciones. El pie compartido sigue al contenido.
+
 El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública y contacto/apoyo; una línea inferior separa el año y la marca de la atribución de la fotografía de portada. El inicio elimina su antiguo pie interno para evitar duplicarlo.
 
 Notificaciones muestra cuenta y acceso a preferencias, filtros, explicación de lectura y archivo, contador y acciones, confirmaciones, tarjetas y paginación. Un detalle abierto desde una alerta conserva su regreso a la bandeja y omite los filtros de listado.
@@ -53,6 +57,8 @@ La portada incorpora las reseñas después de los avisos y el acceso al mapa, an
 El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las tarjetas de avisos activos. Muestra únicamente animales perdidos con ubicación; el enlace **Abrir mapa completo** mantiene el acceso a avistamientos, encontrados y filtros de la página `/mapa`.
 
 ## Navigation
+
+Términos y condiciones se enlaza en la franja inferior del pie compartido. Registro, revisión de los formularios y avistamiento breve muestran enlaces informativos que abren otra pestaña y anuncian ese comportamiento a lectores de pantalla. El índice nativo permite saltar a los encabezados con anclas; no se cambia la navegación ni la validación de los formularios.
 
 El pie enlaza las rutas existentes de animales perdidos, mapa, Cómo funciona, los tres tipos de reporte, Contacto y Apoyanos. Los grupos públicos usan landmarks `nav` con encabezados asociados; no se agregan accesos permanentes a Mis avisos o Notificaciones. Los enlaces admiten teclado, muestran el foco existente y tienen al menos 44 px de altura.
 
@@ -82,6 +88,8 @@ Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda 
 
 ## Typography
 
+Términos usa el título general de página, subtítulos de 21 px —20 en móvil— y texto de 15 px con interlineado 1,8. La fecha y los enlaces del índice usan 13 px. Los párrafos y los enlaces largos permiten salto de línea.
+
 El pie mantiene Arial: marca de 25 px y peso 800, encabezados de 15 px y peso 700, enlaces y descripciones de 14 px, gratuidad de 13 px y atribución de 12 px. Las descripciones usan interlineado 1,7 y los enlaces permiten saltos de línea.
 
 El estado de lectura de cada alerta usa texto de 12 px y fecha de Uruguay. Los filtros usan 14 px y peso 600. Los mensajes de guardado se anuncian como estados accesibles.
@@ -100,6 +108,8 @@ Las reseñas usan texto principal de 15 px con interlineado 1,7, nombre público
 
 ## Color System
 
+El artículo de condiciones usa blanco, bordes suaves y los textos existentes en azul oscuro y gris azulado. El resumen tiene fondo azul claro y escudo azul; los enlaces subrayados usan el azul de acciones y coral al pasar el puntero.
+
 El pie tiene fondo azul grisáceo claro `#f2f6fa`, texto azul oscuro de la marca y descripciones con el token secundario existente. El logo y el apoyo conservan el coral; Contacto utiliza el azul de los enlaces. Bordes suaves separan el pie y su franja inferior.
 
 Los filtros de notificaciones seleccionados usan borde y texto azul con fondo azul suave. Sin leer conserva borde y fondo azul; Leída y Archivada tienen texto secundario, separado de la etiqueta del resultado de comparación.
@@ -113,6 +123,8 @@ El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Ele
 Las estrellas y la puntuación seleccionada usan coral, con texto accesible que informa de 1 a 5 estrellas. La invitación a reseñar usa fondo azul suave, separado de los mensajes de cierre ya guardado.
 
 ## Spacing and Layout Rhythm
+
+La página legal separa resumen, índice y artículo con 24–28 px. El artículo tiene 36 px superiores/inferiores y separa las secciones por 28 px y una línea suave. En móvil usa 24 px interiores verticales y 20 px laterales.
 
 El pie tiene 48 px de espacio superior, columnas separadas por 36 px y 36 px antes de la línea inferior. En tablet los gaps son 28 px verticales y 40 px horizontales. En móvil usa 32 px arriba, 20 px laterales, gaps de 24 × 16 px y 28 px antes de la franja inferior.
 
@@ -129,6 +141,8 @@ Los niveles de apoyo usan gaps de 20 px y padding de 24 px; el resumen, 24–28 
 La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducido a 20 px en móvil. La invitación tiene margen superior de 24 px y padding de 20 px. Puntuaciones y acciones conservan objetivos táctiles de 48 px.
 
 ## Image Treatment
+
+Términos reutiliza el escudo y el chevron SVG existentes, sin imágenes adicionales ni nuevas descargas.
 
 El pie reutiliza la huella SVG de la marca dentro de un bloque coral de 40 px y los iconos de corazón y flecha existentes. Conserva el crédito enlazado a Victor G / Unsplash e identifica que corresponde a la foto de portada. No necesita fotografías ni recursos gráficos nuevos.
 
@@ -147,6 +161,8 @@ Los marcadores de animales perdidos son círculos de 56 px con foto real recorta
 Las tarjetas de la lista reutilizan `DogPhoto` para animales perdidos y `ObservationPhoto` para fotos propias de avistamientos y encontrados. Las miniaturas se cargan de forma diferida desde endpoints públicos que procesan las imágenes y eliminan metadatos; no se entregan claves ni URLs firmadas del almacenamiento. Sin foto usan ojo o corazón y **Sin foto**, y ante error **Foto no disponible**. En la tarjeta del mapa la foto mide 144 px de alto y usa `object-fit: contain` para ver el animal completo.
 
 ## Cards and Content Blocks
+
+Las condiciones se leen dentro de una única superficie blanca con radio de 16 px. El resumen y el índice usan radio de 14 px. El índice conserva `details`/`summary` y las obligaciones de publicación se muestran como una lista con viñetas.
 
 El pie organiza contenido sobre un fondo continuo, sin tarjetas ni sombras. La descripción de la marca se limita a 30 caracteres de ancho aproximado y crece a 42 en móvil. Los grupos de enlaces son listas semánticas; contacto y apoyo comparten un bloque con encabezado propio.
 
@@ -176,6 +192,8 @@ Los avistamientos y encontrados añaden características informadas, fecha y hor
 
 ## Buttons and CTAs
 
+Los accesos legales son enlaces informativos; no se agregan botones de aceptación ni nuevas barreras a publicar. El índice tiene un control de al menos 48 px y sus enlaces un área mínima de 44 px. Los enlaces de correo y formulario de contacto permiten consultar el documento.
+
 Conocé cómo apoyar usa un botón de 48 px con corazón, fondo blanco y borde coral; al pasar el puntero aparece el fondo coral suave. En móvil ocupa todo el ancho. Contacto y sugerencias es un enlace con flecha azul y área de 44 px. Ambos abren las páginas existentes; el botón no inicia un cobro.
 
 Notificaciones agrega Abrir alerta, Marcar todas como leídas, Archivar notificación y Restaurar notificación. Archivar es reversible desde su vista propia; los reportes y sus controles de revisión se conservan. Los botones usan los estilos existentes y cambian a Guardando durante su operación.
@@ -191,6 +209,8 @@ La portada enlaza a **Conocé cómo apoyar**. En Apoyanos, **Donaciones próxima
 La invitación ofrece **Escribir una reseña** y **Ahora no**. El formulario ofrece **Publicar reseña** y **Cancelar**. El cierre del aviso no depende de estas acciones. Una reseña guardada muestra **Retirar mi reseña de la portada**.
 
 ## Overall Design Feel
+
+La página de condiciones prioriza lectura clara y reconoce su carácter preliminar para el piloto. Explica los comportamientos reales de MascoMatch, mantiene el lenguaje cercano y deja la identificación legal definitiva documentada en `legal-terms.md`.
 
 El pie crea un cierre claro y cercano con más espacio para la marca y las acciones públicas. Mantiene visible la gratuidad de publicar y buscar y ofrece participación mediante reportes, sugerencias y apoyo. Su estructura compartida da continuidad entre páginas sin cambiar formularios o servicios.
 

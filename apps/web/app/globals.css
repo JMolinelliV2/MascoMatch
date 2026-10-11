@@ -224,6 +224,33 @@ h1, h2, h3 { color: var(--text-primary); }
   .page-intro { margin: 12px 0 0; color: var(--text-secondary); font-size: 16px; }
   .back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--text-secondary); font-size: 13px; }
   .back-link:hover { color: var(--accent-blue); }
+  .legal-page { max-width: 920px; }
+  .legal-heading { margin-top: 24px; }
+  .legal-heading .eyebrow { margin-bottom: 8px; }
+  .legal-heading h1 { margin-top: 0; }
+  .legal-version { margin: 16px 0 0; color: var(--text-secondary); font-size: 13px; }
+  .legal-summary { display: flex; align-items: flex-start; gap: 16px; margin-top: 28px; padding: 24px; border: 1px solid #d1e6f8; border-radius: 14px; background: var(--accent-blue-soft); }
+  .legal-summary > .ui-icon { width: 24px; height: 24px; margin-top: 2px; color: var(--accent-blue); }
+  .legal-summary h2 { margin: 0 0 8px; font-size: 18px; font-weight: 700; line-height: 1.4; }
+  .legal-summary p { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+  .legal-index { margin-top: 24px; padding: 8px 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+  .legal-index summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 48px; list-style: none; font-size: 15px; font-weight: 700; }
+  .legal-index summary::-webkit-details-marker { display: none; }
+  .legal-index summary .ui-icon { width: 16px; height: 16px; transform: rotate(90deg); }
+  .legal-index[open] summary .ui-icon { transform: rotate(-90deg); }
+  .legal-index ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; list-style: none; margin: 8px 0; padding: 0; }
+  .legal-index a { display: flex; align-items: center; min-height: 44px; padding: 8px 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+  .legal-index a:hover { color: var(--accent-blue); text-decoration: underline; text-underline-offset: 3px; }
+  .legal-content { margin-top: 24px; padding: 36px 40px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .legal-content section { scroll-margin-top: 24px; }
+  .legal-content section + section { margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .legal-content h2 { margin: 0 0 14px; font-size: 21px; font-weight: 700; line-height: 1.4; }
+  .legal-content p, .legal-content li { color: var(--text-secondary); font-size: 15px; line-height: 1.8; overflow-wrap: anywhere; }
+  .legal-content p { margin: 12px 0 0; }
+  .legal-content ul { margin: 16px 0 0; padding-left: 20px; list-style: disc; }
+  .legal-content li + li { margin-top: 8px; }
+  .legal-content a, .form-legal a { color: var(--accent-blue); text-decoration: underline; text-underline-offset: 3px; }
+  .legal-content a:hover, .form-legal a:hover { color: var(--primary); }
   .support-page { max-width: 1280px; }
   .support-intro { max-width: 780px; margin: 16px auto 48px; text-align: center; }
   .support-mark { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 20px; color: var(--primary); background: var(--primary-soft); }
@@ -704,6 +731,11 @@ h1, h2, h3 { color: var(--text-primary); }
     .lost-dogs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 640px) {
+    .legal-summary { padding: 20px 16px; gap: 12px; }
+    .legal-index { padding: 8px 16px; }
+    .legal-index ol { grid-template-columns: 1fr; }
+    .legal-content { padding: 24px 20px; }
+    .legal-content h2 { font-size: 20px; }
     .site-footer-inner { padding: 32px 20px 20px; }
     .footer-content { gap: 24px 16px; padding-bottom: 28px; }
     .footer-brand, .footer-community { grid-column: 1 / -1; }

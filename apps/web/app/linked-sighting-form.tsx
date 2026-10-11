@@ -124,6 +124,7 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
             {!recent && <label className="field-label">¿Cuándo lo viste?<input type="datetime-local" value={when} required className="form-input" onChange={event => { changed(); setWhen(event.target.value); }} /><span className="field-help">La fecha y la hora pueden ser aproximadas.</span></label>}
             {error && <p role="alert" className="notice notice-error">{error}</p>}
             <div className="form-footer"><button type="submit" className="button button-primary">{busy ? "Enviando…" : "Enviar avistamiento"}</button><p className="form-privacy">Podés enviarlo sin crear una cuenta. La ubicación exacta se compartirá de forma privada con el dueño si el avistamiento resulta relevante. La identidad del animal siempre está por confirmar.</p></div>
+            <p className="form-privacy form-legal">Consultá los <Link href="/terminos" target="_blank" rel="noopener noreferrer" aria-label="Términos y condiciones, se abre en otra pestaña">Términos y condiciones</Link> antes de enviar tu avistamiento.</p>
           </fieldset>
         </form>
       </>}

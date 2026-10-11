@@ -93,6 +93,7 @@ export function RegistrationForm() {
       <label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required maxLength={320} autoComplete="email" /><span className="field-help">Para recibir alertas y recuperar el acceso a tu cuenta.</span></label>
       <label className="field-label">Contraseña<input className="form-input" name="password" type="password" required minLength={12} maxLength={128} autoComplete="new-password" /><span className="field-help">Usá al menos 12 caracteres.</span></label>
       <label className="field-label">Repetí la contraseña<input className="form-input" name="confirmPassword" type="password" required minLength={12} maxLength={128} autoComplete="new-password" /></label>
+      <p className="form-privacy form-legal">Antes de crear tu cuenta, consultá los <Link href="/terminos" target="_blank" rel="noopener noreferrer" aria-label="Términos y condiciones, se abre en otra pestaña">Términos y condiciones</Link>.</p>
       <button className="button button-primary" type="submit">{busy ? "Creando cuenta…" : "Crear cuenta"}</button>
     </fieldset>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}

@@ -483,6 +483,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
               <button type="submit" disabled={busy || (step === 3 && (sessionChecking || Boolean(sessionError) || needsVerification))} className="button button-primary submit-button">{busy ? "Guardando…" : step < 3 ? kind === "lost" && step === 1 && missingPhotoNotice && !photo ? "Continuar sin foto →" : "Continuar →" : needsVerification ? "Confirmá tu correo para publicar" : !sessionUser && accountMode === "register" ? "Crear cuenta y confirmar correo" : copy.submit}</button>
             </div>
             <p className="form-privacy">{step === 3 ? !sessionUser && accountMode === "register" ? "Primero crearemos tu cuenta y te enviaremos el enlace de confirmación. Los datos del aviso seguirán en esta pestaña." : "Tu correo y la ubicación exacta no se muestran públicamente." : "Todavía no se publica nada. Podés revisar los datos al final."}</p>
+            {step === 3 && <p className="form-privacy form-legal">Consultá los <Link href="/terminos" target="_blank" rel="noopener noreferrer" aria-label="Términos y condiciones, se abre en otra pestaña">Términos y condiciones</Link> antes de enviar tu reporte.</p>}
           </div>
         </fieldset>
         </div>

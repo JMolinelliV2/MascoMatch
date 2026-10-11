@@ -24,7 +24,7 @@ Se mantiene Arial. El título principal usa 30–42 px, peso 800 e interlineado 
 
 La superficie abierta utiliza el fondo crema del sitio. El texto conserva azul oscuro y gris azulado. Publicación usa coral; comunidad y revisión, azul; reencuentro, verde. Cada paso reutiliza los tokens de acento y fondo suave existentes. La línea base usa `#c7d8e4` y su tramo recorrido usa coral. Los puntos visitados combinan borde, fondo suave y número con el acento de su paso.
 
-Las ilustraciones de ManyPixels comparten contornos azul oscuro, acentos coral, celeste o verde según el paso y detalles amarillos y naranjas del material original. Los estados decorativos del recorrido no representan el estado de una publicación ni una identidad confirmada.
+La primera ilustración conserva su adaptación coral de ManyPixels. Las otras tres parten de las referencias del usuario y usan coral, azul oscuro, azul y fondos suaves verdes y celestes, manteniendo piel y pelaje en colores naturales. Los estados decorativos del recorrido no representan el estado de una publicación ni una identidad confirmada.
 
 ## Spacing and Layout Rhythm
 
@@ -34,9 +34,9 @@ En tablet el padding superior baja a 64 px. En móvil la sección usa 56 px vert
 
 ## Image Treatment
 
-Se incorporaron cuatro ilustraciones de internet de la colección Playstroke de ManyPixels: Content Creation, Navigation, Profile Analysis y Dog Walking. Representan publicación, ubicación, revisión y mascota con su familia. Proceden de la galería oficial y usan su licencia para incorporar imágenes en sitios comerciales sin atribución visible obligatoria. Su origen se documenta en `apps/web/public/images/README.md`.
+El paso 1 conserva Content Creation, de la colección Playstroke de ManyPixels. Los pasos 2, 3 y 4 usan adaptaciones de las referencias `clue.avif`, `ia busqueda.avif` y `reunion.jpg`, respectivamente. Muestran una mano con lupa y preguntas, un robot revisando información y una persona acariciando a su perro tras el reencuentro. Se adaptaron con la herramienta integrada imagegen, conservando la composición general y usando la paleta del sitio. Su origen, archivos y prompts se documentan en `apps/web/public/images/README.md`.
 
-Los archivos son SVG con área de dibujo de 500 × 500, fondo transparente y un tamaño total de aproximadamente 60 KB. Se adaptaron sus acentos al coral, azul y verde de MascoMatch, conservando la composición. Se sirven desde `public/images` con Next Image y carga diferida. Su ancho máximo visible es 360 px en escritorio, 280 px en tablet y 300 px en móvil. Cada escena tiene una forma orgánica suave detrás, construida con CSS. El texto contiguo explica completamente cada paso; las imágenes decorativas tienen `alt` vacío para evitar repetición.
+El primer archivo es SVG con área de dibujo de 500 × 500. Los otros tres son WebP con transparencia, optimizados con calidad 88 y dimensiones de 1536 × 1024, 1685 × 933 y 1222 × 1287. Se sirven desde `public/images` con Next Image y carga diferida. Su ancho máximo visible es 360 px en escritorio, 280 px en tablet y 300 px en móvil. Se conserva un espacio cuadrado con `object-fit: contain` para mostrar sus diferentes proporciones completas. La forma orgánica de CSS acompaña solamente al primer paso; los otros usan el fondo de su propia ilustración. El texto contiguo explica completamente cada paso; las imágenes decorativas tienen `alt` vacío para evitar repetición.
 
 ## Cards and Content Blocks
 
@@ -52,7 +52,7 @@ Los desplegables informan sobre correo confirmado, fotos opcionales, avistamient
 
 ## Overall Design Feel
 
-La sección utiliza una composición editorial con aire, ilustraciones vectoriales de internet, texto alternado y un camino numerado. Retoma los ejemplos aportados por el usuario y mantiene la identidad de MascoMatch. El tono es cálido y lúdico, con títulos directos e información funcional accesible.
+La sección utiliza una composición editorial con aire, escenas elegidas a partir de las referencias del usuario, texto alternado y un camino numerado. La primera imagen se conserva y las otras tres siguen los motivos solicitados. El tono es cálido y lúdico, con títulos directos e información funcional accesible.
 
 El camino se colorea con el avance por la página. IntersectionObserver activa una entrada suave de 600 ms para el texto y 750 ms para la ilustración, una única vez por escena. El contenido permanece visible antes de esas animaciones. El hover mueve la imagen 4 px y rota un grado; la preferencia de movimiento reducido elimina animaciones y transformaciones de hover.
 

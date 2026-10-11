@@ -9,6 +9,7 @@ import "./home-how-it-works.css";
 const steps = [
   {
     id: "notice", hint: "El primer paso", tone: "coral", icon: "camera",
+    image: { src: "/images/how-notice-manypixels.svg", width: 500, height: 500, kind: "library" },
     title: "Publicá su aviso.",
     description: "Contanos cómo es tu mascota, dónde la viste por última vez y cuándo. Una foto clara ayuda a reconocerla y hace que su aviso sea más fácil de compartir.",
     detailTitle: "Antes de publicar",
@@ -17,6 +18,7 @@ const steps = [
   },
   {
     id: "sighting", hint: "La comunidad se suma", tone: "blue", icon: "pin",
+    image: { src: "/images/how-sighting-reference.webp", width: 1536, height: 1024, kind: "adapted" },
     title: "Una mirada puede ser la pista.",
     description: "Alguien reconoce a una mascota en la calle. Desde su aviso puede indicar dónde y cuándo la vio, y sumar una foto si tiene. Ese avistamiento breve se puede enviar sin cuenta.",
     detailTitle: "Si todavía no hay un aviso",
@@ -25,6 +27,7 @@ const steps = [
   },
   {
     id: "review", hint: "Cada detalle cuenta", tone: "blue", icon: "spark",
+    image: { src: "/images/how-review-reference.webp", width: 1685, height: 933, kind: "adapted" },
     title: "La tecnología conecta. Vos revisás.",
     description: "MascoMatch compara fotos, características, zona y fecha para acercarte posibles coincidencias. Las pistas llegan a tu cuenta y también pueden llegar por correo, según tus preferencias.",
     detailTitle: "Cómo llegan las pistas",
@@ -33,6 +36,7 @@ const steps = [
   },
   {
     id: "reunion", hint: "De vuelta en casa", tone: "green", icon: "heart",
+    image: { src: "/images/how-reunion-reference.webp", width: 1222, height: 1287, kind: "adapted" },
     title: "El reencuentro cierra la búsqueda.",
     description: "Cuando tu mascota ya esté con vos, marcá “Ya la recuperé” desde Mis avisos. Su aviso deja de aparecer entre los animales perdidos y podés compartir una reseña sobre tu experiencia.",
     detailTitle: "¿Y si confirmé un avistamiento?",
@@ -159,8 +163,8 @@ export function HomeHowItWorks() {
           <path ref={progressPath} className="how-route-progress" d={route.path} pathLength="1000" />
         </svg>}
         <span className="how-checkpoint" data-how-marker aria-hidden="true">0{index + 1}</span>
-        <div className="how-illustration" aria-hidden="true">
-          <Image src={`/images/how-${step.id}-manypixels.svg`} alt="" width={500} height={500} sizes="(max-width: 760px) 300px, (max-width: 1000px) 280px, 360px" />
+        <div className="how-illustration" data-image-kind={step.image.kind} aria-hidden="true">
+          <Image src={step.image.src} alt="" width={step.image.width} height={step.image.height} sizes="(max-width: 760px) 300px, (max-width: 1000px) 280px, 360px" />
           <span className="how-illustration-stamp"><Icon name={step.icon} /></span>
         </div>
         <div className="how-step-copy">

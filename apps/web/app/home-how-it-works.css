@@ -25,7 +25,8 @@
 .how-checkpoint { z-index: 1; grid-column: 2; grid-row: 1; justify-self: center; display: grid; place-items: center; width: 72px; height: 72px; border: 1.5px solid #a6bacb; border-radius: 50%; background: var(--background); color: var(--text-primary); font-size: 23px; font-weight: 500; letter-spacing: -1px; transition: border-color .3s, background-color .3s, box-shadow .3s; }
 .how-journey-step[data-visited="true"] .how-checkpoint { border-color: var(--how-accent); background: var(--how-soft); color: var(--how-accent); }
 .how-journey-step[data-current="true"] .how-checkpoint { box-shadow: 0 0 0 8px var(--how-soft); }
-.how-illustration { position: relative; grid-column: 1; grid-row: 1; justify-self: end; width: 100%; max-width: 360px; min-width: 0; }
+.how-illustration { position: relative; isolation: isolate; grid-column: 1; grid-row: 1; justify-self: end; width: 100%; max-width: 360px; min-width: 0; }
+.how-illustration::before { content: ""; position: absolute; z-index: -1; inset: 10% 3% 8% 7%; border-radius: 58% 42% 47% 53% / 45% 40% 60% 55%; background: var(--how-soft); transform: rotate(-6deg); }
 .how-illustration img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; transition: transform .35s ease; }
 .how-illustration-stamp { position: absolute; right: 7%; bottom: 5%; display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid var(--how-accent); border-radius: 50%; background: var(--background); color: var(--how-accent); transform: rotate(8deg); transition: transform .35s ease; }
 .how-illustration-stamp .ui-icon { width: 23px; height: 23px; }

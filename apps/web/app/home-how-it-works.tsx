@@ -160,7 +160,7 @@ export function HomeHowItWorks() {
         </svg>}
         <span className="how-checkpoint" data-how-marker aria-hidden="true">0{index + 1}</span>
         <div className="how-illustration" aria-hidden="true">
-          <Image src={`/images/how-${step.id}-generated.webp`} alt="" width={1254} height={1254} sizes="(max-width: 760px) 300px, (max-width: 1000px) 280px, 360px" />
+          <Image src={`/images/how-${step.id}-manypixels.svg`} alt="" width={500} height={500} sizes="(max-width: 760px) 300px, (max-width: 1000px) 280px, 360px" />
           <span className="how-illustration-stamp"><Icon name={step.icon} /></span>
         </div>
         <div className="how-step-copy">

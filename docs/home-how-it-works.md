@@ -24,7 +24,7 @@ Se mantiene Arial. El título principal usa 30–42 px, peso 800 e interlineado 
 
 La superficie abierta utiliza el fondo crema del sitio. El texto conserva azul oscuro y gris azulado. Publicación usa coral; comunidad y revisión, azul; reencuentro, verde. Cada paso reutiliza los tokens de acento y fondo suave existentes. La línea base usa `#c7d8e4` y su tramo recorrido usa coral. Los puntos visitados combinan borde, fondo suave y número con el acento de su paso.
 
-Las ilustraciones comparten azul oscuro, coral, celeste suave, verde apagado y pequeños detalles mostaza. Los estados decorativos del recorrido no representan el estado de una publicación ni una identidad confirmada.
+Las ilustraciones de ManyPixels comparten contornos azul oscuro, acentos coral, celeste o verde según el paso y detalles amarillos y naranjas del material original. Los estados decorativos del recorrido no representan el estado de una publicación ni una identidad confirmada.
 
 ## Spacing and Layout Rhythm
 
@@ -34,9 +34,9 @@ En tablet el padding superior baja a 64 px. En móvil la sección usa 56 px vert
 
 ## Image Treatment
 
-Se generaron cuatro ilustraciones originales con la herramienta integrada imagegen el 11 de octubre de 2026. Representan publicación desde el teléfono, una persona fotografiando un avistamiento, revisión humana de fotografías y un reencuentro con perro y gato. Toman la composición abierta y el tono editorial de las referencias del usuario.
+Se incorporaron cuatro ilustraciones de internet de la colección Playstroke de ManyPixels: Content Creation, Navigation, Profile Analysis y Dog Walking. Representan publicación, ubicación, revisión y mascota con su familia. Proceden de la galería oficial y usan su licencia para incorporar imágenes en sitios comerciales sin atribución visible obligatoria. Su origen se documenta en `apps/web/public/images/README.md`.
 
-Los archivos son WebP de 1254 × 1254 px con transparencia, sin recorte de la composición y optimizados con calidad 88. Se sirven desde `public/images` con Next Image, `sizes` adaptativo y carga diferida. Su ancho máximo visible es 360 px en escritorio, 280 px en tablet y 300 px en móvil. El texto contiguo explica completamente cada paso; las imágenes decorativas tienen `alt` vacío para evitar repetición. Los prompts y archivos se documentan en `apps/web/public/images/README.md`.
+Los archivos son SVG con área de dibujo de 500 × 500, fondo transparente y un tamaño total de aproximadamente 60 KB. Se adaptaron sus acentos al coral, azul y verde de MascoMatch, conservando la composición. Se sirven desde `public/images` con Next Image y carga diferida. Su ancho máximo visible es 360 px en escritorio, 280 px en tablet y 300 px en móvil. Cada escena tiene una forma orgánica suave detrás, construida con CSS. El texto contiguo explica completamente cada paso; las imágenes decorativas tienen `alt` vacío para evitar repetición.
 
 ## Cards and Content Blocks
 
@@ -52,7 +52,7 @@ Los desplegables informan sobre correo confirmado, fotos opcionales, avistamient
 
 ## Overall Design Feel
 
-La sección utiliza una composición editorial con aire, escenas de personas y mascotas, texto alternado y un camino numerado. Retoma los ejemplos aportados por el usuario y mantiene la identidad de MascoMatch. El tono es cálido y lúdico, con títulos directos e información funcional accesible.
+La sección utiliza una composición editorial con aire, ilustraciones vectoriales de internet, texto alternado y un camino numerado. Retoma los ejemplos aportados por el usuario y mantiene la identidad de MascoMatch. El tono es cálido y lúdico, con títulos directos e información funcional accesible.
 
 El camino se colorea con el avance por la página. IntersectionObserver activa una entrada suave de 600 ms para el texto y 750 ms para la ilustración, una única vez por escena. El contenido permanece visible antes de esas animaciones. El hover mueve la imagen 4 px y rota un grado; la preferencia de movimiento reducido elimina animaciones y transformaciones de hover.
 

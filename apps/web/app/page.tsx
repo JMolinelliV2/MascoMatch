@@ -3,13 +3,7 @@ import Link from "next/link";
 import { Icon } from "./ui/pictogram";
 import { HomeLostAnimals } from "./home-lost-animals";
 import { HomeReviews } from "./home-reviews";
-
-const steps = [
-  { title: "Publicá una mascota perdida", description: "Contanos cómo es, dónde y cuándo la viste por última vez. Podés agregar una foto y los rasgos que ayuden a reconocerla.", detail: "Creá una cuenta y confirmá tu correo para publicar y gestionar tu aviso.", icon: "paw" as const, tone: "feature-icon-0" },
-  { title: "Sumá una pista desde la comunidad", description: "Explorá los animales perdidos o el mapa. Si reconocés alguno, abrí su aviso para indicar dónde lo viste, cuándo y adjuntar fotos si tenés.", detail: "Desde una ficha, el avistamiento breve se envía sin cuenta. Para un animal que todavía no esté publicado, usá “Vi una mascota” con tu cuenta.", icon: "pin" as const, tone: "feature-icon-1" },
-  { title: "Recibí posibles coincidencias", description: "Comparamos fotos, características, lugar y fecha de los reportes con las búsquedas activas. Las alertas se muestran en tu cuenta y también pueden llegar por correo.", detail: "Cada coincidencia necesita revisión: mirá las fotos, el mapa y los detalles antes de confirmar.", icon: "spark" as const, tone: "feature-icon-2" },
-  { title: "Confirmá las pistas y el reencuentro", description: "Si un avistamiento corresponde a tu mascota, confirmalo para registrar esa pista. La búsqueda sigue activa mientras todavía no esté con vos.", detail: "Cuando la recuperes, marcá “Ya la recuperé” o actualizá el estado desde Mis avisos.", icon: "check" as const, tone: "feature-icon-2" },
-];
+import { HomeHowItWorks } from "./home-how-it-works";
 
 export default function Home() {
   return (
@@ -31,23 +25,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="como-funciona" className="how-it-works" aria-labelledby="how-title">
-        <div className="how-heading">
-          <p className="eyebrow">Cada pista puede ayudar</p>
-          <h2 id="how-title">Cómo funciona MascoMatch</h2>
-          <p className="how-intro">Un aviso empieza la búsqueda. Los avistamientos de la comunidad suman información para que cada familia pueda revisar las pistas y acercarse a un reencuentro.</p>
-        </div>
-        <ol className="how-steps">
-          {steps.map((step, index) => (
-            <li key={step.title}>
-              <div className="how-step-top"><span className={`feature-icon ${step.tone}`}><Icon name={step.icon} /></span><span className="how-step-number">Paso {index + 1}</span></div>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-              <p className="how-step-detail">{step.detail}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <HomeHowItWorks />
       <HomeLostAnimals />
       <HomeReviews />
       <section className="home-support" aria-labelledby="home-support-title"><span className="feature-icon"><Icon name="heart" /></span><div><p className="eyebrow">Apoyo voluntario</p><h2 id="home-support-title">Ayudá a sostener MascoMatch</h2><p>Conocé los niveles de patrocinio y cómo los aportes pueden acompañar las búsquedas de la comunidad.</p></div><Link href="/apoyanos" className="button button-secondary">Conocé cómo apoyar <Icon name="arrow" /></Link></section>

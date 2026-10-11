@@ -20,7 +20,7 @@ La espera al ingresar y consultar la sesión usa una tarjeta centrada de hasta 6
 
 Contenedor de 1280 px con márgenes automáticos y 24 px laterales. Portada con texto y foto en dos columnas. Formularios con una columna principal flexible y ayuda lateral de 320 px; bajo 950 px pasan a una columna. Desde 360 px los controles se apilan, el stepper muestra la etapa activa y las fotos se pueden recorrer horizontalmente.
 
-Cómo funciona ocupa una sección propia, con título visible, introducción y cuatro pasos en una grilla de dos columnas. A 640 px o menos se apila en una columna. La altura mínima en escritorio es 72 vh y el contenido puede crecer; en móvil se usa altura natural.
+Cómo funciona ocupa una sección propia con cuatro pestañas y un panel interactivo que divide explicación y ejemplo visual. A 640 px o menos, las pestañas usan dos columnas y el panel una. Se conserva la altura mínima de 72 vh en escritorio y el alto natural en móvil. El recorrido se detalla en `home-how-it-works.md`.
 
 Apoyanos utiliza el contenedor de 1280 px y una introducción centrada de hasta 780 px. Los cuatro niveles ocupan cuatro columnas, dos a 950 px o menos y una a 640 px o menos. El monto personalizado, el resumen y las acciones se apilan en móvil. El destino de los aportes usa tres columnas en escritorio y una en móvil.
 
@@ -100,7 +100,7 @@ Los estados de carga usan título de 20–24 px, peso 700 y explicación de 15 p
 
 Se conserva Arial, la fuente existente, sin añadir descargas externas. Títulos de página de 32–46 px y peso 800; portada de hasta 58 px; secciones de 22–26 px; tarjetas de 18–22 px; texto de 14–16 px y ayudas de 12–13 px. El contenido largo permite salto de línea.
 
-El título de Cómo funciona usa 28–36 px, la introducción 16–17 px, los títulos de pasos 20–21 px y su texto principal 15 px. Los detalles complementarios se separan con una línea y usan 13 px.
+El título de Cómo funciona usa 28–36 px y la introducción 16–17 px. Los títulos del panel usan 25–32 px, el texto 16 px y las ayudas 13 px. En móvil los títulos son de 26 px y el texto de 15 px. Las pestañas usan 14 px y sus detalles 12 px; en móvil se simplifican a icono y título de 13 px.
 
 Apoyanos mantiene los títulos generales, encabezados de sección de 24–28 px y niveles de 21 px. Los importes usan 30 px y peso 800, con frecuencia de 13 px. Las descripciones usan 15 px y los detalles de destino 13 px.
 
@@ -134,7 +134,7 @@ La ventana de fotos usa 12 × 16 px en cabecera, 10 × 16 px en pie y 20 px entr
 
 Separaciones de 8, 12, 16, 20, 24, 28 y 32 px. Tarjetas con 24–28 px de padding en escritorio y 16–20 px en móvil. Campos de al menos 48 px y acciones táctiles de al menos 44 px. Ayudas y revisión conservan una jerarquía separada de los campos.
 
-Cómo funciona tiene 64 px de separación superior y 72 px inferior en escritorio, tarjetas de al menos 240 px y gaps de 24 px. En móvil el padding vertical es 48 px y los pasos crecen según su contenido, sin recortar texto ni forzar espacio vacío.
+Cómo funciona tiene 64 px de separación superior y 72 px inferior en escritorio, un panel de al menos 470 px, padding interior de 36 px y gap de 40 px. En móvil el padding vertical de la sección es 48 px y el panel usa 24 × 20 px y una sola columna. El contador ocupa una fila sobre Anterior/Siguiente.
 
 Los niveles de apoyo usan gaps de 20 px y padding de 24 px; el resumen, 24–28 px. La sección de destino empieza 64 px después del selector, reducidos a 48 px en móvil. El bloque de apoyo en portada usa padding de 28 px y una separación inferior de 40 px.
 
@@ -180,7 +180,7 @@ La tarjeta de carga usa superficie blanca, borde existente, radio de 16 px, padd
 
 Tarjetas blancas, bordes discretos, radios de 12–16 px y sombra mínima. Componentes compartidos para stepper, fotos, iconos, tarjetas de animales y compatibilidad. El panel muestra las cantidades disponibles en sus datos; no se inventan nuevos avistamientos, compartidos, historias o recorridos. La foto de un aviso activo respeta el endpoint público y sus restricciones.
 
-Los cuatro pasos de Cómo funciona usan iconos existentes, un número visible y dos niveles de explicación. El contenido distingue confirmar un avistamiento de recuperar al animal y explica el envío breve sin cuenta.
+Los cuatro pasos de Cómo funciona usan pestañas, iconos existentes y ejemplos ilustrativos manipulables: foto opcional, ubicación elegible, detalles de revisión y estado de recuperación. El contenido distingue confirmar un avistamiento de recuperar al animal y explica el envío breve sin cuenta. Los controles admiten teclado y no se reproducen automáticamente; la preferencia de movimiento reducido elimina las animaciones.
 
 Los niveles de patrocinio son etiquetas de radios nativos: toda la tarjeta permite seleccionar, el teclado conserva el comportamiento del grupo y el foco tiene contorno azul. Nombre, importe, frecuencia y descripción tienen jerarquía propia. Las preguntas frecuentes usan `details` y `summary` nativos. No se muestran cantidades de donantes, metas ni testimonios ficticios.
 

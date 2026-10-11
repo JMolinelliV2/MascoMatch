@@ -4,6 +4,8 @@ Las cuatro referencias visuales se adaptan al flujo existente. Se conserva la ma
 
 ## Layout Structure
 
+El pie compartido usa un contenedor de 1280 px con 24 px laterales. En escritorio distribuye marca, Explorar, Ayudar a encontrar y Comunidad en cuatro columnas flexibles; a 950 px o menos pasa a dos. A 640 px o menos, marca y comunidad ocupan ambas columnas y los dos grupos de enlaces quedan lado a lado.
+
 La bandeja de notificaciones suma un grupo flexible de tres filtros, Sin leer, Todas y Archivadas. La barra de cantidades reúne las acciones de lectura y actualización, con salto de línea en pantallas estrechas.
 
 Las fotos ampliadas usan una ventana de hasta 1180 × 900 px, limitada al ancho y alto disponibles con 16 px de margen. La cabecera, el lienzo flexible y el pie ocupan tres filas; la imagen se ajusta completa al lienzo y las acciones siguen visibles en móvil.
@@ -30,6 +32,8 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 ## Section Order
 
+El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública y contacto/apoyo; una línea inferior separa el año y la marca de la atribución de la fotografía de portada. El inicio elimina su antiguo pie interno para evitar duplicarlo.
+
 Notificaciones muestra cuenta y acceso a preferencias, filtros, explicación de lectura y archivo, contador y acciones, confirmaciones, tarjetas y paginación. Un detalle abierto desde una alerta conserva su regreso a la bandeja y omite los filtros de listado.
 
 La ventana de fotos presenta título y cierre, imagen, y posición con controles de anterior y siguiente cuando hay varias. Se abre sobre el contexto actual sin sustituir la ficha ni la tarjeta del mapa.
@@ -50,11 +54,13 @@ El antiguo enlace al mapa se reemplaza por el mapa incrustado después de las ta
 
 ## Navigation
 
+El pie enlaza las rutas existentes de animales perdidos, mapa, Cómo funciona, los tres tipos de reporte, Contacto y Apoyanos. Los grupos públicos usan landmarks `nav` con encabezados asociados; no se agregan accesos permanentes a Mis avisos o Notificaciones. Los enlaces admiten teclado, muestran el foco existente y tienen al menos 44 px de altura.
+
 La bandeja inicia en Sin leer. Abrir alerta lleva al detalle y guarda la lectura; marcar una como leída la retira de esa vista. Todas conserva las alertas sin archivar. Archivar la mueve a Archivadas, donde Restaurar la devuelve a Todas. Los filtros indican selección con `aria-pressed` y las acciones muestran el resultado después del éxito del servidor. Se bloquean durante el guardado para evitar operaciones simultáneas.
 
 La foto principal abre la ventana con clic, toque o Enter. Las miniaturas con un enlace o acción previa conservan ese destino y agregan un control independiente para ampliar. Cerrar, Escape o pulsar fuera regresa al control de apertura. Las flechas del teclado recorren la galería; Escape dentro de la ventana conserva los detalles del mapa. El diálogo nativo mantiene el foco dentro mientras está abierto.
 
-Contacto y sugerencias está disponible en Explorar, el menú móvil y el pie del inicio. La página conserva el regreso al inicio y el enlace directo a info@mascomatch.com.
+Contacto y sugerencias está disponible en Explorar, el menú móvil y el pie compartido de todas las páginas. La página conserva el regreso al inicio y el enlace directo a info@mascomatch.com.
 
 El enlace de configuración de la bandeja y de los correos abre `/mi-cuenta#notificaciones`. La sección se lleva a la vista después de cargar la sesión, incluso al entrar sin una sesión iniciada y luego ingresar desde esa página.
 
@@ -76,6 +82,8 @@ Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda 
 
 ## Typography
 
+El pie mantiene Arial: marca de 25 px y peso 800, encabezados de 15 px y peso 700, enlaces y descripciones de 14 px, gratuidad de 13 px y atribución de 12 px. Las descripciones usan interlineado 1,7 y los enlaces permiten saltos de línea.
+
 El estado de lectura de cada alerta usa texto de 12 px y fecha de Uruguay. Los filtros usan 14 px y peso 600. Los mensajes de guardado se anuncian como estados accesibles.
 
 El título de la ventana de fotos usa Arial de 18 px y peso 700; el contador del pie, 14 px, y los mensajes de carga o error, 15 px. Los títulos largos permiten saltos de línea.
@@ -92,6 +100,8 @@ Las reseñas usan texto principal de 15 px con interlineado 1,7, nombre público
 
 ## Color System
 
+El pie tiene fondo azul grisáceo claro `#f2f6fa`, texto azul oscuro de la marca y descripciones con el token secundario existente. El logo y el apoyo conservan el coral; Contacto utiliza el azul de los enlaces. Bordes suaves separan el pie y su franja inferior.
+
 Los filtros de notificaciones seleccionados usan borde y texto azul con fondo azul suave. Sin leer conserva borde y fondo azul; Leída y Archivada tienen texto secundario, separado de la etiqueta del resultado de comparación.
 
 La ventana de fotos conserva cabecera y pie blancos con texto navy. El lienzo usa navy oscuro `#102536` y el fondo exterior navy al 78%, para separar la foto de la página. Los controles tienen borde visible y foco azul.
@@ -103,6 +113,8 @@ El nivel elegido lleva borde coral de 2 px, fondo coral suave, check y texto Ele
 Las estrellas y la puntuación seleccionada usan coral, con texto accesible que informa de 1 a 5 estrellas. La invitación a reseñar usa fondo azul suave, separado de los mensajes de cierre ya guardado.
 
 ## Spacing and Layout Rhythm
+
+El pie tiene 48 px de espacio superior, columnas separadas por 36 px y 36 px antes de la línea inferior. En tablet los gaps son 28 px verticales y 40 px horizontales. En móvil usa 32 px arriba, 20 px laterales, gaps de 24 × 16 px y 28 px antes de la franja inferior.
 
 Los filtros de la bandeja usan objetivos de 44 px, padding de 10 × 16 px y separación de 8 px. Las acciones de la barra se separan 16 px y permiten salto de línea. El estado de lectura se separa 12 px del contenido de la alerta.
 
@@ -117,6 +129,8 @@ Los niveles de apoyo usan gaps de 20 px y padding de 24 px; el resumen, 24–28 
 La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducido a 20 px en móvil. La invitación tiene margen superior de 24 px y padding de 20 px. Puntuaciones y acciones conservan objetivos táctiles de 48 px.
 
 ## Image Treatment
+
+El pie reutiliza la huella SVG de la marca dentro de un bloque coral de 40 px y los iconos de corazón y flecha existentes. Conserva el crédito enlazado a Victor G / Unsplash e identifica que corresponde a la foto de portada. No necesita fotografías ni recursos gráficos nuevos.
 
 Las imágenes ampliadas usan `object-fit: contain`, sin recortes ni deformaciones, y se descargan al seleccionarlas. Las versiones de hasta 2048 px mantienen la resolución original disponible y eliminan metadatos; las miniaturas y el análisis siguen usando 1024 px. Las galerías consultan imágenes que pertenecen al reporte y mantienen las comprobaciones públicas o privadas de acceso.
 
@@ -133,6 +147,8 @@ Los marcadores de animales perdidos son círculos de 56 px con foto real recorta
 Las tarjetas de la lista reutilizan `DogPhoto` para animales perdidos y `ObservationPhoto` para fotos propias de avistamientos y encontrados. Las miniaturas se cargan de forma diferida desde endpoints públicos que procesan las imágenes y eliminan metadatos; no se entregan claves ni URLs firmadas del almacenamiento. Sin foto usan ojo o corazón y **Sin foto**, y ante error **Foto no disponible**. En la tarjeta del mapa la foto mide 144 px de alto y usa `object-fit: contain` para ver el animal completo.
 
 ## Cards and Content Blocks
+
+El pie organiza contenido sobre un fondo continuo, sin tarjetas ni sombras. La descripción de la marca se limita a 30 caracteres de ancho aproximado y crece a 42 en móvil. Los grupos de enlaces son listas semánticas; contacto y apoyo comparten un bloque con encabezado propio.
 
 Cada alerta muestra el estado de lectura antes del resultado de comparación. Marcar o archivar actualiza la lista y el contador, conserva el resultado del servidor frente a consultas anteriores y muestra una confirmación. Cada vista vacía explica dónde consultar las alertas leídas o archivadas.
 
@@ -160,6 +176,8 @@ Los avistamientos y encontrados añaden características informadas, fecha y hor
 
 ## Buttons and CTAs
 
+Conocé cómo apoyar usa un botón de 48 px con corazón, fondo blanco y borde coral; al pasar el puntero aparece el fondo coral suave. En móvil ocupa todo el ancho. Contacto y sugerencias es un enlace con flecha azul y área de 44 px. Ambos abren las páginas existentes; el botón no inicia un cobro.
+
 Notificaciones agrega Abrir alerta, Marcar todas como leídas, Archivar notificación y Restaurar notificación. Archivar es reversible desde su vista propia; los reportes y sus controles de revisión se conservan. Los botones usan los estilos existentes y cambian a Guardando durante su operación.
 
 El icono de ampliar reutiliza el sistema SVG existente. En fotos con navegación previa es un botón separado del enlace; en fotos principales es un indicador dentro del botón que ocupa la imagen. Los botones de anterior y siguiente se deshabilitan al llegar a los extremos de la galería, y el contador comunica la posición también a lectores de pantalla.
@@ -173,6 +191,8 @@ La portada enlaza a **Conocé cómo apoyar**. En Apoyanos, **Donaciones próxima
 La invitación ofrece **Escribir una reseña** y **Ahora no**. El formulario ofrece **Publicar reseña** y **Cancelar**. El cierre del aviso no depende de estas acciones. Una reseña guardada muestra **Retirar mi reseña de la portada**.
 
 ## Overall Design Feel
+
+El pie crea un cierre claro y cercano con más espacio para la marca y las acciones públicas. Mantiene visible la gratuidad de publicar y buscar y ofrece participación mediante reportes, sugerencias y apoyo. Su estructura compartida da continuidad entre páginas sin cambiar formularios o servicios.
 
 Las fotos se amplían dentro de la página y mantienen el contexto del aviso o avistamiento. La ventana se centra en ver el animal completo y conserva el estilo simple de la plataforma. Su implementación y revisión están documentadas en `photo-viewer.md`.
 

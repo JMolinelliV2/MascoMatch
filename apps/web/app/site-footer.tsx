@@ -51,7 +51,6 @@ export function SiteFooter() {
         <div className="footer-bottom">
           <p>© {new Date().getFullYear()} MascoMatch</p>
           <nav aria-label="Información legal"><Link href="/terminos">Términos y condiciones</Link></nav>
-          <a href="https://unsplash.com/photos/golden-retriever-x5oPmHmY3kQ" target="_blank" rel="noopener noreferrer">Foto de portada: Victor G / Unsplash</a>
         </div>
       </div>
     </footer>

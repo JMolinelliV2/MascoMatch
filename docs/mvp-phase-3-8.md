@@ -94,7 +94,7 @@ Migraciones `0006` a `0011`: vectores y matches, alertas por pareja aviso/report
 ```powershell
 docker compose exec -T api python -m pytest -q -p no:cacheprovider
 docker compose exec -T api python -m app.matching.evaluate test-data/matching/fixtures.json
-docker compose cp ./apps/web/public/images/dog-hero.jpg worker:/tmp/matching-check-dog.jpg
+docker compose cp ./apps/web/public/images/dog-hero-generated.jpg worker:/tmp/matching-check-dog.jpg
 docker compose exec -T -e RUN_MATCHING_INTEGRATION=1 -e AI_SMOKE_IMAGE_PATH=/tmp/matching-check-dog.jpg worker python -m pytest tests/test_matching_integration.py -q -s -p no:cacheprovider
 ```
 

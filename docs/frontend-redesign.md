@@ -36,7 +36,7 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 Términos presenta regreso al inicio, título e introducción, fecha de última actualización, resumen de participación responsable, índice cerrado inicialmente y trece secciones de condiciones. El pie compartido sigue al contenido.
 
-El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública y contacto/apoyo; una línea inferior separa el año y la marca de la atribución de la fotografía de portada. El inicio elimina su antiguo pie interno para evitar duplicarlo.
+El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública y contacto/apoyo; una línea inferior reúne el año, la marca y el acceso a los términos. El inicio elimina su antiguo pie interno para evitar duplicarlo.
 
 Notificaciones muestra cuenta y acceso a preferencias, filtros, explicación de lectura y archivo, contador y acciones, confirmaciones, tarjetas y paginación. Un detalle abierto desde una alerta conserva su regreso a la bandeja y omite los filtros de listado.
 
@@ -48,7 +48,7 @@ Contacto presenta regreso al inicio, título e introducción, formulario y direc
 
 Mi cuenta reúne contacto, notificaciones por correo y eliminación de cuenta, en ese orden. Notificaciones mantiene la bandeja de alertas y enlaza a la configuración en Mi cuenta. La sección de preferencias tiene título, casilla, explicación, feedback de guardado y enlace para consultar las alertas.
 
-Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con atribución de la fotografía. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro en cuatro pasos. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
+Portada: navegación, presentación y acciones para los tres tipos de reporte, Cómo funciona, avisos activos reales, acceso al mapa, bloque de apoyo y pie con navegación, contacto y términos. Cómo funciona explica publicación y confirmación de correo, aportes de la comunidad, revisión de posibles coincidencias y cierre después del reencuentro en cuatro pasos. Formularios: título, tres etapas, campos del paso actual, validación, acciones y ayuda. Mis avisos: sesión, dos cantidades derivadas de los datos, casos con controles, reportes enviados y acceso a notificaciones.
 
 Apoyanos: regreso al inicio, presentación, aviso de disponibilidad próxima, frecuencia del aporte, niveles, monto personalizado, resumen, destino de los aportes, preguntas frecuentes y acción para explorar animales perdidos.
 
@@ -90,7 +90,7 @@ Al avanzar desde Mascota sin foto en un aviso de pérdida se presenta una ayuda 
 
 Términos usa el título general de página, subtítulos de 21 px —20 en móvil— y texto de 15 px con interlineado 1,8. La fecha y los enlaces del índice usan 13 px. Los párrafos y los enlaces largos permiten salto de línea.
 
-El pie mantiene Arial: marca de 25 px y peso 800, encabezados de 15 px y peso 700, enlaces y descripciones de 14 px, gratuidad de 13 px y atribución de 12 px. Las descripciones usan interlineado 1,7 y los enlaces permiten saltos de línea.
+El pie mantiene Arial: marca de 25 px y peso 800, encabezados de 15 px y peso 700, enlaces y descripciones de 14 px, gratuidad de 13 px e información de la franja inferior de 12 px. Las descripciones usan interlineado 1,7 y los enlaces permiten saltos de línea.
 
 El estado de lectura de cada alerta usa texto de 12 px y fecha de Uruguay. Los filtros usan 14 px y peso 600. Los mensajes de guardado se anuncian como estados accesibles.
 
@@ -144,13 +144,13 @@ La grilla de reseñas usa gaps de 20 px y tarjetas con padding de 24 px, reducid
 
 Términos reutiliza el escudo y el chevron SVG existentes, sin imágenes adicionales ni nuevas descargas.
 
-El pie reutiliza la huella SVG de la marca dentro de un bloque coral de 40 px y los iconos de corazón y flecha existentes. Conserva el crédito enlazado a Victor G / Unsplash e identifica que corresponde a la foto de portada. No necesita fotografías ni recursos gráficos nuevos.
+El pie reutiliza la huella SVG de la marca dentro de un bloque coral de 40 px y los iconos de corazón y flecha existentes. Su franja inferior reúne la marca y el acceso a los términos; la portada utiliza una imagen generada y no incorpora un crédito de fotografía externa.
 
 Las imágenes ampliadas usan `object-fit: contain`, sin recortes ni deformaciones, y se descargan al seleccionarlas. Las versiones de hasta 2048 px mantienen la resolución original disponible y eliminan metadatos; las miniaturas y el análisis siguen usando 1024 px. Las galerías consultan imágenes que pertenecen al reporte y mantienen las comprobaciones públicas o privadas de acceso.
 
 La espera reutiliza la huella SVG de 30 px dentro de un círculo coral suave de 76 px. Un aro de 3 px rota cada 1,2 segundos y permanece quieto con movimiento reducido. No requiere descargar imágenes. Las formas provisionales se ocultan a los lectores de pantalla y no representan cantidades ni publicaciones reales.
 
-La fotografía existente de portada conserva su atribución. Los avisos muestran únicamente fotos reales de la API, con un estado de ausencia cuando no hay foto. Miniaturas cuadradas y fotos de detalle de 4:3. El cargador compartido conserva una foto opcional para reportes generales y hasta cuatro para avistamientos vinculados, con JPEG, PNG y WebP de hasta 10 MB. Incluye selección, arrastre, miniaturas, eliminación y errores; no agrega campos al payload.
+La portada utiliza `dog-hero-generated.jpg`, una imagen ilustrativa original de un golden retriever generada con imagegen y optimizada a JPEG de 1536 × 1024 px y aproximadamente 180 KB. La composición centrada mantiene visibles la cabeza y las orejas con los recortes existentes en escritorio y móvil. El origen y el prompt se documentan en `apps/web/public/images/README.md`. Los avisos muestran únicamente fotos reales de la API, con un estado de ausencia cuando no hay foto. Miniaturas cuadradas y fotos de detalle de 4:3. El cargador compartido conserva una foto opcional para reportes generales y hasta cuatro para avistamientos vinculados, con JPEG, PNG y WebP de hasta 10 MB. Incluye selección, arrastre, miniaturas, eliminación y errores; no agrega campos al payload.
 
 Apoyanos reutiliza los iconos SVG de corazón, huella, coincidencias y cuidado del proyecto. No añade imágenes remotas ni fotografías de supuestos reencuentros.
 

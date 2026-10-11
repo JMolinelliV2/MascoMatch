@@ -27,7 +27,7 @@ export default function Home() {
           <p className="hero-note"><Icon name="shield" />Perros, gatos y otros animales. Fotos opcionales.</p>
         </div>
         <div className="hero-photo">
-          <Image src="/images/dog-hero.jpg" alt="Un perro golden retriever mirando a la cámara" fill priority sizes="(max-width: 760px) 100vw, 50vw" />
+          <Image src="/images/dog-hero-generated.jpg" alt="Imagen ilustrativa de un golden retriever en un jardín" fill priority sizes="(max-width: 760px) 100vw, 50vw" />
         </div>
       </section>
 

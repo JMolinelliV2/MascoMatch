@@ -171,7 +171,7 @@ docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true api python -m pyt
 Para incluir la fotografía de ejemplo de la portada:
 
 ```powershell
-docker compose cp ./apps/web/public/images/dog-hero.jpg api:/tmp/mascomatch-check-dog.jpg
+docker compose cp ./apps/web/public/images/dog-hero-generated.jpg api:/tmp/mascomatch-check-dog.jpg
 docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true -e AI_SMOKE_IMAGE_PATH=/tmp/mascomatch-check-dog.jpg api python -m pytest tests/test_local_ai_integration.py -q
 ```
 

@@ -118,7 +118,7 @@ TypeScript y la sintaxis Python terminaron sin errores. Se actualizaron las expe
 Ejecutar la integración:
 
 ```powershell
-docker compose cp ./apps/web/public/images/dog-hero.jpg api:/tmp/linked-check-dog.jpg
+docker compose cp ./apps/web/public/images/dog-hero-generated.jpg api:/tmp/linked-check-dog.jpg
 docker compose exec -T -e RUN_LINKED_INTEGRATION=1 -e AI_SMOKE_IMAGE_PATH=/tmp/linked-check-dog.jpg api python -m pytest tests/test_linked_integration.py -q -s -p no:cacheprovider
 ```
 

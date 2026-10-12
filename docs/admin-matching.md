@@ -41,7 +41,7 @@ Rutas privadas: `GET /api/v1/admin/matching` y `GET /api/v1/admin/matching/{id}/
 
 La sección Coincidencias se abre desde la navegación lateral de `/admin`. Conserva los filtros, indicadores, desglose por origen, lista e historial, y comparte el período con las demás secciones. La lista tiene controles anterior y siguiente; cada historial se abre en su propia tarjeta. Mi cuenta ofrece el acceso solo a la cuenta autorizada.
 
-El ancho común de 1280 px, los temas claro y oscuro, la navegación móvil y las visualizaciones se describen en [dashboard-design.md](dashboard-design.md). Los estados mantienen sus cantidades y etiquetas: las confirmaciones, dudas y falta de respuesta no se presentan como una probabilidad de identificación.
+El dashboard ocupa todo el ancho disponible. Los temas claro y oscuro, la navegación móvil y las visualizaciones se describen en [dashboard-design.md](dashboard-design.md). Los estados mantienen sus cantidades y etiquetas: las confirmaciones, dudas y falta de respuesta no se presentan como una probabilidad de identificación.
 
 ## Revisión de la entrega
 

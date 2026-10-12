@@ -2,9 +2,9 @@
 
 ## Layout Structure
 
-Todas las páginas usan el ancho máximo de 1280 px definido en `--site-width`, igual que el inicio. El mapa, las notificaciones, el detalle de avisos, los términos y el dashboard comparten ese contenedor. Los formularios de acceso y contacto mantienen una columna interior de 592 px centrada para conservar su lectura y disposición. Los márgenes laterales son de 24 px en escritorio y 20 px en móvil.
+Las páginas públicas usan el ancho máximo de 1280 px definido en `--site-width`, igual que el inicio. El mapa, las notificaciones, el detalle de avisos y los términos comparten ese contenedor. Los formularios de acceso y contacto mantienen una columna interior de 592 px centrada para conservar su lectura y disposición. Los márgenes laterales son de 24 px en escritorio y 20 px en móvil.
 
-El dashboard tiene una barra lateral de 242 px y un área de contenido flexible. La barra baja a 216 px en pantallas intermedias y se convierte en un menú desplegable por debajo de 1000 px. La cuadrícula de gráficos usa tres columnas; el gráfico de evolución ocupa dos. En pantallas intermedias pasa a dos columnas y en móvil, a una.
+El dashboard autenticado ocupa todo el ancho disponible, sin límite máximo en el contenedor exterior ni en el contenido. Tiene una barra lateral de 242 px y un área de contenido flexible con márgenes interiores. La barra baja a 216 px en pantallas intermedias y se convierte en un menú desplegable por debajo de 1000 px. La cuadrícula de gráficos usa tres columnas; el gráfico de evolución ocupa dos. En pantallas intermedias pasa a dos columnas y en móvil, a una.
 
 ## Section Order
 

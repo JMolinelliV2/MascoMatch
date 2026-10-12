@@ -10,7 +10,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.analysis.service import utcnow
-from app.core.config import settings
 from app.db.session import get_db
 from app.models import ContactMessage
 
@@ -67,8 +66,8 @@ async def contact_payload(request: Request):
 @router.post("", status_code=202)
 def create_contact(response: Response, payload: ContactSubmission = Depends(contact_payload), db: Session = Depends(get_db)):
     response.headers["Cache-Control"] = "no-store"
-    if settings.mail_delivery_mode == "disabled":
-        raise HTTPException(status_code=503, detail="El formulario no está disponible por ahora. Escribinos a info@mascomatch.com.")
+    # Receiving a message and forwarding it by email are independent operations.
+    # Keep it available to administrators while SMTP delivery is paused.
     values = {"name": payload.name, "email": payload.email, "topic": payload.topic, "message": payload.message}
     existing = db.get(ContactMessage, payload.request_id)
     if existing:

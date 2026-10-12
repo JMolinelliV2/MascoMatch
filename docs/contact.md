@@ -8,7 +8,7 @@ Los mensajes se envían exclusivamente a **info@mascomatch.com**, usando el SMTP
 
 La confirmación de la página indica que se recibió el mensaje, no que SMTP ya lo entregó en la bandeja. El envío se procesa cada diez segundos. Una solicitud repetida con el mismo identificador y contenido reutiliza el registro; un fallo de red permite reintentar sin crear otro correo pendiente.
 
-Con `MAIL_DELIVERY_MODE=smtp`, el envío usa Brevo u otro SMTP real ya configurado. `preview` envía al buzón local Mailpit. `disabled` rechaza solicitudes con una explicación y ofrece la dirección de contacto.
+Con `MAIL_DELIVERY_MODE=smtp`, el envío usa Brevo u otro SMTP real ya configurado. `preview` envía al buzón local Mailpit. Con `disabled`, el formulario sigue recibiendo mensajes: quedan disponibles en Administración → Contactos y pendientes de envío. Al habilitar SMTP, el proceso de entrega los envía automáticamente. Desactivar los correos no desactiva la recepción ni indica que el mensaje ya fue entregado.
 
 ## Entrega y operación
 

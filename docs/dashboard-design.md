@@ -56,6 +56,8 @@ La API administrativa agrega datos sin información personal al resumen existent
 
 El estado de trabajos usa los trabajos creados en el período y sus estados actuales; tipos de publicaciones incluyen registros conservados, también cerrados u ocultos. Correos por tipo incluye únicamente mensajes con estado SENT del historial real de intentos. El estado de las cuentas distingue habilitadas, bloqueadas y confirmación de correo, sin sumar categorías superpuestas. No se incorporan porcentajes de crecimiento ficticios ni datos de ejemplo a la base.
 
+El resumen muestra Mascotas recuperadas junto al gráfico de publicaciones y entre las métricas de operación. Cuenta avisos creados en el período con estado actual FOUND. El gráfico identifica por separado los reportes publicados desde Encontré una mascota; la recuperación de un aviso existente no crea una nueva publicación ni suma otra categoría al anillo.
+
 ### Revisión de la entrega
 
 Se abrió el panel con la sesión administradora y los datos existentes. El resumen y los gráficos cargaron correctamente; se revisaron los temas claro y oscuro, el selector temporal y la navegación adaptable. El período de 30 días se mantuvo al abrir Coincidencias; luego se restauró Todo el período. El menú se cerró al elegir una sección y las recomendaciones existentes conservaron sus estados.

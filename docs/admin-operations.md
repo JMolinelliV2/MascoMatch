@@ -24,6 +24,10 @@ Cada sección explica la fecha aplicada: registro o actividad de usuarios, creac
 
 El resumen cuenta los trabajos según su fecha de creación y estado actual; en Trabajos se puede elegir finalización para estudiar cuándo terminaron. La cola global de correos y la actividad de los últimos 15 minutos indican el estado actual de toda la plataforma y lo anuncian expresamente. El resto de métricas respeta el período seleccionado. Buscar usuarios usa nombre/correo; publicaciones, ID, nombre, descripción o autor; trabajos, modelo/código de error; contactos, nombre/correo/mensaje. La búsqueda usa parámetros y escapa comodines SQL.
 
+**Mascotas recuperadas** cuenta avisos de pérdida con estado actual `FOUND`, creados en el período seleccionado. Se muestra junto a Publicaciones por tipo y en Estado de operación. Reconocer a la mascota en una coincidencia no basta: se cuenta cuando el dueño indica que la recuperó o marca su aviso como encontrado. Cada aviso cuenta una vez, aunque tenga varias coincidencias. Este filtro usa la creación del aviso, no la fecha en que se recuperó al animal.
+
+Publicaciones por tipo cuenta registros: Avisos de pérdida incluye los recuperados y cerrados; Avistamientos cuenta reportes `USER_SIGHTING`; Reportes de animales encontrados cuenta publicaciones `FOUND_ANIMAL` recibidas desde Encontré una mascota. La recuperación de una mascota no crea un reporte de ese último tipo ni incrementa el total de publicaciones.
+
 ### Actividad
 
 `User.status = ACTIVE` indica una cuenta habilitada. La actividad se registra cuando una solicitud autenticada termina correctamente, también al iniciar sesión o crear una cuenta. Incluye las consultas automáticas del sitio. No certifica que la persona esté observando la pantalla ni mide duración de sesión.

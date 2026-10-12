@@ -55,9 +55,9 @@ def chart_data(db, from_at, to_at, job_states, mail_states, user_scope):
     ]
     publication_types = []
     for label, model, condition, tone in (
-        ("Animales perdidos", LostCase, literal(True), "coral"),
+        ("Avisos de pérdida", LostCase, literal(True), "coral"),
         ("Avistamientos", Observation, Observation.source_type == "USER_SIGHTING", "blue"),
-        ("Animales encontrados", Observation, Observation.source_type == "FOUND_ANIMAL", "teal"),
+        ("Reportes de animales encontrados", Observation, Observation.source_type == "FOUND_ANIMAL", "teal"),
     ):
         total = db.scalar(select(func.count()).select_from(model)
             .where(condition, *period_filters(model.created_at, from_at, to_at))) or 0

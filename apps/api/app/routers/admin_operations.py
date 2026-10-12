@@ -65,6 +65,7 @@ def overview(response: Response, from_at: AwareDatetime | None = None, to_at: Aw
              db=Depends(get_db), user=Depends(administrator)):
     response.headers["Cache-Control"] = "no-store"
     user_scope = period_filters(User.created_at, from_at, to_at)
+    case_scope = period_filters(LostCase.created_at, from_at, to_at)
     job_scope = period_filters(AnalysisJob.created_at, from_at, to_at)
     mail_scope = period_filters(EmailDeliveryLog.created_at, from_at, to_at)
     contact_scope = period_filters(ContactMessage.created_at, from_at, to_at)
@@ -78,6 +79,7 @@ def overview(response: Response, from_at: AwareDatetime | None = None, to_at: Aw
     tracking = db.get(OperationalTracking, 1)
     return {"metrics": [
         {"label": "Cuentas registradas", "value": count(db, User, user_scope), "help": "Registradas en el período seleccionado."},
+        {"label": "Mascotas recuperadas", "value": count(db, LostCase, [*case_scope, LostCase.status == "FOUND"]), "help": "Avisos creados en el período y marcados como recuperados."},
         {"label": "Usuarios con actividad", "value": active, "help": "Cuentas distintas con una sesión usada en el período."},
         {"label": "Actividad en los últimos 15 min", "value": count(db, User, [User.status == "ACTIVE", User.last_active_at >= utcnow() - timedelta(minutes=15)]), "help": "Estado actual de toda la plataforma; incluye consultas automáticas del sitio."},
         {"label": "Cuentas bloqueadas", "value": count(db, User, [*user_scope, User.status == "BLOCKED"]), "help": "Entre las cuentas registradas en el período."},

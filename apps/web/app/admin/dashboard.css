@@ -110,6 +110,12 @@ body:has(.admin-workspace) > .site-header, body:has(.admin-workspace) > .site-fo
 .admin-widget-heading p { margin: 4px 0 0; color: var(--text-muted); font-size: 10px; }
 .admin-widget-heading > .ui-icon { color: var(--text-muted); width: 16px; height: 16px; }
 .admin-widget-footnote { margin: 10px 0 0; color: var(--text-muted); font-size: 10px; }
+.admin-publication-recoveries { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.admin-publication-recoveries > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
+.admin-publication-recoveries span { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+.admin-publication-recoveries .ui-icon { width: 16px; height: 16px; color: var(--chart-teal); }
+.admin-publication-recoveries strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.admin-publication-recoveries p { margin: 8px 0 0; color: var(--text-muted); font-size: 10px; }
 .admin-line-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 10px; }
 .admin-line-legend > button { display: inline-flex; align-items: center; gap: 7px; border: 0; padding: 4px 0; background: transparent; color: var(--text-secondary); font-size: 11px; cursor: pointer; min-height: 30px; }
 .admin-line-legend > button[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }

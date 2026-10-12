@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AdminDateRange, adminDate, emptyPeriod, periodQuery } from "./date-range";
+import { AdminDateRange, adminDate, periodQuery } from "./date-range";
 import type { AdminPeriod } from "./date-range";
 import { ModerationDialog } from "./moderation-dialog";
 import type { ModerationAction } from "./moderation-dialog";
 import { ReportId } from "../ui/report-id";
+import { OverviewWidgets } from "./overview-widgets";
+import type { OverviewCharts } from "./overview-widgets";
+import { Icon } from "../ui/pictogram";
 
-type Section = "overview" | "users" | "jobs" | "mail" | "contacts" | "publications" | "audit";
+export type OperationSection = "overview" | "users" | "jobs" | "mail" | "contacts" | "publications" | "audit";
+type Section = OperationSection;
 type Entry = {
   id: string; name?: string; email?: string; phone?: string; status?: string; verified?: boolean; is_self?: boolean;
   created_at: string; last_active_at?: string; lost_cases?: number; observations?: number;
@@ -21,6 +25,7 @@ type Entry = {
 };
 type Data = { items?: Entry[]; total?: number; limit?: number; summary?: Record<string, number>;
   metrics?: { label: string; value: number; help: string }[]; mail_queue?: { pending: number; failed: number };
+  charts?: OverviewCharts;
   tracking_started_at?: string; generated_at: string };
 const sections: [Section, string][] = [["overview", "Resumen"], ["users", "Usuarios"], ["jobs", "Trabajos"], ["mail", "Correos"], ["contacts", "Contactos"], ["publications", "Publicaciones"], ["audit", "Auditoría"]];
 const labels: Record<string, string> = {
@@ -53,9 +58,7 @@ const number = (value: number) => new Intl.NumberFormat("es-UY").format(value);
 function Badge({ value }: { value?: string }) { return value ? <span className={`admin-outcome-label ${["BLOCKED", "FAILED", "HIDDEN"].includes(value) ? "admin-outcome-false" : ["SUCCEEDED", "SENT", "ACTIVE", "VISIBLE"].includes(value) ? "admin-outcome-positive" : "admin-outcome-pending"}`}>{labels[value] || value}</span> : null; }
 function Detail({ label, value }: { label: string; value?: string | number | null }) { return <div><dt>{label}</dt><dd>{value ?? "Sin registro"}</dd></div>; }
 
-export function OperationsDashboard() {
-  const [section, setSection] = useState<Section>("overview");
-  const [period, setPeriod] = useState<AdminPeriod>(emptyPeriod);
+export function OperationsDashboard({section,onNavigate,period,onPeriodChange}:{section:Section;onNavigate:(value:Section)=>void;period:AdminPeriod;onPeriodChange:(value:AdminPeriod)=>void}) {
   const [state, setState] = useState("all");
   const [dateField, setDateField] = useState("created");
   const [kind, setKind] = useState("all");
@@ -68,7 +71,8 @@ export function OperationsDashboard() {
   const [refresh, setRefresh] = useState(0);
   const [action, setAction] = useState<ModerationAction | null>(null);
   const [saved, setSaved] = useState("");
-  function navigate(next: Section) { setSection(next); setOffset(0); setState("all"); setDateField("created"); setKind("all"); setSearch(""); setQ(""); setSaved(""); }
+  function navigate(next: Section) { onNavigate(next); }
+  useEffect(()=>{setOffset(0);setState("all");setDateField("created");setKind("all");setSearch("");setQ("");setSaved("");if(section!=="mail")setMailView("mail");setAction(null);},[section]);
   function filter(setter: (value: string) => void, value: string) { setter(value); setOffset(0); }
   useEffect(() => {
     const controller = new AbortController(); setData(null); setError("");
@@ -95,9 +99,8 @@ export function OperationsDashboard() {
   const title = sections.find(([value]) => value === section)?.[1];
   const options = section === "mail" && mailView === "mail_queue" ? ["PENDING", "FAILED"] : stateOptions[section];
   return <section className="admin-operations" aria-labelledby="admin-operations-title">
-    <nav className="admin-operations-navigation" aria-label="Secciones de operación">{sections.map(([value, label]) => <button key={value} type="button" aria-pressed={section === value} onClick={() => navigate(value)}>{label}</button>)}</nav>
-    <div className="admin-section-heading"><div><h2 id="admin-operations-title">{title}</h2><p>{sectionDescription[section]}</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
-    <AdminDateRange value={period} onApply={next => { setPeriod(next); setOffset(0); }} />
+    <div className="admin-section-heading"><div><span className="admin-section-eyebrow">{section==="overview"?"Vista general":"Gestión de la plataforma"}</span><h2 id="admin-operations-title">{section==="overview"?"Resumen de la plataforma":title}</h2><p>{sectionDescription[section]}</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}><Icon name="clock"/>Actualizar</button></div>
+    <AdminDateRange value={period} onApply={next => { onPeriodChange(next); setOffset(0); }} />
     {section !== "overview" && <div className="admin-matching-filters admin-operations-filters">
       {section === "mail" && <label className="field-label">Consultar<select className="form-input" value={mailView} onChange={event => { setMailView(event.target.value); setState("all"); setOffset(0); }}><option value="mail">Historial de envíos</option><option value="mail_queue">Solicitudes pendientes y fallidas</option></select></label>}
       {options.length > 0 && <label className="field-label">Estado<select className="form-input" value={state} onChange={event => filter(setState, event.target.value)}><option value="all">Todos los estados</option>{options.map(value => <option key={value} value={value}>{labels[value]}</option>)}</select></label>}
@@ -108,8 +111,7 @@ export function OperationsDashboard() {
     {saved && <p role="status" className="notice">{saved}</p>}{error && <p role="alert" className="notice notice-warning">{error}</p>}
     {!data && !error && <p role="status" className="admin-matching-loading">Cargando {title?.toLowerCase()}…</p>}
     {data && <>
-      {section === "overview" ? <><div className="admin-matching-summary">{data.metrics?.map(metric => <div className="admin-metric" key={metric.label}><span>{metric.label}</span><strong>{number(metric.value)}</strong><small>{metric.help}</small></div>)}</div>
-        <div className="admin-outcome-analysis"><h3>Cola de correos · estado actual de toda la plataforma</h3><p>{number(data.mail_queue?.pending || 0)} solicitudes pendientes · {number(data.mail_queue?.failed || 0)} agotaron sus reintentos.</p><p className="field-help">Una solicitud puede agruparse con otras en un solo correo. Estas cifras no están limitadas por el período.</p><button type="button" className="text-button" onClick={() => { navigate("mail"); setMailView("mail_queue"); }}>Consultar la cola de correos</button></div></>
+      {section === "overview" ? <OverviewWidgets metrics={data.metrics||[]} charts={data.charts} queue={data.mail_queue} onQueue={()=>{navigate("mail");setMailView("mail_queue");}}/>
         : <>
           {data.summary && Object.keys(data.summary).length > 0 && <div className="admin-state-totals" aria-label="Totales antes del filtro de estado">{Object.entries(data.summary).filter(([key]) => key !== "DISPATCHING" && key !== "QUEUED" && !(section === "jobs" && key === "PENDING")).map(([key, value]) => <span key={key}>{labels[key] || key}: <strong>{number(value)}</strong></span>)}</div>}
           <p className="field-help" role="status">{number(data.total || 0)} {data.total === 1 ? "registro" : "registros"} con estos filtros. Los totales por estado respetan el período y la búsqueda, antes del filtro de estado.</p>

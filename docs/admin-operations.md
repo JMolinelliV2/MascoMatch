@@ -56,42 +56,6 @@ La migración `0021_admin_operations`, posterior a `0020_admin_matching`, agrega
 
 Rutas nuevas: `GET /api/v1/admin/operations`, `GET /api/v1/admin/operations/{users|jobs|mail|mail_queue|contacts|publications|audit}` y `PATCH /api/v1/admin/publications/{lost_case|observation}/{id}/visibility`. Los filtros temporales se agregan a coincidencias y denuncias. Cada ruta comprueba `administrator`; las respuestas de lectura usan `no-store`. El proxy conserva la cookie de sesión, exige mismo origen en escrituras y admite solo rutas, parámetros, UUID y tamaños previstos. Las respuestas permiten únicamente campos seleccionados; no exponen snapshots de entrada, tokens de trabajos ni secretos.
 
-## Layout Structure
+## Diseño del panel
 
-Contenedor existente de 1280 px. Los filtros de fecha y hora se distribuyen en columnas adaptables desde 220 px; filtros de listados desde 230 px. Los indicadores usan columnas desde 185 px. Las tarjetas se apilan en móviles; los textos largos se ajustan al ancho disponible.
-
-## Section Order
-
-Título y sesión; navegación principal; navegación de operación; encabezado de sección; filtro temporal; filtros específicos; totales; explicación de conteos; listado; paginación; fecha de actualización. Resumen sustituye el listado por métricas y estado global de correos.
-
-## Navigation
-
-Operación, seguimiento y denuncias/correcciones son las tres secciones principales. Operación tiene siete pestañas que se ajustan en varias filas. Al cambiar pestaña se reinician búsqueda, estado y paginación; se conserva el período dentro de operación. No hay menús ocultos para los controles principales.
-
-## Typography
-
-Tipografía del sitio, encabezados de sección de 26 px, tarjetas de 20 px, números de 36 px y cifras tabulares. Fechas con formato de Uruguay. Las ayudas explican qué cuentan las métricas junto a los valores.
-
-## Color System
-
-Se mantienen azul marino, coral y fondos claros de MascoMatch. Verde identifica habilitado/completado/enviado/visible; coral identifica bloqueado/fallido/oculto; azul, pendiente y estados restantes. Cada color acompaña una etiqueta textual.
-
-## Spacing and Layout Rhythm
-
-Filtros y tarjetas con 24 px internos; indicadores con 20 px; grupos separados por 16–24 px. Los campos de fecha tienen una fila flexible de atajos y ayudas. Controles táctiles de al menos 44 px en navegación.
-
-## Image Treatment
-
-Esta ampliación prioriza información operativa y conserva las fotos de las denuncias. No incorpora imágenes decorativas ni captura fotografías o datos de usuarios en los registros de actividad o SMTP.
-
-## Cards and Content Blocks
-
-Tarjetas con borde suave, fondo blanco y radio de 16 px. Estados en etiquetas; metadatos en definiciones de columnas adaptables. Mensajes de contacto conservan saltos de línea. Referencias técnicas quedan en detalles expandibles.
-
-## Buttons and CTAs
-
-Actualizar, aplicar período y buscar usan el botón secundario existente. Bloquear, reactivar, ocultar y restaurar abren un diálogo centrado con efecto concreto, motivo y cancelar/confirmar. Cancelar recibe foco inicial; el diálogo mantiene el foco nativo y bloquea doble envío. Los cambios exitosos muestran confirmación en la sección.
-
-## Overall Design Feel
-
-Panel simple y consistente con la identidad del sitio. Se priorizan cifras interpretables, búsqueda visible, estados claros y controles reversibles con trazabilidad. Las explicaciones permanecen cerca de los datos que ayudan a interpretar.
+La navegación lateral, los temas claro y oscuro, los gráficos con datos reales, los filtros compartidos y el ancho común de páginas se describen en [dashboard-design.md](dashboard-design.md).

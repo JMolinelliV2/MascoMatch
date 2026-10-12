@@ -14,6 +14,7 @@ import { Icon } from "./ui/pictogram";
 import { ReportId } from "./ui/report-id";
 import type { SessionUser } from "./account-session";
 import { VerifyEmailNotice } from "./verify-email-notice";
+import { ReportPurpose } from "./ui/report-purpose";
 
 type ReportKind = "lost" | "sighting" | "found";
 type AccountMode = "register" | "login";
@@ -362,7 +363,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       <Link href="/" className="back-link"><span aria-hidden="true">←</span> Volver al inicio</Link>
       <h1>{kind === "lost" ? <>Perdí una <span className="title-accent">mascota</span></> : kind === "sighting" ? <>Reportar un <span className="title-accent">avistamiento</span></> : <>Encontré una <span className="title-accent">mascota</span></>}</h1>
       <p className="page-intro">{copy.intro}</p>
-      {kind !== "lost" && <p className="report-kind"><Icon name={kind === "sighting" ? "eye" : "heart"} /><strong>{kind === "sighting" ? "Avistamiento" : "Animal encontrado"}</strong><span>{kind === "sighting" ? "Lo vi, pero no está conmigo" : "Está conmigo o está a salvo"}</span><Link href={kind === "sighting" ? "/encontre" : "/avistamiento"} className="text-button">{kind === "sighting" ? "¿Está con vos?" : "¿Solo lo viste?"}</Link></p>}
+      {kind !== "lost" && <ReportPurpose kind={kind} />}
       <div className="report-layout">
       <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy} className="report-form" onChange={event => { const control = event.target; if ((control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement) && control.name === errorField) { setErrorField(""); setError(""); } }}>
         <Stepper steps={["Mascota", "Fecha y lugar", "Contacto y revisión"]} current={step} />

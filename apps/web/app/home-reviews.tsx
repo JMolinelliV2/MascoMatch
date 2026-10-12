@@ -20,7 +20,7 @@ export function HomeReviews() {
   }, [refresh]);
   if (!items.length) return null;
   return <section className="home-reviews" aria-labelledby="home-reviews-title">
-    <div className="section-heading"><div><p className="eyebrow">Experiencias de la comunidad</p><h2 id="home-reviews-title">Quienes buscaron a su mascota nos cuentan</h2><p className="home-reviews-intro">Reseñas de personas que publicaron un aviso en MascoMatch.</p></div><span className="feature-icon"><Icon name="heart" /></span></div>
+    <div className="section-heading"><div><p className="eyebrow">Experiencias de la comunidad</p><h2 id="home-reviews-title">Quienes buscaron a su mascota nos cuentan</h2></div><span className="feature-icon"><Icon name="heart" /></span></div>
     <div className="home-reviews-grid">{items.map(item => <article className="home-review-card" key={item.id}>
       <p className="review-stars" role="img" aria-label={`${item.rating} de 5 estrellas`}><span aria-hidden="true">{"★".repeat(item.rating)}<span className="review-stars-empty">{"☆".repeat(5 - item.rating)}</span></span></p>
       <blockquote><p>{item.comment}</p></blockquote>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AccountSession } from "../account-session";
 import { ReportId } from "../ui/report-id";
 import { AdminRecords } from "./admin-records";
@@ -7,16 +8,17 @@ import { MatchingDashboard } from "./matching-dashboard";
 import { OperationsDashboard } from "./operations-dashboard";
 import { AdminDateRange, adminDate, emptyPeriod, periodQuery } from "./date-range";
 import type { AdminPeriod } from "./date-range";
+import { AdminWorkspace } from "./admin-workspace";
+import type { SessionUser } from "../account-session";
 type Report = { id: string; target_type: string; target_id: string; public_id: string | null; title: string;
   reason: string; detail: string; status: string; created_at: string; visibility: string | null;
   publication?: { description: string; photo_ids: string[] } };
 type ReportData = { items: Report[]; total: number; limit: number };
 const reasons: Record<string, string> = { SPAM: "Spam", FALSE_INFORMATION: "Información falsa", INAPPROPRIATE_PHOTO: "Foto inapropiada", OTHER: "Otro motivo" };
 
-function PlatformManagement() {
+function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriodChange:(value:AdminPeriod)=>void}) {
   const [data, setData] = useState<ReportData | null>(null);
   const [status, setStatus] = useState("OPEN");
-  const [period, setPeriod] = useState<AdminPeriod>(emptyPeriod);
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
@@ -43,7 +45,7 @@ function PlatformManagement() {
   }
   return <section aria-labelledby="admin-reports-title">
     <div className="admin-section-heading"><div><h2 id="admin-reports-title">Denuncias</h2><p>Revisá las publicaciones denunciadas y registrá la acción correspondiente.</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
-    <AdminDateRange value={period} onApply={next => { setPeriod(next); setOffset(0); }} />
+    <AdminDateRange value={period} onApply={next => { onPeriodChange(next); setOffset(0); }} />
     <p className="field-help">El período se aplica a la recepción de la denuncia. Las correcciones del final conservan su listado de registros recientes.</p>
     <label className="field-label">Estado de la denuncia<select className="form-input" value={status} onChange={event => { setStatus(event.target.value); setOffset(0); }}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></label>
     {error && <p className="notice notice-warning" role="alert">{error}</p>}{saved && <p className="notice" role="status">{saved}</p>}
@@ -60,8 +62,8 @@ function PlatformManagement() {
   </section>;
 }
 
-function AdminPanel() {
-  const [section, setSection] = useState("operations");
-  return <><nav className="admin-panel-navigation" aria-label="Secciones de administración"><button type="button" aria-pressed={section === "operations"} onClick={() => setSection("operations")}>Operación</button><button type="button" aria-pressed={section === "matching"} onClick={() => setSection("matching")}>Seguimiento de coincidencias</button><button type="button" aria-pressed={section === "management"} onClick={() => setSection("management")}>Denuncias y correcciones</button></nav>{section === "operations" ? <OperationsDashboard /> : section === "matching" ? <MatchingDashboard /> : <PlatformManagement />}</>;
+function AdminPanel({user,logout}:{user:SessionUser;logout:()=>Promise<void>}) {
+  const [period,setPeriod]=useState<AdminPeriod>(emptyPeriod);
+  return <AdminWorkspace user={user} logout={logout}>{(view,navigate)=>view==="matching"?<MatchingDashboard period={period} onPeriodChange={setPeriod}/>:view==="management"?<PlatformManagement period={period} onPeriodChange={setPeriod}/>:<OperationsDashboard section={view} onNavigate={navigate} period={period} onPeriodChange={setPeriod}/>}</AdminWorkspace>;
 }
-export function Administration() { return <AccountSession>{user => user.admin_access ? <AdminPanel /> : <div className="notice notice-warning"><h2>Acceso restringido</h2><p>Este panel está reservado a la cuenta administradora con su correo confirmado. Tu sesión actual no tiene acceso.</p></div>}</AccountSession>; }
+export function Administration() { return <AccountSession showAccountHeader={false}>{(user,actions) => user.admin_access ? <AdminPanel user={user} logout={actions.logout}/> : <div className="notice notice-warning"><h2>Acceso restringido</h2><p>Este panel está reservado a la cuenta administradora con su correo confirmado. Tu sesión actual no tiene acceso.</p><div className="location-actions"><Link className="text-button" href="/mi-cuenta">Ir a mi cuenta</Link><button className="text-button" type="button" onClick={()=>void actions.logout()}>Cerrar sesión</button></div></div>}</AccountSession>; }

@@ -37,45 +37,11 @@ Filtros: fecha y hora de Uruguay con extremos de minuto y atajos de 7, 30 o 90 d
 
 Rutas privadas: `GET /api/v1/admin/matching` y `GET /api/v1/admin/matching/{id}/history`. Todas las respuestas usan `Cache-Control: no-store`; los proxies web conservan la autorización de la cookie y solo aceptan las rutas y parámetros previstos.
 
-## Layout Structure
+## Diseño del panel
 
-La página conserva el ancho de 1280 px y el sistema de márgenes del sitio. Los filtros se distribuyen en columnas adaptables de al menos 230 px; los cinco indicadores, en columnas de al menos 185 px. Cada bloque ocupa una columna en pantallas pequeñas y crece con el contenido.
+La sección Coincidencias se abre desde la navegación lateral de `/admin`. Conserva los filtros, indicadores, desglose por origen, lista e historial, y comparte el período con las demás secciones. La lista tiene controles anterior y siguiente; cada historial se abre en su propia tarjeta. Mi cuenta ofrece el acceso solo a la cuenta autorizada.
 
-## Section Order
-
-Título e introducción, sesión, selector de sección, filtros, indicadores, proporción de confirmadas, desglose por origen, lista e historial. Gestión de la plataforma conserva denuncias, registros, fallos y auditoría en la segunda sección.
-
-## Navigation
-
-Tres botones permiten alternar entre operación, seguimiento de coincidencias y denuncias/correcciones. Los filtros reinician la paginación. La lista tiene anterior y siguiente; cada historial se abre en la propia tarjeta. Mi cuenta ofrece el acceso solo a la cuenta autorizada.
-
-## Typography
-
-Arial y los encabezados existentes. Los indicadores usan 36 px y la proporción, 40 px; las etiquetas, 14 px; ayudas, 13 px. Los números usan cifras tabulares para facilitar la comparación.
-
-## Color System
-
-Se conservan azul oscuro, blanco y crema. Verde para confirmadas, coral para falsas, ámbar para dudosas y azul para pendientes. Todos los estados tienen texto y cantidades; el color es un refuerzo.
-
-## Spacing and Layout Rhythm
-
-Bloques separados por 24 px; filtros, análisis y tarjetas con 24 px interiores; indicadores con 20 px; rejillas con 16 px de separación. La navegación tiene controles de al menos 48 px.
-
-## Image Treatment
-
-El panel utiliza datos, sin fotografías ni ilustraciones. La lista presenta IDs y nombres de mascotas, sin contactos o coordenadas precisas. Esto permite revisar respuestas sin cargar imágenes privadas innecesariamente.
-
-## Cards and Content Blocks
-
-Tarjetas blancas con borde existente, radios de 14–16 px y fondos suaves en los indicadores. Una barra proporcional resume los estados, con una descripción accesible. La tabla de origen se desplaza dentro de su contenedor en pantallas pequeñas.
-
-## Buttons and CTAs
-
-Actualizar y paginación usan botones secundarios del sitio. Los historiales usan botones de texto con estado expandido. Los cambios de gestión mantienen sus controles existentes.
-
-## Overall Design Feel
-
-Un panel claro y sobrio que prioriza cantidades, respuestas y contexto. Las confirmaciones, dudas y falta de respuesta se distinguen sin presentar los resultados como una probabilidad de identificación.
+El ancho común de 1280 px, los temas claro y oscuro, la navegación móvil y las visualizaciones se describen en [dashboard-design.md](dashboard-design.md). Los estados mantienen sus cantidades y etiquetas: las confirmaciones, dudas y falta de respuesta no se presentan como una probabilidad de identificación.
 
 ## Revisión de la entrega
 

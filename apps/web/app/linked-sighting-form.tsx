@@ -12,6 +12,7 @@ import { LocationPicker } from "./location-picker";
 import { DogPhoto } from "./perdidos/dog-photo";
 import { PhotoUploader } from "./ui/photo-uploader";
 import { ReportId } from "./ui/report-id";
+import { ReportPurpose } from "./ui/report-purpose";
 
 export function LinkedSightingForm({ caseId }: { caseId: string }) {
   const [target, setTarget] = useState<LostDogNotice | null>(null);
@@ -114,6 +115,7 @@ export function LinkedSightingForm({ caseId }: { caseId: string }) {
       </> : <>
         <h1>¿Viste a {target.name}?</h1>
         <p className="page-intro">Indicá el lugar y adjuntá fotos si tenés. Tu avistamiento quedará vinculado a este aviso.</p>
+        <ReportPurpose kind="sighting" />
         <div className="sighting-target"><DogPhoto dog={target} /><div><strong>{target.name}</strong><ReportId id={target.id} publicId={target.public_id} /><p>{speciesLabel(target.species)} · Aviso de animal perdido</p></div></div>
         <form onSubmit={submit} className="linked-sighting-form" aria-busy={busy}>
           <fieldset disabled={busy} className="form-controls section-fields">

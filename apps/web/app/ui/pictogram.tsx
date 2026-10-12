@@ -20,6 +20,14 @@ const paths = {
   edit: <><path d="m15 4 5 5M4 20l4-1 12-12a3.5 3.5 0 0 0-5-5L3 14l-1 6Z" /></>,
   spark: <path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" />,
   shield: <><path d="m12 2 9 4v6c0 6-9 10-9 10S3 18 3 12V6Z" /><path d="m8 12 3 3 5-6" /></>,
+  grid: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>,
+  chart: <><path d="M3 3v18h18M7 15l4-5 4 3 6-8" /></>,
+  mail: <><rect x="2" y="4" width="20" height="16" rx="3" /><path d="m3 6 9 7 9-7" /></>,
+  message: <path d="M21 12a8 8 0 0 1-8 8H3l2-5a8 8 0 1 1 16-3Z" />,
+  layers: <><path d="m12 2 10 5-10 5L2 7Zm-9 10 9 5 9-5M3 17l9 5 9-5" /></>,
+  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 1v2M12 21v2M1 12h2M21 12h2M4 4l1.5 1.5M18.5 18.5 20 20M4 20l1.5-1.5M18.5 5.5 20 4" /></>,
+  moon: <path d="M21 13a9 9 0 0 1-10-10A9 9 0 1 0 21 13Z" />,
+  logout: <><path d="M9 4H3v16h6M9 12h12m-5-5 5 5-5 5" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

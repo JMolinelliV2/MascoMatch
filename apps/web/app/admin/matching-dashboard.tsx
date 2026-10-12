@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../ui/pictogram";
 import { ReportId } from "../ui/report-id";
-import { AdminDateRange, emptyPeriod, periodQuery } from "./date-range";
+import { AdminDateRange, periodQuery } from "./date-range";
 import type { AdminPeriod } from "./date-range";
 
 type Outcome = "positive" | "false" | "uncertain" | "pending";
@@ -49,8 +49,7 @@ function ResponseHistory({ id }: { id: string }) {
   </div>;
 }
 
-export function MatchingDashboard() {
-  const [period, setPeriod] = useState<AdminPeriod>(emptyPeriod);
+export function MatchingDashboard({period,onPeriodChange}:{period:AdminPeriod;onPeriodChange:(value:AdminPeriod)=>void}) {
   const [source, setSource] = useState("all");
   const [dataset, setDataset] = useState("all");
   const [result, setResult] = useState("all");
@@ -74,7 +73,7 @@ export function MatchingDashboard() {
   const counts = data?.summary;
   return <section className="admin-matching" aria-labelledby="admin-matching-title">
     <div className="admin-section-heading"><div><h2 id="admin-matching-title">Resultados de las coincidencias</h2><p>Seguimiento de las recomendaciones del sistema y las respuestas de los dueños.</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}><Icon name="clock" />Actualizar</button></div>
-    <AdminDateRange value={period} onApply={next => { setPeriod(next); setOffset(0); }} />
+    <AdminDateRange value={period} onApply={next => { onPeriodChange(next); setOffset(0); }} />
     <p className="field-help">El período se aplica a la fecha en que se generó la recomendación.</p>
     <div className="admin-matching-filters">
       <label className="field-label">Origen<select className="form-input" value={source} onChange={event => filter(setSource, event.target.value)}><option value="all">Todos los orígenes</option><option value="GENERAL">Búsqueda general</option><option value="LINKED">Desde un aviso</option></select></label>

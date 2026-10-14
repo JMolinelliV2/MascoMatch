@@ -42,6 +42,8 @@ Tarjetas con radios de 12–16 px, bordes de bajo contraste y sombra ligera. Los
 
 Las métricas secundarias conservan toda la información del panel anterior, con explicaciones junto a las cifras. Los mensajes de contacto conservan sus saltos de línea; las referencias técnicas siguen en detalles expandibles.
 
+Las etiquetas de indicadores, gráficos, categorías, estados, filtros y detalles incluyen una «i» con una explicación breve. La ayuda se abre al pasar el puntero, enfocar con el teclado o tocar el icono. Se cierra con Escape, al tocar nuevamente el icono o al pulsar fuera. Al desplazar o redimensionar la pantalla se reubica; se cierra cuando su icono queda fuera de la vista. El cuadro admite mantener el puntero sobre el texto y se ajusta a los límites de la pantalla, en ambos temas. Se presenta fuera de las tarjetas para evitar recortes. Los controles de información son independientes de los selectores del gráfico y de las etiquetas de los campos.
+
 ## Buttons and CTAs
 
 Actualizar, consultar la cola y buscar mantienen botones secundarios. El selector de tema alterna claro/oscuro. Bloquear y restaurar conservan sus confirmaciones y motivos; no se ejecutaron acciones reales de moderación para preparar este diseño. Los formularios Encontré y Avistamiento ofrecen un enlace al otro recorrido cuando corresponde.

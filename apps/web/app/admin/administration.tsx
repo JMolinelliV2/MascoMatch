@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { AccountSession } from "../account-session";
 import { ReportId } from "../ui/report-id";
@@ -10,6 +10,7 @@ import { AdminDateRange, adminDate, emptyPeriod, periodQuery } from "./date-rang
 import type { AdminPeriod } from "./date-range";
 import { AdminWorkspace } from "./admin-workspace";
 import type { SessionUser } from "../account-session";
+import { AdminFieldLabel, AdminHeading } from "./admin-info";
 type Report = { id: string; target_type: string; target_id: string; public_id: string | null; title: string;
   reason: string; detail: string; status: string; created_at: string; visibility: string | null;
   publication?: { description: string; photo_ids: string[] } };
@@ -17,6 +18,7 @@ type ReportData = { items: Report[]; total: number; limit: number };
 const reasons: Record<string, string> = { SPAM: "Spam", FALSE_INFORMATION: "Información falsa", INAPPROPRIATE_PHOTO: "Foto inapropiada", OTHER: "Otro motivo" };
 
 function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriodChange:(value:AdminPeriod)=>void}) {
+  const fieldId = useId();
   const [data, setData] = useState<ReportData | null>(null);
   const [status, setStatus] = useState("OPEN");
   const [offset, setOffset] = useState(0);
@@ -44,10 +46,10 @@ function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriod
     finally { setBusy(null); }
   }
   return <section aria-labelledby="admin-reports-title">
-    <div className="admin-section-heading"><div><h2 id="admin-reports-title">Denuncias</h2><p>Revisá las publicaciones denunciadas y registrá la acción correspondiente.</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
+    <div className="admin-section-heading"><div><AdminHeading level={2} id="admin-reports-title" label="Denuncias" /><p>Revisá las publicaciones denunciadas y registrá la acción correspondiente.</p></div><button type="button" className="button button-secondary" onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div>
     <AdminDateRange value={period} onApply={next => { onPeriodChange(next); setOffset(0); }} />
     <p className="field-help">El período se aplica a la recepción de la denuncia. Las correcciones del final conservan su listado de registros recientes.</p>
-    <label className="field-label">Estado de la denuncia<select className="form-input" value={status} onChange={event => { setStatus(event.target.value); setOffset(0); }}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></label>
+    <div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-status`} label="Estado de la denuncia" help="Pendiente significa que falta revisión; con acción aplicada indica que administración intervino; descartada indica que se revisó sin mantener una acción sobre la publicación." /><select id={`${fieldId}-status`} className="form-input" value={status} onChange={event => { setStatus(event.target.value); setOffset(0); }}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></div>
     {error && <p className="notice notice-warning" role="alert">{error}</p>}{saved && <p className="notice" role="status">{saved}</p>}
     {!data && !error && <p role="status">Cargando denuncias…</p>}
     {data && <><p className="field-help">{data.total} denuncias con estos filtros.</p>{!data.items.length && <p>No hay denuncias con estos filtros.</p>}

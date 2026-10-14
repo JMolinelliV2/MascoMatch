@@ -28,6 +28,8 @@ El resumen cuenta los trabajos según su fecha de creación y estado actual; en 
 
 Publicaciones por tipo cuenta registros: Avisos de pérdida incluye los recuperados y cerrados; Avistamientos cuenta reportes `USER_SIGHTING`; Reportes de animales encontrados cuenta publicaciones `FOUND_ANIMAL` recibidas desde Encontré una mascota. La recuperación de una mascota no crea un reporte de ese último tipo ni incrementa el total de publicaciones.
 
+Las etiquetas tienen una «i» para consultar qué representa cada cifra o estado y cómo se aplica el período. También está disponible en los filtros, detalles de registros y seguimiento de coincidencias. Las ayudas explican la diferencia entre mascotas recuperadas y reportes de encontrados, tareas y publicaciones, envíos e intentos, cuentas habilitadas y actividad reciente. Abrir una ayuda no modifica filtros, estados ni datos.
+
 ### Actividad
 
 `User.status = ACTIVE` indica una cuenta habilitada. La actividad se registra cuando una solicitud autenticada termina correctamente, también al iniciar sesión o crear una cuenta. Incluye las consultas automáticas del sitio. No certifica que la persona esté observando la pantalla ni mide duración de sesión.

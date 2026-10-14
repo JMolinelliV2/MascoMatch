@@ -28,6 +28,7 @@ const paths = {
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 1v2M12 21v2M1 12h2M21 12h2M4 4l1.5 1.5M18.5 18.5 20 20M4 20l1.5-1.5M18.5 5.5 20 4" /></>,
   moon: <path d="M21 13a9 9 0 0 1-10-10A9 9 0 1 0 21 13Z" />,
   logout: <><path d="M9 4H3v16h6M9 12h12m-5-5 5 5-5 5" /></>,
+  info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r=".7" fill="currentColor" stroke="none" /></>,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

@@ -2,6 +2,7 @@
 import { useEffect, useId, useState } from "react";
 import type { FormEvent } from "react";
 import { Icon } from "../ui/pictogram";
+import { AdminFieldLabel, AdminInfo, AdminLabel } from "./admin-info";
 
 export type AdminPeriod = { from: string; to: string };
 export const emptyPeriod: AdminPeriod = { from: "", to: "" };
@@ -31,13 +32,13 @@ export function AdminDateRange({ value, onApply }: { value: AdminPeriod; onApply
     setDraft(next); setError(""); onApply(next);setOpen(false);
   }
   const appliedLabel = value.from || value.to ? `${value.from ? adminDate(`${value.from}-03:00`) : "Desde el inicio"} → ${value.to ? adminDate(`${value.to}-03:00`) : "Hasta ahora"}` : "Todo el período";
-  return <details className="admin-date-picker" open={open} onToggle={event=>setOpen(event.currentTarget.open)}><summary><Icon name="calendar"/><span>{appliedLabel}</span><small>Uruguay · UTC−3</small><Icon name="chevron"/></summary><form className="admin-date-range" onSubmit={apply}>
-    <fieldset><legend>Fecha y hora · Uruguay (UTC−3)</legend><div className="admin-date-fields">
-      <label className="field-label" htmlFor={`${id}-from`}>Desde<input id={`${id}-from`} className="form-input" type="datetime-local" value={draft.from} onChange={event => setDraft({ ...draft, from: event.target.value })} /></label>
-      <label className="field-label" htmlFor={`${id}-to`}>Hasta<input id={`${id}-to`} className="form-input" type="datetime-local" value={draft.to} onChange={event => setDraft({ ...draft, to: event.target.value })} /></label>
+  return <div className="admin-period-control"><details className="admin-date-picker" open={open} onToggle={event=>setOpen(event.currentTarget.open)}><summary><Icon name="calendar"/><span>{appliedLabel}</span><small>Uruguay · UTC−3</small><Icon name="chevron"/></summary><form className="admin-date-range" onSubmit={apply}>
+    <fieldset><legend aria-label="Fecha y hora · Uruguay (UTC−3)"><AdminLabel label="Fecha y hora · Uruguay (UTC−3)" help="El período usa la hora de Uruguay, independientemente de la zona horaria de tu computadora. El minuto final está incluido." /></legend><div className="admin-date-fields">
+      <div className="field-label"><AdminFieldLabel htmlFor={`${id}-from`} label="Desde" help="Fecha y hora inicial del período. Los registros de ese minuto también se incluyen. Dejarlo vacío permite consultar desde el inicio." /><input id={`${id}-from`} className="form-input" type="datetime-local" value={draft.from} onChange={event => setDraft({ ...draft, from: event.target.value })} /></div>
+      <div className="field-label"><AdminFieldLabel htmlFor={`${id}-to`} label="Hasta" help="Fecha y hora final del período. Se incluye el minuto completo. Dejarlo vacío permite consultar hasta ahora." /><input id={`${id}-to`} className="form-input" type="datetime-local" value={draft.to} onChange={event => setDraft({ ...draft, to: event.target.value })} /></div>
       <button type="submit" className="button button-secondary">Aplicar período</button>
     </div><div className="admin-period-presets">{[7, 30, 90, 0].map(days => <button type="button" className="text-button" key={days} onClick={() => preset(days)}>{days ? `Últimos ${days} días` : "Todo el período"}</button>)}</div>
     <p className="field-help">{value.from || value.to ? `Filtro aplicado: ${value.from ? adminDate(`${value.from}-03:00`) : "desde el inicio"} → ${value.to ? adminDate(`${value.to}-03:00`) : "hasta ahora"}.` : "Sin límite de fechas."} El minuto final está incluido.</p>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}</fieldset>
-  </form>{(value.from||value.to)&&<p className="admin-applied-period">{value.from?adminDate(`${value.from}-03:00`):"Desde el inicio"} → {value.to?adminDate(`${value.to}-03:00`):"Hasta ahora"}</p>}</details>;
+  </form>{(value.from||value.to)&&<p className="admin-applied-period">{value.from?adminDate(`${value.from}-03:00`):"Desde el inicio"} → {value.to?adminDate(`${value.to}-03:00`):"Hasta ahora"}</p>}</details><AdminInfo label="Período" help="Limita los registros por fecha y hora, según la fecha indicada en cada sección. El período se conserva al cambiar de sección; la cola global de correos y la actividad de los últimos 15 minutos muestran el estado actual de toda la plataforma." /></div>;
 }

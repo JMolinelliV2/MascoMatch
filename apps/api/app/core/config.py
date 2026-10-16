@@ -36,6 +36,17 @@ class Settings(BaseSettings):
     ai_vision_model: str = "gemma3:4b"
     ollama_base_url: str = "http://localhost:11434"
     ai_request_timeout_seconds: int = Field(default=180, ge=10, le=600)
+    ai_text_request_timeout_seconds: int = Field(default=120, ge=10, le=600)
+    ai_vision_request_timeout_seconds: int = Field(default=240, ge=10, le=600)
+    ollama_num_ctx: int = Field(default=4096, ge=2048, le=32768)
+    ollama_num_predict: int = Field(default=768, ge=256, le=4096)
+    ollama_num_threads: int = Field(default=3, ge=1, le=8)
+    ollama_keep_alive: str = Field(default="15m", pattern=r"^[1-9][0-9]{0,3}[sm]$")
+    ollama_prewarm: bool = True
+    ollama_capabilities_cache_seconds: int = Field(default=3600, ge=60, le=86400)
+    vlm_image_max_side: int = Field(default=1024, ge=224, le=2048)
+    vlm_image_jpeg_quality: int = Field(default=88, ge=70, le=95)
+    analysis_worker_kind: Literal["all", "semantic", "visual"] = "all"
     ai_max_attempts: int = Field(default=3, ge=1, le=5)
     ai_dispatch_interval_seconds: int = Field(default=5, ge=1, le=60)
     linked_match_threshold: float = Field(default=0.75, ge=0.5, le=1)
@@ -54,6 +65,24 @@ class Settings(BaseSettings):
     embedding_pretrained: Literal["openai"] = "openai"
     embedding_cache_dir: str = "/models/clip"
     embedding_cpu_threads: int = Field(default=2, ge=1, le=8)
+    pet_reid_enabled: bool = True
+    openclip_enabled: bool = True
+    pet_reid_cache_dir: str = "/models/pet-reid"
+    detector_cache_dir: str = "/models/detector"
+    pet_crop_enabled: bool = True
+    pet_crop_confidence: float = Field(default=.75, ge=.5, le=.99)
+    pet_crop_margin: float = Field(default=.18, ge=0, le=.5)
+    pet_crop_timeout_seconds: int = Field(default=15, ge=1, le=60)
+    embedding_request_timeout_seconds: int = Field(default=90, ge=15, le=600)
+    openclip_visual_floor: float = Field(default=.55, ge=0, le=.99)
+    openclip_visual_ceiling: float = Field(default=.95, ge=0, le=1)
+    pet_reid_visual_floor: float = Field(default=.50, ge=0, le=.99)
+    pet_reid_visual_ceiling: float = Field(default=.90, ge=0, le=1)
+    visual_best_weight: float = Field(default=.7, ge=.5, le=1)
+    matching_analysis_wait_seconds: int = Field(default=30, ge=0, le=300)
+    matching_notify_min_coverage: float = Field(default=.35, ge=.25, le=1)
+    matching_notify_min_feature: float = Field(default=.65, ge=.5, le=1)
+    matching_notify_min_geo: float = Field(default=.35, ge=.1, le=1)
     matching_candidate_threshold: float = Field(default=0.55, ge=0, le=1)
     matching_notify_threshold: float = Field(default=0.82, ge=0.5, le=1)
     matching_max_radius_meters: int = Field(default=50000, ge=1000, le=300000)
@@ -126,6 +155,9 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def matching_configuration(self):
+        for provider in ("openclip", "pet_reid"):
+            if getattr(self, provider + "_visual_floor") >= getattr(self, provider + "_visual_ceiling"):
+                raise ValueError("Provider visual floor must be below ceiling")
         if self.matching_visual_floor >= self.matching_visual_ceiling:
             raise ValueError("Visual floor must be below ceiling")
         if self.matching_candidate_threshold > self.matching_notify_threshold:
@@ -178,7 +210,11 @@ class Settings(BaseSettings):
 
     @property
     def ai_job_timeout_seconds(self) -> int:
-        return self.ai_request_timeout_seconds + 60
+        return max(self.ai_text_request_timeout_seconds, self.ai_vision_request_timeout_seconds, self.embedding_request_timeout_seconds) + 60
+
+    def timeout_for_source(self, source: str) -> int:
+        return {"text": self.ai_text_request_timeout_seconds, "image": self.ai_vision_request_timeout_seconds,
+                "embedding": self.embedding_request_timeout_seconds}[source] + 45
 
     @property
     def cors_origins(self) -> list[str]:

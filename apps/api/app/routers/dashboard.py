@@ -32,8 +32,8 @@ def edit_case(case_id:UUID,payload:CaseEdit,response:Response,db=Depends(get_db)
     if (case.latitude is None)!=(case.longitude is None):
         raise HTTPException(status_code=422,detail="La ubicación necesita un punto completo.")
     db.flush()
-    schedule_text(db,"lost_case",case.id)
-    mark_related_pending(db,"pet",pet.id)
+    from app.embeddings.reschedule import reschedule_owner
+    reschedule_owner(db,"pet",pet.id)
     db.commit()
     response.headers["Cache-Control"]="no-store"
     return case

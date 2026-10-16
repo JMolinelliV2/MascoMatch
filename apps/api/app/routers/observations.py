@@ -21,8 +21,8 @@ def create_observation(payload: ObservationCreate, db: Session = Depends(get_db)
     observation = Observation(author_id=user.id, **payload.model_dump())
     db.add(observation)
     db.flush()
-    schedule_text(db, "observation", observation.id)
-    mark_related_pending(db, "observation", observation.id)
+    from app.embeddings.reschedule import reschedule_owner
+    reschedule_owner(db,"observation",observation.id)
     db.commit()
     db.refresh(observation)
     return observation
@@ -51,8 +51,8 @@ def update_observation(observation_id: UUID, payload: ObservationUpdate, db: Ses
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(observation, field, value)
     db.flush()
-    schedule_text(db, "observation", observation.id)
-    mark_related_pending(db, "observation", observation.id)
+    from app.embeddings.reschedule import reschedule_owner
+    reschedule_owner(db,"observation",observation.id)
     db.commit()
     db.refresh(observation)
     return observation

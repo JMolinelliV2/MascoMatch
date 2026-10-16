@@ -77,12 +77,12 @@ def feedback(match_id: UUID, payload: MatchFeedback, response: Response, db=Depe
 def embedding_status(owner_type: Literal["pet", "lost_case", "observation"], owner_id: UUID, response: Response, db=Depends(get_db), user=Depends(current_user)):
     if not owner_has_access(owner_type, owner_id, db, user):
         raise HTTPException(status_code=404, detail="Reporte no encontrado.")
-    from app.embeddings.provider import model_id, VERSION
     jobs = [job for job in db.scalars(select(AnalysisJob).where(AnalysisJob.owner_type == owner_type, AnalysisJob.owner_id == owner_id,
-        AnalysisJob.source_type == "embedding", AnalysisJob.model == model_id(), AnalysisJob.prompt_version == VERSION)) if is_current(db,job)]
+        AnalysisJob.source_type == "embedding")) if is_current(db,job)]
     response.headers["Cache-Control"] = "no-store"
-    return {"enabled": settings.embeddings_enabled, "model": model_id(), "dimension": 512,
-        "jobs": [{"id":job.id,"status":job.status,"error_code":job.error_code,"photo_id":job.photo_id} for job in jobs]}
+    return {"enabled": settings.embeddings_enabled, "model": jobs[0].model if jobs else None, "dimension": 512,
+        "jobs": [{"id":job.id,"status":job.status,"error_code":job.error_code,"photo_id":job.photo_id,
+                  "provider":job.provider,"model":job.model} for job in jobs]}
 
 
 @router.post("/embeddings/{owner_type}/{owner_id}", status_code=202)

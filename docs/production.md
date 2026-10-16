@@ -1,6 +1,6 @@
 # Preparación para producción
 
-Entrega del 9 de octubre de 2026. Este archivo describe un despliegue Docker en un servidor Linux. No publica automáticamente el dominio ni contrata servicios.
+Actualizado el 15 de octubre de 2026. Este archivo describe un despliegue Docker en un servidor Linux. No publica automáticamente el dominio ni contrata servicios.
 
 ## Cambios
 
@@ -28,36 +28,64 @@ Las fotos se recuperan desde el respaldo manteniendo sus claves y las relaciones
 
 ## Preparar el servidor
 
-En la carpeta del proyecto, con Python 3 y Docker Compose instalados:
+Objetivo probado: Linux x86_64 / Ubuntu 24.04, Docker Compose 2.24.4 o superior. Punto de partida recomendado: 8 vCPU, 24 GB RAM y 100 GB SSD; 16 GB puede servir para un piloto de baja carga, pero requiere medición del servidor concreto. IA está limitada a 3,5 CPU de Ollama + 2 visual + 0,5 semántico. [Mediciones y límites](ai-delivery-report.md#6-resource-usage).
+
+Todos los servicios de producción, modelos, fotos, colas y base de datos quedan en el VPS. La PC personal no almacena ni ejecuta componentes necesarios para atender usuarios.
+
+En un servidor limpio, ingresar mediante SSH y obtener **la revisión aprobada** del repositorio. Esta entrega permanece sin commit/push hasta revisión; no desplegar el `main` anterior pensando que incluye estos cambios.
 
 ```sh
+sudo apt-get update
+sudo apt-get install -y git python3
+git clone https://github.com/JMolinelliV2/MascoMatch.git
+cd MascoMatch
+sudo sh tools/bootstrap_server.sh
 python3 tools/production_init.py --domain mascomatch.com
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml up -d --build
 ```
 
-El generador crea `.env.production` y `.secrets/` y **rechaza sobrescribir claves existentes**. Ambos están excluidos de Git. La carpeta privada tiene permisos 0700 en Linux; los archivos se entregan como montajes individuales de lectura a los contenedores, sin montar la carpeta completa. Guardar `backup_key` en otra ubicación privada antes de depender de los respaldos.
+`bootstrap_server.sh` instala Docker Engine y Compose desde el [repositorio oficial de Docker](https://docs.docker.com/engine/install/ubuntu/). Ejecutar los comandos Docker posteriores con una cuenta autorizada para usar Docker; si se ingresó como administrador/root, ya lo está. El generador crea `.env.production` y `.secrets/`, excluidos de Git, y se niega a sobrescribir claves existentes. El directorio privado es 0700; solo se montan archivos individuales a cada servicio. Guardar `backup_key` en una ubicación privada separada.
 
-El archivo de producción es independiente: no combinarlo con `docker-compose.yml`, que contiene puertos y montajes de desarrollo. DNS debe apuntar al servidor para que Caddy obtenga el certificado. El servidor debe permitir 80/TCP, 443/TCP y, si se usa HTTP/3, 443/UDP. Prometheus publica únicamente 9090 en loopback para acceso mediante SSH.
+Configurar el SMTP ya contratado/verificado según la sección Brevo antes de la comprobación final. Elegir un servidor Photon propio/contratado compatible mediante `GEOCODER_BASE_URL`, o aceptar explícitamente las limitaciones del endpoint público para un piloto de poco tráfico. Esta mejora no añade un proveedor pago de IA. El buscador público Photon sigue sin SLA; no es una solución garantizada para gran volumen.
 
-El punto de partida no activa IA ni SMTP. Esto permite instalar los modelos y configurar Brevo antes de habilitarlos. Para IA local, reservar memoria adicional: la configuración limita Ollama a 6 GB y el worker visual a 2 GB, además de los otros servicios. Dimensionar el servidor con mediciones de uso; esos límites no son una prueba de capacidad ni una garantía de latencia.
+DNS en Hostinger: A de `mascomatch.com` a la IPv4 del VPS; `www` CNAME a `mascomatch.com`. No conservar un AAAA que apunte a otro servidor. Mantener los registros MX/DKIM/DMARC de correo. El firewall del proveedor debe admitir 80/TCP, 443/TCP, opcional 443/UDP, y SSH restringido a administración. Caddy obtiene y renueva HTTPS cuando DNS apunta correctamente. No abrir PostgreSQL, Redis, fotos u Ollama.
 
-Para instalar los modelos en el servidor:
+Después de aceptar los términos de Gemma:
 
 ```sh
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml --profile ai-local build worker
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml --profile ai-local up -d ollama
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml exec ollama ollama pull gemma3:4b
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml --profile ai-local run --rm --no-deps --user 0 -v mascomatch_vision_models:/models/clip:rw worker python -m app.embeddings.setup
+python3 tools/production_apply.py deploy --with-ai --accept-gemma-terms
+python3 tools/production_apply.py smoke
+python3 tools/production_apply.py check
 ```
 
-El último comando utiliza permisos de instalación solo en ese contenedor temporal. El worker habitual sigue sin privilegios y con los modelos en lectura. El nombre del volumen corresponde al proyecto `-p mascomatch`; ajustarlo si se cambia ese nombre. Después activar `AI_ENABLED` y `EMBEDDINGS_ENABLED` en `.env.production`:
+El despliegue valida Compose, construye imágenes, respalda una instalación existente, detiene API/workers, inicia dependencias privadas, inicializa fotos/versionado, migra y aplica permisos, instala/verifica modelos fijados, recupera trabajos interrumpidos, programa backfill y arranca servicios con healthchecks. En la primera instalación también crea un respaldo antes del chequeo final. Gemma hace prewarm al iniciar su worker. Puede repetirse sin duplicar análisis ni reemplazar datos. Sin `--accept-gemma-terms`, solo reutiliza una instalación Gemma cuyo hash ya coincida.
+
+`check` comprueba DB/Redis/fotos, workers/modelos/Gemma, respaldo registrado y SMTP configurado. Para comprobar una entrega real a una cuenta controlada, ejecutar deliberadamente:
 
 ```sh
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml --profile ai-local up -d api worker
-docker compose -p mascomatch --env-file .env.production -f compose.production.yml --profile ai-local run --rm --no-deps worker python -m app.embeddings.setup
+docker compose -p mascomatch --env-file .env.production -f compose.production.yml exec -T api \
+  python -m app.ops.release_check --send-test-email info@mascomatch.com
 ```
 
-La segunda ejecución registra las fotos existentes para procesamiento con el modelo ya instalado. El funcionamiento está detallado en [la entrega del MVP](mvp-phase-3-8.md).
+SMTP aceptado no garantiza bandeja de entrada: abrir el mensaje en la cuenta controlada. Luego comprobar desde el dominio público registro → confirmación → publicación, recuperación y una notificación propia. La suite aislada automatiza ese recorrido sin correo externo:
+
+```sh
+python3 tools/production_validate.py
+```
+
+Crea un proyecto fijo `mascomatch-prod-smoke` separado, sin puertos públicos, SMTP TLS hacia Mailpit y datos sintéticos. Verifica cookie segura, confirmación, foto, CSRF, salida y respaldo/restauración PostgreSQL+S3. Elimina solo los volúmenes de ese proyecto de pruebas al finalizar; `--keep` permite inspeccionarlo.
+
+## Actualización y rollback de IA
+
+```sh
+python3 tools/production_apply.py deploy --with-ai
+python3 tools/production_apply.py fallback
+python3 tools/production_apply.py pause-ai
+python3 tools/production_apply.py resume-ai
+```
+
+`fallback`: Pet-ReID desactivado y OpenCLIP para nuevas representaciones compatibles. `pause-ai`: pausa Gemma; continúa visual y matching básico. `resume-ai`: reactiva los modelos actuales y agenda faltantes. Las banderas se guardan antes de recrear servicios. Se conservan los embeddings y FeatureSets históricos; evidencia obsoleta no se mezcla con la vigente. Las publicaciones siguen disponibles durante una caída de modelo, aunque la actualización planificada detiene brevemente la API.
+
+La migración 0022 es aditiva y no tiene downgrade destructivo. No ejecutar un checkout antiguo directamente contra el nuevo esquema como supuesto rollback. Para volver exactamente a la versión anterior se utiliza la etiqueta `previo-al-cambio-de-modelo-de-ia` y un respaldo anterior en **destinos nuevos y vacíos**, conservando la instalación actual hasta verificar la recuperación. Para incidencias de modelo usar primero las banderas anteriores.
 
 ## Brevo
 
@@ -136,36 +164,16 @@ docker compose -p mascomatch --env-file .env.production -f compose.production.ym
 
 `/internal/metrics` exige el token de monitoreo y no se publica mediante Caddy. `/health/ready` verifica PostgreSQL, Redis y acceso autenticado al bucket. Las métricas contienen cantidades y tiempos, sin contactos ni fotos. Prometheus muestra alertas; queda por configurar un destino de avisos operativos para el operador cuando se elija el servidor. La entrega de un correo no garantiza que el proveedor lo haya colocado en la bandeja de entrada.
 
-## Evaluar coincidencias
+## Evaluar coincidencias y operar la IA
 
-Copiar `test-data/matching/real-dataset.example.json` a una carpeta `real-data/` privada, agregar fotografías distintas y etiquetas de identidad conocidas. Incluir animales parecidos que no sean el mismo, positivos, negativos y reportes sin foto. Separar consultas de calibración y de evaluación final; el evaluador rechaza imágenes repetidas entre referencias y consultas, o entre ambos grupos.
+Ver [IA local: operación, reglas de alerta, backfill, benchmarks, etiquetas y evaluación](ai-production.md). El informe [de entrega](ai-delivery-report.md) diferencia las pruebas técnicas de la eficacia aún no medida con identidades reales.
 
-```sh
-python -m app.matching.real_evaluate real-data/labels.json --output real-data/metrics.json
-```
+La configuración standalone usa volúmenes persistentes, secrets por rol, límites de CPU/memoria, usuarios sin privilegios en API/web/workers, raíces de solo lectura y temporales limitados. No mezclar `compose.production.yml` con el Compose de desarrollo.
 
-Se ejecuta con el worker y el modelo CLIP instalado, montando esa carpeta solo para lectura. Produce métricas agregadas de ranking y alertas, sin fotos ni contactos. Las características se proporcionan en el dataset; no mide por sí solo la calidad del extractor de texto/fotos. Si no se informan distancias y fechas, el reporte marca que se usó un contexto controlado. **Todavía no hay un conjunto real suficiente ni precisión de identificación medida.** No ajustar umbrales mirando las imágenes de evaluación final.
+## Comprobaciones vigentes
 
-## Comprobaciones de esta entrega
-
-- API: 163 pruebas aprobadas y cuatro integraciones opcionales omitidas en la ejecución habitual, con bases temporales.
-- Web: 24 pruebas aprobadas, tipos comprobados y compilación del servidor de producción completada.
-- Dependencias: `pip-audit` no encontró vulnerabilidades conocidas en la imagen final de API ni en la del worker después de actualizar los paquetes observados. En el worker, las versiones CPU de Torch y Torchvision se consultaron con su versión upstream para cubrir las mismas fuentes. Dependencias de producción web: `npm audit` informó cero vulnerabilidades. La integración continua repite estas auditorías.
-- Entorno de producción aislado: registro por la web sin devolver el token al navegador, cookie protegida, publicación con foto, rechazo de origen ajeno y cierre con revocación.
-- Restauración real: recuperación de PostgreSQL y fotos desde un archivo cifrado; hashes coincidentes y rechazo de un destino que ya contenía tablas.
-- Redis: contadores atómicos verificados con solicitudes concurrentes y admisión limitada a tres cargas simultáneas.
-- Monitoreo: configuración y cinco reglas válidas; lectura autenticada de métricas por Prometheus, rechazo sin token y comprobación de dependencias disponible.
-- Worker nuevo: PyTorch 2.13.0 CPU y Torchvision 0.28.0; modelo CLIP existente cargado con UID 10001 y representación de 512 números normalizada a partir de una imagen sintética. La pareja de versiones sigue la [distribución oficial de PyTorch](https://pytorch.org/get-started/previous-versions/).
-- La instalación local conserva sus dos avisos, una foto y un embedding. No se realizó envío de correo externo, configuración de DNS ni publicación del dominio.
-
-Estas comprobaciones validan el recorrido técnico. No miden precisión de identificación con mascotas reales ni capacidad bajo tráfico de producción.
+Los comandos y resultados exactos de esta mejora están en [TEST RESULTS](ai-delivery-report.md#2-test-results). Las pruebas normales no descargan modelos. Las integraciones con PostgreSQL, Redis, storage y modelos requieren activación explícita y usan datos aislados. Los benchmarks no constituyen una medición de tráfico del VPS ni de precisión sobre mascotas reales.
 
 ## Antes de publicar
 
-- Elegir el servidor y configurar DNS/HTTPS.
-- Completar Brevo y probar confirmación de correo, recuperación y alertas en cuentas controladas.
-- Recuperar una copia en otro entorno y exportar respaldos fuera del servidor, con la clave guardada por separado.
-- Configurar el destino de los avisos operativos y medir capacidad, espacio y demora con el uso previsto.
-- Reunir el conjunto de fotografías etiquetadas y calibrar el ranking antes de interpretar una puntuación como buena identificación.
-
-Esta entrega prepara los mecanismos y su configuración. La disponibilidad pública, las pruebas de correo real y las mediciones de uso requieren el servidor y el SMTP configurados.
+Las acciones que necesitan la cuenta, contratación o criterio del titular están detalladas en [OWNER ACTIONS REQUIRED](ai-delivery-report.md#10-owner-actions-required). Los scripts resuelven instalación, migración, modelos, backfill, comprobaciones y rollback; no requieren SQL manual.

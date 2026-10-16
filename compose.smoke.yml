@@ -1,0 +1,56 @@
+# Only tools/production_validate.py supplies these disposable secrets/volumes.
+services:
+  api:
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USERNAME: smoke
+      SMTP_TLS_MODE: starttls
+      MAIL_DELIVERY_MODE: smtp
+      SSL_CERT_FILE: /run/secrets/smoke_smtp_cert
+      TRUSTED_PROXY_IPS: 172.30.51.2,172.30.51.3
+    secrets: [smoke_smtp_cert]
+  web:
+    networks:
+      edge: {ipv4_address: 172.30.51.3}
+    volumes: [./tools/production_smoke.mjs:/tmp/production_smoke.mjs:ro]
+  caddy:
+    ports: !reset []
+    networks:
+      edge: {ipv4_address: 172.30.51.2}
+  prometheus:
+    ports: !reset []
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    command: --smtp-tls-cert /run/secrets/smoke_smtp_cert --smtp-tls-key /run/secrets/smoke_smtp_key --smtp-require-starttls --smtp-auth-accept-any --smtp-allowed-recipients '.*@example\.test' --disable-version-check
+    secrets: [smoke_smtp_cert,smoke_smtp_key]
+    networks: [backend,edge]
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD, /mailpit, readyz]
+      interval: 5s
+      retries: 20
+  recovery-check:
+    build: {context: ./apps/api, dockerfile: Dockerfile.ops}
+    environment:
+      APP_ENV: test
+      DATABASE_URL_FILE: /run/secrets/migrator_database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      S3_ENDPOINT: http://photos:8333
+      S3_ACCESS_KEY: mascomatch_admin
+      S3_SECRET_KEY_FILE: /run/secrets/photos_admin_secret
+      BACKUP_KEY_FILE: /run/secrets/backup_key
+      MAIL_DELIVERY_MODE: disabled
+      RUN_PRODUCTION_INTEGRATION: "1"
+      DISPOSABLE_STACK: mascomatch-prod-smoke
+    secrets: [migrator_database_url,redis_url,photos_admin_secret,backup_key]
+    volumes: [backups:/backups]
+    networks: [backend]
+    command: python -m pytest tests/test_production_integration.py -q -s -p no:cacheprovider
+networks:
+  edge:
+    ipam: !override {config: [{subnet: 172.30.51.0/24,ip_range: 172.30.51.128/25}]}
+secrets:
+  smoke_smtp_cert: {file: "${SECRETS_DIR}/smoke_smtp_cert"}
+  smoke_smtp_key: {file: "${SECRETS_DIR}/smoke_smtp_key"}

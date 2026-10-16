@@ -6,15 +6,16 @@ from app.core.config import settings
 from app.models import AccountToken, User
 
 
-def latest_code(db_factory):
+def latest_code(db_factory, kind="RESET_PASSWORD"):
     with db_factory() as db:
-        ticket=db.scalar(select(AccountToken).order_by(AccountToken.created_at.desc()))
+        ticket=db.scalar(select(AccountToken).where(AccountToken.kind==kind).order_by(AccountToken.created_at.desc(),AccountToken.id.desc()))
         return account_mail.decrypt_token(ticket.encrypted_token)
 
 
-def test_email_confirmation_is_single_use_and_preserves_login(client,auth_headers,db_factory):
-    assert client.post("/api/v1/auth/request-verification",headers=auth_headers).status_code==200
-    code=latest_code(db_factory)
+def test_email_confirmation_is_single_use_and_preserves_login(client,unverified_headers,db_factory):
+    auth_headers=unverified_headers
+    assert client.post("/api/v1/auth/request-verification",headers=auth_headers).status_code==429
+    code=latest_code(db_factory,"VERIFY_EMAIL")
     assert client.post("/api/v1/auth/verify-email",json={"code":code}).status_code==200
     assert client.post("/api/v1/auth/verify-email",json={"code":code}).status_code==400
     assert client.get("/api/v1/auth/me",headers=auth_headers).json()["email_verified"]
@@ -37,13 +38,14 @@ def test_expired_reset_does_not_change_the_password(client,auth_headers,db_facto
     client.post("/api/v1/auth/password-reset",json={"email":"owner@example.com"})
     code=latest_code(db_factory)
     with db_factory() as db:
-        db.scalar(select(AccountToken)).expires_at=utcnow()-timedelta(seconds=1)
+        db.scalar(select(AccountToken).where(AccountToken.kind=="RESET_PASSWORD")).expires_at=utcnow()-timedelta(seconds=1)
         db.commit()
     assert client.post("/api/v1/auth/reset-password",json={"code":code,"password":"new-test-only-passphrase"}).status_code==400
     assert client.get("/api/v1/auth/me",headers=auth_headers).status_code==200
 
 
-def test_account_mail_is_encrypted_deduplicated_and_delivered_locally(client,auth_headers,db_factory,monkeypatch):
+def test_account_mail_is_encrypted_deduplicated_and_delivered_locally(client,unverified_headers,db_factory,monkeypatch):
+    auth_headers=unverified_headers
     for _ in range(3):
         client.post("/api/v1/auth/request-verification",headers=auth_headers)
     with db_factory() as db:
@@ -56,9 +58,12 @@ def test_account_mail_is_encrypted_deduplicated_and_delivered_locally(client,aut
     monkeypatch.setattr(account_mail,"send_message",lambda message:messages.append(message))
     assert account_mail.deliver_pending(db_factory)==1
     assert account_mail.deliver_pending(db_factory)==0
-    assert "/confirmar-correo?codigo=" in messages[0].get_content()
+    assert "/confirmar-correo?codigo=" in messages[0].get_body(preferencelist=("plain",)).get_content()
 
 
-def test_verification_and_reset_codes_are_not_interchangeable(client,auth_headers,db_factory):
-    client.post("/api/v1/auth/request-verification",headers=auth_headers)
-    assert client.post("/api/v1/auth/reset-password",json={"code":latest_code(db_factory),"password":"new-test-only-passphrase"}).status_code==400
+def test_verification_and_reset_codes_are_not_interchangeable(client,unverified_headers,db_factory):
+    assert client.post("/api/v1/auth/reset-password",json={"code":latest_code(db_factory,"VERIFY_EMAIL"),"password":"new-test-only-passphrase"}).status_code==400
+
+
+def test_unverified_account_cannot_publish(client,unverified_headers):
+    assert client.post("/api/v1/pets",headers=unverified_headers,json={"name":"Luna","species":"dog"}).status_code==403

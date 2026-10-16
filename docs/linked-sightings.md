@@ -115,14 +115,16 @@ TypeScript y la sintaxis Python terminaron sin errores. Se actualizaron las expe
 - Frontend: mensajes de incertidumbre, formatos de hora, sesión, origen y límite de carga; TypeScript y compilación.
 - Integración real aislada: Redis/RQ, Ollama `gemma3:4b`, MinIO y SMTP de Mailpit. Dos fotos analizadas, notificación privada, dos correos capturados y comprobación de que no se duplican los envíos. **1 prueba aprobada en 67,51 s**, con dos avisos de deprecación de `fork` emitidos por RQ/Python 3.12.
 
-Ejecutar la integración:
+Ejecutar la integración vigente (Gemma solo conserva el aviso neutral; la promoción a posible coincidencia exige además evidencia visual compatible):
 
 ```powershell
-docker compose cp ./apps/web/public/images/dog-hero-generated.jpg api:/tmp/linked-check-dog.jpg
-docker compose exec -T -e RUN_LINKED_INTEGRATION=1 -e AI_SMOKE_IMAGE_PATH=/tmp/linked-check-dog.jpg api python -m pytest tests/test_linked_integration.py -q -s -p no:cacheprovider
+docker compose --profile mail-local up -d mailpit
+docker compose run --rm --no-deps -e RUN_LINKED_INTEGRATION=1 -e MAIL_DELIVERY_MODE=disabled -e AI_SMOKE_IMAGE_PATH=/fixtures/dog-hero-generated.jpg -v "${PWD}/apps/web/public/images:/fixtures:ro" worker python -m pytest tests/test_linked_integration.py -q -p no:cacheprovider
 ```
 
-## Pendientes y límites
+## Pendientes y límites de la entrega original
+
+Esta sección conserva el estado del 7 de octubre. Embeddings, ranking, moderación y la mejora posterior ya están implementados; las reglas y límites actuales están en [IA productiva](ai-production.md) y el [informe de entrega](ai-delivery-report.md).
 
 - Activar el correo externo con la cuenta, el dominio/remitente y la clave SMTP. La entrega externa no está comprobada mientras falten esos datos.
 - Esta comparación cubre avistamientos vinculados por una persona a un aviso específico. Embeddings, ranking entre todos los avisos, push y moderación de producción quedan para las fases siguientes.

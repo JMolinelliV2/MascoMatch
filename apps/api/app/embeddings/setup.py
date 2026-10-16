@@ -1,43 +1,68 @@
-"""Explicit installation of public model weights; inference never downloads photos or calls an API."""
-from pathlib import Path
-from sqlalchemy import select
+"""Explicit, checksum-verified model installation. Never run from request handlers."""
+import argparse
+import hashlib
+from io import BytesIO
+import json
+import os
+import urllib.request
+from PIL import Image
+from app.embeddings.model_manifest import ARTIFACTS, model_path, required_models, verify_artifact
 
-from app.core.config import settings
-from app.db.session import SessionLocal
-from app.embeddings.provider import checkpoint_path
-from app.models import Photo
+
+def install(kind):
+    artifact,path=ARTIFACTS[kind],model_path(kind)
+    path.parent.mkdir(parents=True,exist_ok=True)
+    if verify_artifact(kind):
+        return path
+    temporary=path.with_suffix(path.suffix+".download")
+    url=f"https://huggingface.co/{artifact['repo']}/resolve/{artifact['revision']}/{artifact['file']}"
+    digest=hashlib.sha256()
+    try:
+        with urllib.request.urlopen(url,timeout=120) as response, temporary.open("wb") as output:
+            count=0
+            while chunk:=response.read(1024*1024):
+                count+=len(chunk)
+                if count>artifact["bytes"]:
+                    raise ValueError("Model exceeds pinned size")
+                digest.update(chunk)
+                output.write(chunk)
+            output.flush()
+            os.fsync(output.fileno())
+        if count!=artifact["bytes"] or digest.hexdigest()!=artifact["sha256"]:
+            raise ValueError("Model checksum or size mismatch")
+        temporary.replace(path)
+        path.chmod(0o444)
+        return path
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def check_load(kind):
+    if not verify_artifact(kind):
+        raise ValueError("Required model missing or checksum mismatch: "+kind)
+    from app.embeddings.provider import get_embedding_provider
+    from app.embeddings.specs import openclip_spec,pet_reid_spec
+    from app.embeddings.cropper import PetCropper
+    output=BytesIO()
+    Image.new("RGB",(256,256),"gray").save(output,format="PNG")
+    if kind=="detector":
+        PetCropper().detect(Image.new("RGB",(256,256),"gray"),"dog")
+    else:
+        vector=get_embedding_provider(pet_reid_spec() if kind=="pet_reid" else openclip_spec()).encode(output.getvalue())
+        if len(vector)!=512:
+            raise ValueError("Unexpected embedding dimension")
 
 
 def main():
-    import open_clip
-    import torch
-    from app.embeddings.service import schedule_embedding
-    target = checkpoint_path()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    config = open_clip.get_pretrained_cfg(settings.embedding_model, settings.embedding_pretrained)
-    source = Path(open_clip.download_pretrained(config, cache_dir=str(target.parent), prefer_hf_hub=False))
-    # OpenCLIP verifies the official download checksum. Convert the trusted TorchScript
-    # checkpoint once to tensors so regular inference keeps weights_only loading enabled.
-    if not target.is_file():
-        state = torch.jit.load(str(source), map_location="cpu").state_dict()
-    else:
-        state = torch.load(target, map_location="cpu", weights_only=True)
-    if not target.is_file() or any(key in state for key in ("input_resolution", "context_length", "vocab_size")):
-        for key in ("input_resolution", "context_length", "vocab_size"):
-            state.pop(key, None)
-        temporary = target.with_suffix(".tmp")
-        torch.save(state, temporary)
-        temporary.replace(target)
-    if settings.embeddings_enabled:
-        with SessionLocal() as db:
-            photos = list(db.scalars(select(Photo)))
-            for photo in photos:
-                schedule_embedding(db, photo)
-            db.commit()
-        print(f"Modelo visual instalado; fotos registradas para procesamiento local: {len(photos)}.")
-    else:
-        print("Modelo visual instalado. Activá EMBEDDINGS_ENABLED para generar vectores.")
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check",action="store_true",help="Verify local files and inference without downloads")
+    args=parser.parse_args()
+    for kind in required_models():
+        if not args.check:
+            install(kind)
+        check_load(kind)
+        print(json.dumps({"model":kind,**ARTIFACTS[kind],"path":str(model_path(kind)),"load":"ok"}))
 
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()

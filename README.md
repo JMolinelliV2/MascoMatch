@@ -68,33 +68,29 @@ Rutas bajo `/api/v1`:
 
 Las rutas de escritura, las fotos, los análisis y los datos privados de mascotas/casos requieren bearer token. Los avistamientos vinculados a un aviso admiten visitantes. Las observaciones públicas omiten contactos y redondean coordenadas; las precisas se usan internamente para matching y en alertas privadas del dueño. Las fotos se guardan privadas en MinIO. PostGIS y pgvector están habilitados, y hay límites básicos de solicitudes por proceso.
 
-## IA local: fase 2
+## IA local: Pet-ReID, OpenCLIP y Gemma
 
-El MVP usa **Ollama**, sin API keys ni proveedores pagos. El servicio incluido tiene `OLLAMA_NO_CLOUD=1` y no publica su puerto en el equipo. La configuración de la API rechaza proveedores distintos de Ollama, nombres de modelos cloud, servidores públicos y URLs con credenciales. El cliente de inferencia no utiliza proxies del sistema ni sigue redirecciones.
+Perros y gatos usan Pet-ReID 512D con detector local; otras especies y desconocido usan OpenCLIP 512D. Gemma 3 4B extrae atributos. El matching combina señales compatibles, características, ubicación y fecha. No usa APIs pagas de IA.
 
-El modelo por defecto es `gemma3:4b`, compatible con texto e imágenes. La primera descarga ocupa varios GB y requiere conexión a Internet; la inferencia se realiza en el entorno local. La velocidad y la memoria necesaria dependen del equipo. El perfil usa CPU por defecto; no requiere configurar una GPU.
+[Arquitectura y operación](docs/ai-production.md) · [Licencias y revisiones](docs/third-party-models.md) · [Informe de entrega y mediciones](docs/ai-delivery-report.md) · [Despliegue](docs/production.md).
 
-Desde la carpeta del proyecto:
-
-```powershell
-docker compose --profile ai-local up -d ollama
-docker compose --profile ai-local exec ollama ollama pull gemma3:4b
-```
-
-Después agregá o cambiá esta línea en tu `.env`:
-
-```dotenv
-AI_ENABLED=true
-```
-
-Reconstruí e iniciá el proyecto y el worker. La API aplica la migración `0002_ai_extraction` al arrancar:
+En desarrollo, construir el worker e instalar explícitamente los modelos en los volúmenes existentes. El comando Gemma requiere haber leído y aceptado sus términos:
 
 ```powershell
-docker compose --profile ai-local up --build -d
-docker compose logs -f api worker
+docker compose --profile ai-local build worker worker-ai
+docker compose --profile ai-local run --rm --no-deps --user 0 worker python -m app.embeddings.setup
+docker compose --profile ai-local run --rm --no-deps --user 0 -v buscadormascotas_ollama_models:/ollama worker python -m app.analysis.gemma_setup --accept-gemma-terms
 ```
 
-Con `AI_ENABLED=false`, los formularios y el CRUD siguen funcionando sin Redis para inferencia ni un modelo disponible. No se generan análisis nuevos. Los reportes creados antes de habilitar IA pueden analizarse con el endpoint POST indicado abajo.
+El nombre de volumen del último ejemplo corresponde a la carpeta local `buscadorMascotas`; usar el volumen Ollama del proyecto si se cambió el nombre. Después activar `AI_ENABLED=true` y `EMBEDDINGS_ENABLED=true` en `.env`, recrear API/workers y programar faltantes:
+
+```powershell
+docker compose --profile ai-local up -d api worker worker-ai web
+docker compose --profile ai-local run --rm --no-deps worker python -m app.embeddings.backfill
+docker compose --profile ai-local run --rm --no-deps worker-ai python -m app.analysis.backfill
+```
+
+Ollama permanece en la red privada y con `OLLAMA_NO_CLOUD=1`. No se descargan pesos durante requests. `AI_ENABLED=false` pausa extracción semántica; `EMBEDDINGS_ENABLED=false` pausa embeddings; `PET_REID_ENABLED=false` conserva OpenCLIP como fallback. La API y publicación no necesitan cargar los modelos.
 
 ### Funcionamiento
 
@@ -104,9 +100,9 @@ Con `AI_ENABLED=false`, los formularios y el CRUD siguen funcionando sin Redis p
 4. El worker consulta Ollama, valida el JSON y guarda un `FeatureSet` privado con valor, confianza y origen de cada atributo.
 5. Al guardar un reporte, la web consulta el estado y muestra características sugeridas separadas por descripción y foto. La descripción original y los datos declarados se conservan.
 
-Los prompts están versionados. Datos faltantes o ambiguos usan `unknown`, `not_visible` o `uncertain`, con confianza cero. La confianza es una valoración no calibrada del atributo, no una probabilidad de identificar una mascota. El análisis no confirma coincidencias ni genera alertas en esta fase.
+Los prompts están versionados. Datos faltantes o ambiguos usan `unknown`, `not_visible` o `uncertain`, con confianza cero. La confianza es una valoración no calibrada del atributo, no una probabilidad de identificar una mascota. El matching posterior revisa esas características junto con las demás señales y aplica los controles de alerta documentados.
 
-La inferencia recibe miniaturas de hasta 1024 píxeles, sin EXIF, y campos físicos. No se agregan nombres, contactos, microchips ni coordenadas a los inputs de IA. Si una persona escribe esos datos dentro de la descripción, forman parte de su texto original; el prompt indica ignorarlos para extraer características físicas. Los resultados y trabajos solamente son accesibles por el dueño del reporte.
+Gemma recibe imágenes de hasta 1024 píxeles, sin EXIF, y campos físicos; los modelos de embeddings usan su propio preprocessing. No se agregan nombres, contactos, microchips ni coordenadas a los inputs de IA. Si una persona escribe esos datos dentro de la descripción, forman parte de su texto original; el prompt indica ignorarlos para extraer características físicas. Los resultados y trabajos solamente son accesibles por el dueño del reporte.
 
 Se deduplican trabajos por propietario, evidencia, modelo y versión de prompt. Hay hasta tres intentos por defecto, con espera entre fallos transitorios. Un modelo inexistente falla sin reintentos automáticos. Las ejecuciones interrumpidas se recuperan mediante leases; versiones antiguas de un trabajo no pueden sobrescribir una ejecución nueva. Las descripciones modificadas invalidan resultados anteriores y las eliminaciones borran los análisis relacionados. Los jobs usan serialización JSON, y sus logs incluyen IDs, estado, modelo y latencia, sin cuerpos de texto o imágenes.
 
@@ -132,7 +128,7 @@ Siempre con `Authorization: Bearer <token>`:
 | `AI_VISION_MODEL` | `gemma3:4b` | Modelo local para fotos |
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | Servidor local en la red de Docker |
 | `REDIS_URL` | `redis://redis:6379/0` | Cola de trabajos |
-| `AI_REQUEST_TIMEOUT_SECONDS` | `180` | Límite por consulta, entre 10 y 600 segundos |
+| `AI_TEXT_REQUEST_TIMEOUT_SECONDS` / `AI_VISION_REQUEST_TIMEOUT_SECONDS` | `120` / `240` | Límites separados de texto e imagen |
 | `AI_MAX_ATTEMPTS` | `3` | Máximo de intentos automáticos, entre 1 y 5 |
 | `AI_DISPATCH_INTERVAL_SECONDS` | `5` | Intervalo del despachador |
 
@@ -152,6 +148,14 @@ docker compose restart ollama
 
 El directorio se conserva en el volumen de modelos. `SSL_CERT_DIR` agrega esos certificados al directorio del sistema dentro de Ollama; se mantiene la validación HTTPS. Los certificados del equipo no se incluyen en el repositorio. [Configuración de certificados de Go](https://pkg.go.dev/crypto/x509#SystemCertPool).
 
+Los instaladores fijados actuales descargan mediante Python en el worker. Si esa conexión también necesita la autoridad corporativa, montar el certificado público de confianza únicamente durante la instalación:
+
+```powershell
+docker compose run --rm --no-deps --user 0 -e SSL_CERT_FILE=/trust/network-ca.crt -v "${PWD}/mi-certificado.crt:/trust/network-ca.crt:ro" worker python -m app.embeddings.setup
+```
+
+Aplicar el mismo montaje y variable al comando de `app.analysis.gemma_setup` cuando corresponda. No desactivar la validación TLS ni exportar una clave privada. En un VPS sin esa inspección de tráfico se utiliza el almacén normal de autoridades del contenedor.
+
 ## Pruebas de API
 
 Con Python 3.12 o superior:
@@ -166,24 +170,23 @@ pytest
 
 Los tests usan SQLite temporal y no requieren Docker ni servicios externos. La fase de extracción tiene pruebas de esquema, permisos, idempotencia, actualización de evidencia, reintentos, recuperación de workers, fallos de Redis, contratos HTTP de Ollama y migraciones desde una base nueva y desde el esquema inicial. Los proveedores de IA y la cola se simulan en estas pruebas; esto no mide la calidad real del modelo ni sustituye una prueba de Docker/PostgreSQL.
 
-La prueba opcional de integración ejecuta un worker RQ real y consulta el modelo local. Usa una base SQLite separada y una cola con nombre único, que elimina al terminar; no modifica los reportes existentes. Requiere el perfil `ai-local`, el modelo descargado y la nueva imagen de API:
+La prueba opcional de integración ejecuta un worker RQ real y consulta el modelo local. Usa una base SQLite separada y una cola con nombre único, que elimina al terminar; no modifica los reportes existentes. Requiere el perfil `ai-local`, modelos instalados y la imagen de worker actual:
 
 ```powershell
-docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true api python -m pytest tests/test_local_ai_integration.py -q
+docker compose run --rm --no-deps -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true -e MAIL_DELIVERY_MODE=disabled worker python -m pytest tests/test_local_ai_integration.py -q
 ```
 
 Para incluir la fotografía de ejemplo de la portada:
 
 ```powershell
-docker compose cp ./apps/web/public/images/dog-hero-generated.jpg api:/tmp/mascomatch-check-dog.jpg
-docker compose exec -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true -e AI_SMOKE_IMAGE_PATH=/tmp/mascomatch-check-dog.jpg api python -m pytest tests/test_local_ai_integration.py -q
+docker compose run --rm --no-deps -e RUN_LOCAL_AI_TESTS=1 -e AI_ENABLED=true -e MAIL_DELIVERY_MODE=disabled -e AI_SMOKE_IMAGE_PATH=/fixtures/dog-hero-generated.jpg -v "${PWD}/apps/web/public/images:/fixtures:ro" worker python -m pytest tests/test_local_ai_integration.py -q
 ```
 
 Estas comprobaciones validan el recorrido y dos ejemplos de extracción; no son una evaluación de precisión del matching.
 
 ## Variables de entorno
 
-Copiar `.env.example` a `.env` antes de ejecutar Compose. Cambiar contraseñas y `JWT_SECRET` para entornos compartidos. La configuración real de producción, TLS, almacenamiento S3 administrado y secretos queda fuera de esta entrega.
+Copiar `.env.example` a `.env` antes de ejecutar Compose. Cambiar contraseñas y `JWT_SECRET` para entornos compartidos. La configuración de producción, TLS, S3 privado y secretos está en `compose.production.yml` y `docs/production.md`.
 
 ## Ubicación en los formularios
 

@@ -1,0 +1,53 @@
+{
+  "environment": "local CPU; component RSS includes Python/runtime/image decoding, not additive",
+  "components": [
+    {
+      "component": "detector",
+      "initial_rss_kib": 17632,
+      "loaded_rss_kib": 392264,
+      "peak_rss_kib": 651620,
+      "seconds_cold_then_warm": [
+        0.9998076890001357,
+        0.4660545639999327,
+        0.43404538899994805
+      ],
+      "cpu_seconds": [
+        1.677874144,
+        0.93010013,
+        0.862674116
+      ]
+    },
+    {
+      "component": "pet_reid",
+      "initial_rss_kib": 17640,
+      "loaded_rss_kib": 464376,
+      "peak_rss_kib": 755588,
+      "seconds_cold_then_warm": [
+        1.5082939379999516,
+        0.45579768699985834,
+        0.4509049529999629
+      ],
+      "cpu_seconds": [
+        2.361421157,
+        0.9078896439999999,
+        0.902665255
+      ]
+    },
+    {
+      "component": "open_clip",
+      "initial_rss_kib": 17520,
+      "loaded_rss_kib": 1009440,
+      "peak_rss_kib": 1564008,
+      "seconds_cold_then_warm": [
+        4.027151804999903,
+        0.34151217099997666,
+        0.3243723919999866
+      ],
+      "cpu_seconds": [
+        4.1151647229999995,
+        0.41366051800000037,
+        0.3928673930000004
+      ]
+    }
+  ]
+}

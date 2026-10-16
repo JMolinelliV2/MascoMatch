@@ -54,6 +54,7 @@ const sections = [
     content: <>
       <p>MascoMatch podrá comparar fotografías, características, fechas y ubicaciones para proponer posibles coincidencias. Los resultados automáticos pueden contener errores y requieren revisión humana. Una puntuación de similitud no constituye una prueba de identidad ni una probabilidad garantizada de correspondencia entre los animales comparados.</p>
       <p>Los avistamientos enviados desde un aviso se presentan a su titular como reportes vinculados al caso. La recepción del reporte es independiente del resultado de la comparación, que puede encontrarse pendiente de análisis o resultar incompatible. La vinculación de un reporte, la recepción de una alerta o la confirmación de una pista no acreditan por sí solas la propiedad del animal.</p>
+      <p>La extracción automática de características utiliza Gemma 3. El uso de esta funcionalidad queda sujeto a los <a href="https://ai.google.dev/gemma/terms" target="_blank" rel="noopener noreferrer">Términos de uso de Gemma</a>, incluidos los límites de su sección 3.2 y la <a href="https://ai.google.dev/gemma/prohibited_use_policy" target="_blank" rel="noopener noreferrer">Política de usos prohibidos de Gemma</a>, que se incorporan a estas condiciones. Las personas usuarias no podrán utilizar dicha funcionalidad para los usos allí prohibidos ni en infracción de la legislación aplicable.</p>
     </>,
   },
   {

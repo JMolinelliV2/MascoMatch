@@ -9,7 +9,8 @@ from uuid import uuid4
 
 import httpx2 as httpx
 import pytest
-from rq import Queue, SpawnWorker
+from rq import Queue
+from app.analysis.worker import PersistentWorker
 from rq.serializers import JSONSerializer
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -50,12 +51,17 @@ def test_linked_photo_notification_and_mailpit(client, tmp_path, monkeypatch):
     monkeypatch.setattr(tasks, "SessionLocal", factory)
     real_queue = get_queue()
     isolated = Queue(f"mascomatch-linked-check-{uuid4().hex}", connection=real_queue.connection, serializer=JSONSerializer)
-    monkeypatch.setattr(queue, "get_queue", lambda: isolated)
+    monkeypatch.setattr(queue, "get_queue", lambda *args: isolated)
     recipient = f"linked-check-{uuid4().hex}@example.test"
     stored_keys = []
     try:
         owner = client.post("/api/v1/auth/register", json={"email": recipient, "password": "test-only-passphrase", "name": "Dueño de prueba"}).json()
         headers = {"Authorization": f"Bearer {owner['access_token']}"}
+        from app.account_mail import decrypt_token
+        from app.models import AccountToken
+        with factory() as db:
+            code=decrypt_token(db.scalar(select(AccountToken).where(AccountToken.kind=="VERIFY_EMAIL")).encrypted_token)
+        assert client.post("/api/v1/auth/verify-email",json={"code":code}).status_code==200
         pet = client.post("/api/v1/pets", headers=headers, json={"name": "Animal de prueba", "species": "dog"}).json()
         case = client.post("/api/v1/lost-cases", headers=headers, json={"pet_id": pet["id"], "description": "Aviso de prueba de integración", "lost_at": (utcnow() - timedelta(hours=2)).isoformat(), "latitude": -34.9, "longitude": -56.15}).json()
         no_photo = client.post(f"/api/v1/public/lost-animals/{case['id']}/sightings", data={"request_id": str(uuid4()), "observed_at": (utcnow() - timedelta(minutes=15)).isoformat(), "latitude": "-34.901", "longitude": "-56.151"})
@@ -72,16 +78,18 @@ def test_linked_photo_notification_and_mailpit(client, tmp_path, monkeypatch):
             stored_keys.extend(db.scalars(select(Photo.storage_key).where(Photo.owner_type == "observation")))
         assert queue.dispatch_pending() == 2
         engine.dispose()
-        SpawnWorker([isolated], connection=isolated.connection, serializer=JSONSerializer).work(burst=True)
+        PersistentWorker([isolated], connection=isolated.connection, serializer=JSONSerializer,log_job_description=False).work(burst=True)
         with factory() as db:
             from uuid import UUID
             observation = db.get(Observation, UUID(sighting.json()["id"]))
-            assert observation.matching_status == "POSSIBLE_MATCH", observation.matching_reasons
+            # Gemma attributes alone cannot promote a linked photo to an identity alert.
+            assert observation.matching_status == "UNVERIFIED", observation.matching_reasons
             assert db.scalar(select(Notification).where(Notification.observation_id == observation.id)) is not None
         inbox = client.get("/api/v1/notifications", headers=headers)
         assert inbox.status_code == 200
         assert inbox.json()["total"] == 2
-        photo_notice = next(notice for notice in inbox.json()["items"] if notice["kind"] == "POSSIBLE_MATCH")
+        assert all(notice["kind"]=="REPORTED_SIGHTING" for notice in inbox.json()["items"])
+        photo_notice = next(notice for notice in inbox.json()["items"] if notice["photo_ids"])
         image_url = f"/api/v1/notifications/{photo_notice['id']}/photos/{photo_notice['photo_ids'][0]}"
         assert client.get(image_url).status_code == 401
         image_response = client.get(image_url, headers=headers)

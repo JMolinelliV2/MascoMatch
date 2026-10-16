@@ -119,7 +119,7 @@ def test_analysis_is_disabled_without_configuration(client, auth_headers):
     assert client.post(f"/api/v1/analysis/observation/{record}", headers=auth_headers).status_code == 409
 
 
-def test_automatic_text_analysis_is_private_and_deduplicated(client, auth_headers, monkeypatch):
+def test_automatic_text_analysis_is_private_and_deduplicated(client, auth_headers, monkeypatch, confirm_account):
     record = create_observation(client, auth_headers, monkeypatch)
     first = owner_jobs(client, auth_headers, record)
     second = client.post(f"/api/v1/analysis/observation/{record}", headers=auth_headers).json()["jobs"]
@@ -130,6 +130,7 @@ def test_automatic_text_analysis_is_private_and_deduplicated(client, auth_header
     assert client.get(f"/api/v1/analysis/observation/{record}").status_code == 401
     other = client.post("/api/v1/auth/register", json={"email": "other@example.com", "password": "another-passphrase", "name": "Other"}).json()
     other_headers = {"Authorization": f"Bearer {other['access_token']}"}
+    confirm_account("other@example.com")
     assert client.get(f"/api/v1/analysis/observation/{record}", headers=other_headers).status_code == 404
     assert client.get(f"/api/v1/analysis/jobs/{first[0]['id']}", headers=other_headers).status_code == 404
     assert client.post(f"/api/v1/analysis/jobs/{first[0]['id']}/retry", headers=other_headers).status_code == 404
@@ -251,7 +252,7 @@ def test_outbox_keeps_job_when_redis_is_unavailable(client, auth_headers, monkey
     class OfflineQueue:
         def enqueue(self, *args, **kwargs):
             raise ConnectionError("Redis unavailable")
-    monkeypatch.setattr(queue, "get_queue", OfflineQueue)
+    monkeypatch.setattr(queue, "get_queue", lambda *args: OfflineQueue())
     assert queue.dispatch_pending() == 0
     job = owner_jobs(client, auth_headers, record)[0]
     assert job["status"] == "PENDING" and job["error_code"] == "QUEUE_UNAVAILABLE"
@@ -265,7 +266,7 @@ def test_dispatch_is_unique_and_old_generation_cannot_run(client, auth_headers, 
     class RecordingQueue:
         def enqueue(self, *args, **kwargs):
             calls.append((args, kwargs))
-    monkeypatch.setattr(queue, "get_queue", RecordingQueue)
+    monkeypatch.setattr(queue, "get_queue", lambda *args: RecordingQueue())
     assert queue.dispatch_pending() == 1
     assert queue.dispatch_pending() == 0
     assert calls[0][1]["unique"] is True
@@ -289,7 +290,7 @@ def test_expired_worker_lease_is_recovered(client, auth_headers, monkeypatch, db
     class RecordingQueue:
         def enqueue(self, *args, **kwargs):
             return None
-    monkeypatch.setattr(queue, "get_queue", RecordingQueue)
+    monkeypatch.setattr(queue, "get_queue", lambda *args: RecordingQueue())
     assert queue.dispatch_pending() == 1
     assert owner_jobs(client, auth_headers, record)[0]["status"] == "QUEUED"
 
@@ -309,7 +310,7 @@ def test_ollama_uses_json_schema_without_auth_and_sends_base64_image(monkeypatch
     raw["confidence"] = {name: item["confidence"] for name, item in features.items()}
     response = httpx.Response(200, json={"done": True, "message": {"content": json.dumps(raw)}},
                               request=httpx.Request("POST", "http://localhost:11434/api/chat"))
-    post = AsyncMock(return_value=response)
+    post = AsyncMock(side_effect=[httpx.Response(200, json={"capabilities": ["completion", "vision"]}, request=response.request), response])
     monkeypatch.setattr(httpx.AsyncClient, "post", post)
     result = asyncio.run(OllamaProvider("local-model").analyze_image(b"image-bytes", "image/jpeg"))
     body = post.call_args.kwargs["json"]
@@ -356,6 +357,8 @@ def test_image_analysis_uses_a_small_clean_thumbnail(monkeypatch):
             return {"Body": stream}
     monkeypatch.setattr(image_storage, "_client", lambda endpoint: Storage())
     payload, mime = image_storage.load_analysis_image("photo.jpg", "image/jpeg")
+    from app.analysis.image_preprocessing import prepare_vlm_image
+    payload = prepare_vlm_image(payload, mime).data
     with Image.open(BytesIO(payload)) as image:
         assert max(image.size) == 1024
         assert image.getexif().get(0x010E) is None

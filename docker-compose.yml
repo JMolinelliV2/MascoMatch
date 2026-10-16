@@ -79,6 +79,34 @@ services:
       PHOTO_REMINDER_DELAY_MINUTES: ${PHOTO_REMINDER_DELAY_MINUTES:-30}
       EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
       EMBEDDING_CACHE_DIR: /models/clip
+      PET_REID_CACHE_DIR: /models/pet-reid
+      DETECTOR_CACHE_DIR: /models/detector
+      PET_REID_ENABLED: ${PET_REID_ENABLED:-true}
+      OPENCLIP_ENABLED: ${OPENCLIP_ENABLED:-true}
+      PET_CROP_ENABLED: ${PET_CROP_ENABLED:-true}
+      PET_CROP_CONFIDENCE: ${PET_CROP_CONFIDENCE:-0.75}
+      PET_CROP_MARGIN: ${PET_CROP_MARGIN:-0.18}
+      PET_CROP_TIMEOUT_SECONDS: ${PET_CROP_TIMEOUT_SECONDS:-15}
+      EMBEDDING_REQUEST_TIMEOUT_SECONDS: ${EMBEDDING_REQUEST_TIMEOUT_SECONDS:-90}
+      OPENCLIP_VISUAL_FLOOR: ${OPENCLIP_VISUAL_FLOOR:-0.55}
+      OPENCLIP_VISUAL_CEILING: ${OPENCLIP_VISUAL_CEILING:-0.95}
+      PET_REID_VISUAL_FLOOR: ${PET_REID_VISUAL_FLOOR:-0.50}
+      PET_REID_VISUAL_CEILING: ${PET_REID_VISUAL_CEILING:-0.90}
+      VISUAL_BEST_WEIGHT: ${VISUAL_BEST_WEIGHT:-0.7}
+      MATCHING_ANALYSIS_WAIT_SECONDS: ${MATCHING_ANALYSIS_WAIT_SECONDS:-30}
+      MATCHING_NOTIFY_MIN_COVERAGE: ${MATCHING_NOTIFY_MIN_COVERAGE:-0.35}
+      MATCHING_NOTIFY_MIN_FEATURE: ${MATCHING_NOTIFY_MIN_FEATURE:-0.65}
+      MATCHING_NOTIFY_MIN_GEO: ${MATCHING_NOTIFY_MIN_GEO:-0.35}
+      OLLAMA_CAPABILITIES_CACHE_SECONDS: ${OLLAMA_CAPABILITIES_CACHE_SECONDS:-3600}
+      VLM_IMAGE_JPEG_QUALITY: ${VLM_IMAGE_JPEG_QUALITY:-88}
+      OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-4096}
+      OLLAMA_NUM_PREDICT: ${OLLAMA_NUM_PREDICT:-768}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-15m}
+      OLLAMA_PREWARM: ${OLLAMA_PREWARM:-true}
+      OLLAMA_NUM_THREADS: ${OLLAMA_NUM_THREADS:-3}
+      AI_TEXT_REQUEST_TIMEOUT_SECONDS: ${AI_TEXT_REQUEST_TIMEOUT_SECONDS:-120}
+      AI_VISION_REQUEST_TIMEOUT_SECONDS: ${AI_VISION_REQUEST_TIMEOUT_SECONDS:-240}
+      VLM_IMAGE_MAX_SIDE: ${VLM_IMAGE_MAX_SIDE:-1024}
       EMBEDDING_CPU_THREADS: ${EMBEDDING_CPU_THREADS:-2}
       MATCHING_CANDIDATE_THRESHOLD: ${MATCHING_CANDIDATE_THRESHOLD:-0.55}
       MATCHING_NOTIFY_THRESHOLD: ${MATCHING_NOTIFY_THRESHOLD:-0.82}
@@ -99,6 +127,7 @@ services:
     volumes:
       - ./apps/api:/app
       - ./test-data:/app/test-data:ro
+      - vision_models:/models:ro
     depends_on:
       db:
         condition: service_healthy
@@ -127,10 +156,12 @@ services:
     working_dir: /app
     command: python -m app.analysis.worker
     restart: unless-stopped
-    environment: *backend_environment
+    environment:
+      <<: *backend_environment
+      ANALYSIS_WORKER_KIND: visual
     volumes:
       - ./apps/api:/app
-      - vision_models:/models/clip
+      - vision_models:/models
       - ./test-data:/app/test-data:ro
     depends_on:
       api:
@@ -139,6 +170,26 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+
+  worker-ai:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.worker
+    profiles: [ai-local]
+    command: python -m app.analysis.worker
+    restart: unless-stopped
+    environment:
+      <<: *backend_environment
+      ANALYSIS_WORKER_KIND: semantic
+      EMBEDDING_CPU_THREADS: "1"
+    volumes:
+      - ./apps/api:/app
+      - vision_models:/models
+      - ./test-data:/app/test-data:ro
+    depends_on:
+      api: {condition: service_started}
+      redis: {condition: service_healthy}
+      ollama: {condition: service_started}
 
   web:
     image: node:22-alpine

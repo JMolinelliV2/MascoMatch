@@ -1,6 +1,6 @@
 # MVP: embeddings, matching, alertas, mapa, feedback y moderación
 
-Este documento conserva la entrega funcional original. Las sesiones, el correo confirmado, los límites compartidos y el despliegue actual se describen en [la preparación para producción](production.md).
+Este documento conserva la entrega funcional original. Las sesiones, el correo confirmado, los límites compartidos y el despliegue actual se describen en [la preparación para producción](production.md). El sistema visual vigente y las alertas se detallan en [IA productiva](ai-production.md); los resultados históricos de este archivo no son los de la versión actual.
 
 Entrega del 8 de octubre de 2026. El dominio `mascomatch.com` fue adquirido por el usuario; DNS, correo externo, despliegue y refuerzo de producción se configuran después del plan funcional.
 
@@ -20,27 +20,27 @@ Entrega del 8 de octubre de 2026. El dominio `mascomatch.com` fue adquirido por 
 
 ## Modelo visual local
 
-OpenCLIP `ViT-B-32`, pesos `openai`, 512 dimensiones y vectores normalizados. Se ejecuta en CPU, con dos hilos por defecto. No utiliza claves, API pagas ni inferencia remota. El worker visual tiene una imagen separada para que la API no cargue PyTorch.
+La versión actual usa Pet-ReID 512D para perros/gatos y OpenCLIP `ViT-B-32/openai` 512D para otras especies/desconocido. Vectores normalizados, CPU y dos hilos por defecto. No utiliza claves, API pagas ni inferencia remota. El worker visual tiene una imagen separada para que la API no cargue PyTorch.
 
-Los pesos públicos se descargan explícitamente una vez y OpenCLIP verifica su checksum. El instalador convierte el checkpoint oficial a un archivo de tensores; la inferencia mantiene la carga `weights_only` de PyTorch. Los archivos se guardan en el volumen `vision_models`. La descarga ronda 354 MB; se conserva también la conversión local.
+Los pesos se descargan explícitamente desde revisiones fijadas y se verifican por SHA-256. OpenCLIP se instala directamente en Safetensors y Pet-ReID/detector en ONNX, sin pickle ni conversión de código remoto. El volumen `vision_models` conserva aproximadamente 1 GB de pesos visuales. Ver [modelos y licencias](third-party-models.md).
 
 La representación de una foto entera puede reflejar el fondo, iluminación o pose. No es reconocimiento biométrico de una mascota. [OpenCLIP](https://github.com/mlfoundations/open_clip), [pgvector Python](https://github.com/pgvector/pgvector-python).
 
 ### Instalación nueva
 
 ```powershell
-docker compose --profile ai-local up --build -d
-docker compose exec -T --user 0 worker python -m app.embeddings.setup
+docker compose --profile ai-local build worker
+docker compose --profile ai-local run --rm --no-deps --user 0 worker python -m app.embeddings.setup
 ```
 
 Después configurar `EMBEDDINGS_ENABLED=true` en `.env`:
 
 ```powershell
 docker compose --profile ai-local up -d api worker
-docker compose exec -T worker python -m app.embeddings.setup
+docker compose run --rm --no-deps worker python -m app.embeddings.backfill
 ```
 
-La segunda ejecución registra las fotos existentes para procesamiento, sin volver a subirlas. Los análisis visuales tienen estado, deduplicación, reintentos y validación de vigencia. Cambiar o eliminar evidencia invalida resultados antiguos. El endpoint privado `/embeddings/{owner_type}/{owner_id}` muestra estado y errores, sin publicar vectores.
+El backfill registra las fotos existentes para procesamiento, sin volver a subirlas. Los análisis visuales tienen estado, deduplicación, reintentos y validación de vigencia. Cambiar o eliminar evidencia invalida resultados antiguos. El endpoint privado `/embeddings/{owner_type}/{owner_id}` muestra estado y errores, sin publicar vectores.
 
 ## Ranking
 

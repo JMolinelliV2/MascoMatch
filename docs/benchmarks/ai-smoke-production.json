@@ -1,0 +1,230 @@
+{
+  "effective_identity_accuracy": null,
+  "purpose": "technical smoke; repeated photos are not an identity evaluation",
+  "checks": {
+    "priority_queues": true,
+    "dog": true,
+    "cat": true,
+    "rabbit": true,
+    "unknown": true,
+    "notification_outbox": true,
+    "idempotent_backfill": true,
+    "text_features": true,
+    "image_features": true,
+    "crop_reuse": true,
+    "postgres_redis_storage": true,
+    "no_external_email": true
+  },
+  "visual_seconds": 19.51100368599998,
+  "visual_jobs": [
+    {
+      "provider": "open_clip",
+      "metrics": {
+        "load_image_ms": 16.766680000046108,
+        "crop_used": false,
+        "image_input": "original",
+        "width": 1536,
+        "height": 2048,
+        "blur_variance": 605.416,
+        "visual_reliability": 0.75,
+        "visual_inference_ms": 10286.31459199994,
+        "total_ms": 10303.10005299998,
+        "cpu_ms": 9196.450845000001,
+        "persist_result_ms": 15.830691000019215,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 27.009569000028932
+      }
+    },
+    {
+      "provider": "pet_reid",
+      "metrics": {
+        "load_image_ms": 26.42164100006994,
+        "detected": true,
+        "crop_used": true,
+        "image_input": "animal_crop",
+        "detection_confidence": 0.9254496693611145,
+        "crop_reason": "detected",
+        "animal_ratio": 0.538344817924326,
+        "bbox": [
+          0,
+          0,
+          1367,
+          2048
+        ],
+        "width": 1367,
+        "height": 2048,
+        "blur_variance": 600.958,
+        "visual_reliability": 1,
+        "visual_inference_ms": 3184.264065999969,
+        "total_ms": 3210.7079280000335,
+        "cpu_ms": 5295.205419000002,
+        "persist_result_ms": 8.360329000083766,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 13.407534999942072
+      }
+    },
+    {
+      "provider": "open_clip",
+      "metrics": {
+        "load_image_ms": 22.447174999911113,
+        "crop_used": false,
+        "image_input": "original",
+        "width": 1536,
+        "height": 2048,
+        "blur_variance": 605.416,
+        "visual_reliability": 0.75,
+        "visual_inference_ms": 451.1017410000022,
+        "total_ms": 473.574120999956,
+        "cpu_ms": 614.5603559999984,
+        "persist_result_ms": 10.45542800000021,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 20.228788999929748
+      }
+    },
+    {
+      "provider": "open_clip",
+      "metrics": {
+        "load_image_ms": 26.168890000008105,
+        "crop_used": false,
+        "image_input": "original",
+        "width": 1536,
+        "height": 2048,
+        "blur_variance": 605.416,
+        "visual_reliability": 0.75,
+        "visual_inference_ms": 432.429872000057,
+        "total_ms": 458.62101800003074,
+        "cpu_ms": 588.5223490000016,
+        "persist_result_ms": 11.1385989999917,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 21.07613099997252
+      }
+    },
+    {
+      "provider": "pet_reid",
+      "metrics": {
+        "load_image_ms": 16.445000999965487,
+        "detected": true,
+        "crop_used": true,
+        "image_input": "animal_crop",
+        "detection_confidence": 0.93687903881073,
+        "crop_reason": "detected",
+        "animal_ratio": 0.2592135812640528,
+        "bbox": [
+          784,
+          0,
+          1756,
+          1310
+        ],
+        "width": 972,
+        "height": 1310,
+        "blur_variance": 570.667,
+        "visual_reliability": 1,
+        "visual_inference_ms": 1329.5205269999997,
+        "total_ms": 1345.981236000057,
+        "cpu_ms": 2690.3876480000017,
+        "persist_result_ms": 9.59128099998452,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 18.01009799999065
+      }
+    },
+    {
+      "provider": "open_clip",
+      "metrics": {
+        "load_image_ms": 19.219896999970842,
+        "crop_used": false,
+        "image_input": "original",
+        "width": 1536,
+        "height": 2048,
+        "blur_variance": 605.416,
+        "visual_reliability": 0.75,
+        "visual_inference_ms": 464.1403130000299,
+        "total_ms": 483.3834050000405,
+        "cpu_ms": 965.7214210000013,
+        "persist_result_ms": 9.648136999999224,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 24.043866999932106
+      }
+    },
+    {
+      "provider": "pet_reid",
+      "metrics": {
+        "load_image_ms": 23.68103800006338,
+        "detected": true,
+        "crop_used": true,
+        "image_input": "animal_crop",
+        "detection_confidence": 0.9254496693611145,
+        "crop_reason": "detected",
+        "animal_ratio": 0.538344817924326,
+        "bbox": [
+          0,
+          0,
+          1367,
+          2048
+        ],
+        "width": 1367,
+        "height": 2048,
+        "blur_variance": 600.958,
+        "visual_reliability": 1,
+        "visual_inference_ms": 1281.545661999985,
+        "total_ms": 1305.2547370000411,
+        "cpu_ms": 2446.743725000001,
+        "persist_result_ms": 11.38397400006852,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 16.786829000011494
+      }
+    },
+    {
+      "provider": "pet_reid",
+      "metrics": {
+        "load_image_ms": 22.099651000075937,
+        "detected": true,
+        "crop_used": true,
+        "image_input": "animal_crop",
+        "detection_confidence": 0.93687903881073,
+        "crop_reason": "detected",
+        "animal_ratio": 0.2592135812640528,
+        "bbox": [
+          784,
+          0,
+          1756,
+          1310
+        ],
+        "width": 972,
+        "height": 1310,
+        "blur_variance": 570.667,
+        "visual_reliability": 1,
+        "visual_inference_ms": 1383.3266679999952,
+        "total_ms": 1405.4464790000338,
+        "cpu_ms": 2805.1396519999976,
+        "persist_result_ms": 10.882432000016706,
+        "retries": 0,
+        "timeouts": 0,
+        "invalid_responses": 0,
+        "incomplete_responses": 0,
+        "trigger_matching_ms": 16.880862999983037
+      }
+    }
+  ],
+  "worker_peak_rss_kib": 1734872
+}

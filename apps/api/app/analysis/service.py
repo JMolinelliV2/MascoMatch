@@ -50,11 +50,18 @@ def photo_snapshot(photo: Photo) -> dict:
 
 
 def is_current(db: Session, job: AnalysisJob) -> bool:
+    if job.source_type == "embedding":
+        from app.embeddings.service import is_current_embedding
+        return is_current_embedding(db,job)
+    expected_model=settings.ai_vision_model if job.source_type=="image" else settings.ai_text_model
+    expected_prompt=VISION_PROMPT_VERSION if job.source_type=="image" else TEXT_PROMPT_VERSION
+    if job.provider!=settings.ai_provider or job.model!=expected_model or job.prompt_version!=expected_prompt:
+        return False
     if job.source_type in {"image", "embedding"}:
         photo = db.get(Photo, job.photo_id) if job.photo_id else None
         if photo is None or photo.owner_type != job.owner_type or photo.owner_id != job.owner_id:
             return False
-        snapshot = photo_snapshot(photo)
+        snapshot = image_snapshot(db,photo) if job.preprocessing_version != "legacy" else photo_snapshot(photo)
         # A photo must still have an existing report or pet.
         if text_snapshot(db, job.owner_type, job.owner_id) is None:
             return False
@@ -63,12 +70,31 @@ def is_current(db: Session, job: AnalysisJob) -> bool:
     return snapshot is not None and input_hash(snapshot) == job.input_hash
 
 
-def _schedule(db: Session, owner_type: str, owner_id: UUID, source: str, snapshot: dict, photo_id: UUID | None = None) -> AnalysisJob:
+def owner_priority(db, owner_type, owner_id):
+    if owner_type == "observation":
+        return 100
+    if owner_type == "lost_case":
+        case = db.get(LostCase,owner_id)
+        return 90 if case and case.status == "ACTIVE" else 10
+    if owner_type == "pet" and db.scalar(select(LostCase.id).where(LostCase.pet_id==owner_id,LostCase.status=="ACTIVE").limit(1)):
+        return 90
+    return 50
+
+
+def image_snapshot(db,photo):
+    from app.analysis.image_preprocessing import preprocessing_id
+    from app.embeddings.specs import photo_species,crop_version
+    return {**photo_snapshot(photo),"species":photo_species(db,photo),
+            "preprocessing":preprocessing_id(),"crop_version":crop_version()}
+
+
+def _schedule(db: Session, owner_type: str, owner_id: UUID, source: str, snapshot: dict, photo_id: UUID | None = None, *, priority=None) -> AnalysisJob:
     model = settings.ai_vision_model if source == "image" else settings.ai_text_model
     version = VISION_PROMPT_VERSION if source == "image" else TEXT_PROMPT_VERSION
     digest = input_hash(snapshot)
+    preprocessing = snapshot.get("preprocessing", "text-evidence-v2")
     key = input_hash({"owner_type": owner_type, "owner_id": str(owner_id), "photo_id": str(photo_id or ""),
-                      "source": source, "input": digest, "provider": settings.ai_provider, "model": model, "version": version})
+                      "source": source, "input": digest, "provider": settings.ai_provider, "model": model, "version": version,"preprocessing":preprocessing})
     existing = db.scalar(select(AnalysisJob).where(AnalysisJob.deduplication_key == key))
     if existing is not None:
         return existing
@@ -81,6 +107,7 @@ def _schedule(db: Session, owner_type: str, owner_id: UUID, source: str, snapsho
                 source_type=source, provider=settings.ai_provider, model=model, prompt_version=version,
                 input_hash=digest, input_snapshot=snapshot, max_attempts=settings.ai_max_attempts,
                 available_at=utcnow(),
+                preprocessing_version=preprocessing, priority=priority if priority is not None else owner_priority(db,owner_type,owner_id),
             )
             db.add(job)
             db.flush()
@@ -92,11 +119,12 @@ def _schedule(db: Session, owner_type: str, owner_id: UUID, source: str, snapsho
         return existing
 
 
-def schedule_text(db: Session, owner_type: str, owner_id: UUID) -> AnalysisJob | None:
+def schedule_text(db: Session, owner_type: str, owner_id: UUID, *, priority=None) -> AnalysisJob | None:
     if not settings.ai_enabled:
         return None
     snapshot = text_snapshot(db, owner_type, owner_id)
-    return _schedule(db, owner_type, owner_id, "text", snapshot) if snapshot is not None else None
+    # Structured traits already participate directly in scoring. Only prose adds text evidence.
+    return _schedule(db, owner_type, owner_id, "text", snapshot,priority=priority) if snapshot is not None and snapshot.get("description", "").strip() else None
 
 
 def schedule_photo(db: Session, photo: Photo) -> AnalysisJob | None:
@@ -104,7 +132,7 @@ def schedule_photo(db: Session, photo: Photo) -> AnalysisJob | None:
     schedule_embedding(db, photo)
     if not settings.ai_enabled:
         return None
-    return _schedule(db, photo.owner_type, photo.owner_id, "image", photo_snapshot(photo), photo.id)
+    return _schedule(db, photo.owner_type, photo.owner_id, "image", image_snapshot(db,photo), photo.id)
 
 
 def schedule_owner(db: Session, owner_type: str, owner_id: UUID) -> None:

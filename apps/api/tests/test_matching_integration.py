@@ -10,7 +10,8 @@ from pathlib import Path
 from uuid import uuid4
 import pytest
 from PIL import Image, ImageOps
-from rq import Queue, SpawnWorker
+from rq import Queue
+from app.analysis.worker import PersistentWorker
 from rq.serializers import JSONSerializer
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import make_url
@@ -25,7 +26,8 @@ from app.models import Embedding, LostCase, Match, Notification, Observation, Pe
 
 
 @pytest.mark.skipif(os.getenv("RUN_MATCHING_INTEGRATION")!="1",reason="Requires PostgreSQL, Redis, MinIO and installed local CLIP weights")
-def test_real_visual_candidates_and_text_only_reports(monkeypatch):
+@pytest.mark.parametrize("pet_reid",[False,True])
+def test_real_visual_candidates_and_text_only_reports(monkeypatch,pet_reid):
     image_path=os.getenv("AI_SMOKE_IMAGE_PATH")
     assert image_path
     image=Path(image_path).read_bytes()
@@ -52,10 +54,11 @@ def test_real_visual_candidates_and_text_only_reports(monkeypatch):
         monkeypatch.setenv("DATABASE_URL",url.render_as_string(hide_password=False))
         monkeypatch.setenv("EMBEDDINGS_ENABLED","true")
         monkeypatch.setattr(settings,"embeddings_enabled",True)
+        monkeypatch.setattr(settings,"pet_reid_enabled",pet_reid)
         monkeypatch.setattr(settings,"ai_enabled",False)
         monkeypatch.setattr(queue,"SessionLocal",factory)
         monkeypatch.setattr(tasks,"SessionLocal",factory)
-        monkeypatch.setattr(queue,"get_queue",lambda:isolated)
+        monkeypatch.setattr(queue,"get_queue",lambda *args:isolated)
         with factory() as db:
             owner=User(email="owner@example.test",name="Owner",password_hash="unused")
             reporter=User(email="reporter@example.test",name="Reporter",password_hash="unused")
@@ -73,11 +76,12 @@ def test_real_visual_candidates_and_text_only_reports(monkeypatch):
                 db.add(photo);db.flush();schedule_photo(db,photo)
             db.commit()
         assert queue.dispatch_pending()==2
-        SpawnWorker([isolated],connection=isolated.connection,serializer=JSONSerializer).work(burst=True)
+        PersistentWorker([isolated],connection=isolated.connection,serializer=JSONSerializer,log_job_description=False).work(burst=True)
         with factory() as db:
             embeddings=list(db.scalars(select(Embedding)))
             assert len(embeddings)==2
             assert all(item.dimension==512 for item in embeddings)
+            assert all(item.provider==("pet_reid" if pet_reid else "open_clip") for item in embeddings)
             evaluate_observation(db,identities[1]);evaluate_observation(db,identities[2]);db.commit()
             matches=list(db.scalars(select(Match).order_by(Match.final_score.desc())))
             assert len(matches)==2
@@ -85,8 +89,12 @@ def test_real_visual_candidates_and_text_only_reports(monkeypatch):
             assert visual.visual_similarity>.75
             assert visual.visual_score is not None
             assert next(item for item in matches if item.observation_id==identities[2]).visual_score is None
-            assert len(list(db.scalars(select(Notification))))==2
-            print(f"Local CLIP cosine={visual.visual_similarity:.4f}; PostgreSQL ranking and text-only alerts passed")
+            notices=list(db.scalars(select(Notification)))
+            assert any(item.observation_id==identities[2] for item in notices)
+            from app.matching.scoring import notification_evidence
+            visual_notice=any(item.observation_id==identities[1] for item in notices)
+            assert visual_notice==notification_evidence(visual.final_score,.43,1,visual.geo_score)
+            print(f"Local {'Pet-ReID' if pet_reid else 'OpenCLIP'} cosine={visual.visual_similarity:.4f}; PostgreSQL ranking and guarded alerts passed")
     finally:
         isolated.delete(delete_jobs=True)
         for key in stored:delete_private_image(key)

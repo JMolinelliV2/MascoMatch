@@ -245,7 +245,7 @@ class Photo(TimestampMixin, Base):
 
 class AnalysisJob(TimestampMixin, Base):
     __tablename__ = "analysis_jobs"
-    __table_args__ = (Index("ix_analysis_jobs_created_at", "created_at"), Index("ix_analysis_jobs_finished_at", "finished_at"))
+    __table_args__ = (Index("ix_analysis_jobs_created_at", "created_at"), Index("ix_analysis_jobs_finished_at", "finished_at"), Index("ix_analysis_jobs_dispatch", "status", "priority", "available_at"))
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     deduplication_key: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
@@ -258,6 +258,9 @@ class AnalysisJob(TimestampMixin, Base):
     prompt_version: Mapped[str] = mapped_column(String(80), nullable=False)
     input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     input_snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, default=50, server_default="50", nullable=False)
+    preprocessing_version: Mapped[str] = mapped_column(String(240), default="legacy", server_default="legacy", nullable=False)
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}", nullable=False)
     status: Mapped[str] = mapped_column(String(24), default="PENDING", index=True, nullable=False)
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_attempts: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
@@ -286,6 +289,11 @@ class Embedding(TimestampMixin, Base):
     dimension: Mapped[int] = mapped_column(Integer, nullable=False)
     input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     vector: Mapped[list[float]] = mapped_column(Vector(512).with_variant(JSON(), "sqlite"), nullable=False)
+    provider: Mapped[str] = mapped_column(String(40), default="legacy", server_default="legacy", nullable=False)
+    revision: Mapped[str] = mapped_column(String(80), default="legacy", server_default="legacy", nullable=False)
+    preprocessing_version: Mapped[str] = mapped_column(String(240), default="legacy", server_default="legacy", nullable=False)
+    space_id: Mapped[str] = mapped_column(String(64), default="legacy", server_default="legacy", index=True, nullable=False)
+    quality: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}", nullable=False)
 
 
 class Match(TimestampMixin, Base):

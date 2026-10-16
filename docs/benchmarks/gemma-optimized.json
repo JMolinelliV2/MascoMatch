@@ -1,0 +1,588 @@
+{
+  "models": [
+    {
+      "name": "gemma3:4b",
+      "digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "size": 3338801804
+    }
+  ],
+  "model_comparison": false,
+  "prompt_versions": [
+    "text_feature_extractor_v2",
+    "vision_feature_extractor_v2"
+  ],
+  "environment": "local CPU; not a production capacity measurement",
+  "configurations": [
+    {
+      "num_ctx": 4096,
+      "num_predict": 768,
+      "max_side": 1024,
+      "keep_alive": "15m",
+      "num_parallel_server": "1 (external configuration)",
+      "rows": [
+        {
+          "source": "text",
+          "cold_requested": true,
+          "crop_requested": false,
+          "success": true,
+          "known": 5,
+          "unknown": 7,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 39.8936,
+          "metrics": {
+            "ollama_request_ms": 39806.986,
+            "total_duration": 39805250029,
+            "load_duration": 6083687391,
+            "prompt_eval_duration": 6891721000,
+            "eval_duration": 26821866000,
+            "prompt_eval_count": 391,
+            "eval_count": 282,
+            "cold_start": 1.0,
+            "parse_validate_ms": 0.321
+          }
+        },
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 2,
+          "unknown": 10,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 27.9675,
+          "metrics": {
+            "ollama_request_ms": 27965.639,
+            "total_duration": 27963224155,
+            "load_duration": 827170,
+            "prompt_eval_duration": 7502127000,
+            "eval_duration": 20453905000,
+            "prompt_eval_count": 394,
+            "eval_count": 216,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.213
+          }
+        },
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 3,
+          "unknown": 9,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 27.9159,
+          "metrics": {
+            "ollama_request_ms": 27913.854,
+            "total_duration": 27911434487,
+            "load_duration": 1362596,
+            "prompt_eval_duration": 7495393000,
+            "eval_duration": 20406887000,
+            "prompt_eval_count": 398,
+            "eval_count": 213,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.134
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": true,
+          "crop_requested": false,
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 1044290,
+            "output_bytes": 130300,
+            "original_width": 5184,
+            "original_height": 3456,
+            "width": 1024,
+            "height": 683,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 1044290
+          },
+          "success": true,
+          "known": 6,
+          "unknown": 6,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 72.9802,
+          "metrics": {
+            "ollama_request_ms": 72665.536,
+            "total_duration": 72661934186,
+            "load_duration": 3576475904,
+            "prompt_eval_duration": 40858155000,
+            "eval_duration": 28194893000,
+            "prompt_eval_count": 609,
+            "eval_count": 280,
+            "cold_start": 1.0,
+            "parse_validate_ms": 0.365
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": true,
+          "crop_requested": true,
+          "crop": {
+            "detected": true,
+            "crop_used": true,
+            "image_input": "animal_crop",
+            "detection_confidence": 0.9364827871322632,
+            "crop_reason": "detected",
+            "animal_ratio": 0.25937119320280644,
+            "bbox": [
+              1985,
+              0,
+              4445,
+              3315
+            ],
+            "width": 2460,
+            "height": 3315,
+            "blur_variance": 570.609,
+            "visual_reliability": 1
+          },
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 1401349,
+            "output_bytes": 135466,
+            "original_width": 2460,
+            "original_height": 3315,
+            "width": 760,
+            "height": 1024,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 1044290
+          },
+          "success": true,
+          "known": 4,
+          "unknown": 8,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 75.4995,
+          "metrics": {
+            "ollama_request_ms": 73975.622,
+            "total_duration": 73972101265,
+            "load_duration": 3830242802,
+            "prompt_eval_duration": 41214442000,
+            "eval_duration": 28892231000,
+            "prompt_eval_count": 609,
+            "eval_count": 287,
+            "cold_start": 1.0,
+            "parse_validate_ms": 0.259
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": true,
+          "crop_requested": false,
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 4480055,
+            "output_bytes": 235259,
+            "original_width": 3000,
+            "original_height": 4000,
+            "width": 768,
+            "height": 1024,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 4480055
+          },
+          "success": true,
+          "known": 5,
+          "unknown": 7,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 73.6217,
+          "metrics": {
+            "ollama_request_ms": 73392.824,
+            "total_duration": 73389361211,
+            "load_duration": 3834030899,
+            "prompt_eval_duration": 40618737000,
+            "eval_duration": 28904995000,
+            "prompt_eval_count": 609,
+            "eval_count": 285,
+            "cold_start": 1.0,
+            "parse_validate_ms": 0.315
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": true,
+          "crop_requested": true,
+          "crop": {
+            "detected": true,
+            "crop_used": true,
+            "image_input": "animal_crop",
+            "detection_confidence": 0.9261412024497986,
+            "crop_reason": "detected",
+            "animal_ratio": 0.5388115324307137,
+            "bbox": [
+              0,
+              0,
+              2670,
+              4000
+            ],
+            "width": 2670,
+            "height": 4000,
+            "blur_variance": 599.558,
+            "visual_reliability": 1
+          },
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 3531250,
+            "output_bytes": 210193,
+            "original_width": 2670,
+            "original_height": 4000,
+            "width": 684,
+            "height": 1024,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 4480055
+          },
+          "success": true,
+          "known": 9,
+          "unknown": 3,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 74.6429,
+          "metrics": {
+            "ollama_request_ms": 74035.118,
+            "total_duration": 74031355359,
+            "load_duration": 3578267164,
+            "prompt_eval_duration": 40493783000,
+            "eval_duration": 29924295000,
+            "prompt_eval_count": 609,
+            "eval_count": 293,
+            "cold_start": 1.0,
+            "parse_validate_ms": 0.253
+          }
+        },
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 5,
+          "unknown": 7,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 34.178,
+          "metrics": {
+            "ollama_request_ms": 34175.064,
+            "total_duration": 34171893423,
+            "load_duration": 1302005,
+            "prompt_eval_duration": 6266508000,
+            "eval_duration": 27775060000,
+            "prompt_eval_count": 391,
+            "eval_count": 282,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.198
+          }
+        },
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 2,
+          "unknown": 10,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 27.1355,
+          "metrics": {
+            "ollama_request_ms": 27133.371,
+            "total_duration": 27130722857,
+            "load_duration": 910594,
+            "prompt_eval_duration": 5827248000,
+            "eval_duration": 21295888000,
+            "prompt_eval_count": 394,
+            "eval_count": 216,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.163
+          }
+        },
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 3,
+          "unknown": 9,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 26.5965,
+          "metrics": {
+            "ollama_request_ms": 26594.164,
+            "total_duration": 26591586714,
+            "load_duration": 937868,
+            "prompt_eval_duration": 5963867000,
+            "eval_duration": 20619839000,
+            "prompt_eval_count": 398,
+            "eval_count": 213,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.201
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": false,
+          "crop_requested": false,
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 1044290,
+            "output_bytes": 130300,
+            "original_width": 5184,
+            "original_height": 3456,
+            "width": 1024,
+            "height": 683,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 1044290
+          },
+          "success": true,
+          "known": 5,
+          "unknown": 7,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 66.7182,
+          "metrics": {
+            "ollama_request_ms": 66509.136,
+            "total_duration": 66506281987,
+            "load_duration": 2569931,
+            "prompt_eval_duration": 38969690000,
+            "eval_duration": 27433392000,
+            "prompt_eval_count": 609,
+            "eval_count": 272,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.14
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": false,
+          "crop_requested": true,
+          "crop": {
+            "detected": true,
+            "crop_used": true,
+            "image_input": "animal_crop",
+            "detection_confidence": 0.9364827871322632,
+            "crop_reason": "detected",
+            "animal_ratio": 0.25937119320280644,
+            "bbox": [
+              1985,
+              0,
+              4445,
+              3315
+            ],
+            "width": 2460,
+            "height": 3315,
+            "blur_variance": 570.609,
+            "visual_reliability": 1
+          },
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 1401349,
+            "output_bytes": 135466,
+            "original_width": 2460,
+            "original_height": 3315,
+            "width": 760,
+            "height": 1024,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 1044290
+          },
+          "success": true,
+          "known": 4,
+          "unknown": 8,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 68.4546,
+          "metrics": {
+            "ollama_request_ms": 67851.31,
+            "total_duration": 67848425288,
+            "load_duration": 2442993,
+            "prompt_eval_duration": 38614364000,
+            "eval_duration": 29117871000,
+            "prompt_eval_count": 609,
+            "eval_count": 288,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.156
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": false,
+          "crop_requested": false,
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 4480055,
+            "output_bytes": 235259,
+            "original_width": 3000,
+            "original_height": 4000,
+            "width": 768,
+            "height": 1024,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 4480055
+          },
+          "success": true,
+          "known": 6,
+          "unknown": 6,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 68.2631,
+          "metrics": {
+            "ollama_request_ms": 68085.958,
+            "total_duration": 68082467668,
+            "load_duration": 3763341,
+            "prompt_eval_duration": 38430982000,
+            "eval_duration": 29471263000,
+            "prompt_eval_count": 609,
+            "eval_count": 287,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.214
+          }
+        },
+        {
+          "source": "image",
+          "cold_requested": false,
+          "crop_requested": true,
+          "crop": {
+            "detected": true,
+            "crop_used": true,
+            "image_input": "animal_crop",
+            "detection_confidence": 0.9261412024497986,
+            "crop_reason": "detected",
+            "animal_ratio": 0.5388115324307137,
+            "bbox": [
+              0,
+              0,
+              2670,
+              4000
+            ],
+            "width": 2670,
+            "height": 4000,
+            "blur_variance": 599.558,
+            "visual_reliability": 1
+          },
+          "image": {
+            "preprocessing_version": "vlm_rgb_exif_lanczos_v2",
+            "image_input": "original",
+            "input_bytes": 3531250,
+            "output_bytes": 210193,
+            "original_width": 2670,
+            "original_height": 4000,
+            "width": 684,
+            "height": 1024,
+            "max_side": 1024,
+            "jpeg_quality": 88,
+            "original_file_bytes": 4480055
+          },
+          "success": true,
+          "known": 9,
+          "unknown": 3,
+          "gt_checks": 1,
+          "gt_errors": 0,
+          "seconds": 31.739,
+          "metrics": {
+            "ollama_request_ms": 31150.552,
+            "total_duration": 31147412610,
+            "load_duration": 4188680,
+            "prompt_eval_duration": 317180000,
+            "eval_duration": 30652654000,
+            "prompt_eval_count": 609,
+            "eval_count": 293,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.178
+          }
+        }
+      ],
+      "summary": {
+        "text": {
+          "requests": 6,
+          "success_rate": 1.0,
+          "schema_validity": 1.0,
+          "latency_p50_seconds": 27.9159,
+          "latency_p95_seconds": 39.8936,
+          "errors": {},
+          "timeout_rate": 0.0,
+          "incomplete_response_rate": 0.0,
+          "known_attributes": 20,
+          "unknown_attributes": 52,
+          "ground_truth_checks": 18,
+          "ground_truth_errors": 0
+        },
+        "image": {
+          "requests": 8,
+          "success_rate": 1.0,
+          "schema_validity": 1.0,
+          "latency_p50_seconds": 68.4546,
+          "latency_p95_seconds": 75.4995,
+          "errors": {},
+          "timeout_rate": 0.0,
+          "incomplete_response_rate": 0.0,
+          "known_attributes": 48,
+          "unknown_attributes": 48,
+          "ground_truth_checks": 8,
+          "ground_truth_errors": 0
+        }
+      },
+      "parallel_two_requests_seconds": 63.6740384630001,
+      "parallel_results": [
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 5,
+          "unknown": 7,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 34.8868,
+          "metrics": {
+            "ollama_request_ms": 34884.534,
+            "total_duration": 34879552840,
+            "load_duration": 1236823,
+            "prompt_eval_duration": 6190971000,
+            "eval_duration": 28463444000,
+            "prompt_eval_count": 391,
+            "eval_count": 282,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.183
+          }
+        },
+        {
+          "source": "text",
+          "cold_requested": false,
+          "crop_requested": false,
+          "success": true,
+          "known": 2,
+          "unknown": 10,
+          "gt_checks": 3,
+          "gt_errors": 0,
+          "seconds": 63.6716,
+          "metrics": {
+            "ollama_request_ms": 63669.387,
+            "total_duration": 63665657426,
+            "load_duration": 1014799,
+            "prompt_eval_duration": 6442826000,
+            "eval_duration": 22338593000,
+            "prompt_eval_count": 394,
+            "eval_count": 216,
+            "cold_start": 0.0,
+            "parse_validate_ms": 0.157
+          }
+        }
+      ],
+      "client_peak_rss_kib": 649380
+    }
+  ]
+}

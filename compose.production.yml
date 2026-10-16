@@ -24,6 +24,38 @@ x-backend: &backend
   AI_ENABLED: ${AI_ENABLED:-false}
   EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
   EMBEDDING_CACHE_DIR: /models/clip
+  PET_REID_CACHE_DIR: /models/pet-reid
+  DETECTOR_CACHE_DIR: /models/detector
+  PET_REID_ENABLED: ${PET_REID_ENABLED:-true}
+  OPENCLIP_ENABLED: ${OPENCLIP_ENABLED:-true}
+  PET_CROP_ENABLED: ${PET_CROP_ENABLED:-true}
+  PET_CROP_CONFIDENCE: ${PET_CROP_CONFIDENCE:-0.75}
+  PET_CROP_MARGIN: ${PET_CROP_MARGIN:-0.18}
+  PET_CROP_TIMEOUT_SECONDS: ${PET_CROP_TIMEOUT_SECONDS:-15}
+  EMBEDDING_REQUEST_TIMEOUT_SECONDS: ${EMBEDDING_REQUEST_TIMEOUT_SECONDS:-90}
+  EMBEDDING_CPU_THREADS: ${EMBEDDING_CPU_THREADS:-2}
+  AI_TEXT_MODEL: gemma3:4b
+  AI_VISION_MODEL: gemma3:4b
+  OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-4096}
+  OLLAMA_NUM_PREDICT: ${OLLAMA_NUM_PREDICT:-768}
+  OLLAMA_NUM_THREADS: ${OLLAMA_NUM_THREADS:-3}
+  OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-15m}
+  OLLAMA_PREWARM: ${OLLAMA_PREWARM:-true}
+  AI_TEXT_REQUEST_TIMEOUT_SECONDS: ${AI_TEXT_REQUEST_TIMEOUT_SECONDS:-120}
+  AI_VISION_REQUEST_TIMEOUT_SECONDS: ${AI_VISION_REQUEST_TIMEOUT_SECONDS:-240}
+  VLM_IMAGE_MAX_SIDE: ${VLM_IMAGE_MAX_SIDE:-1024}
+  VLM_IMAGE_JPEG_QUALITY: ${VLM_IMAGE_JPEG_QUALITY:-88}
+  OLLAMA_CAPABILITIES_CACHE_SECONDS: ${OLLAMA_CAPABILITIES_CACHE_SECONDS:-3600}
+  OPENCLIP_VISUAL_FLOOR: ${OPENCLIP_VISUAL_FLOOR:-0.55}
+  OPENCLIP_VISUAL_CEILING: ${OPENCLIP_VISUAL_CEILING:-0.95}
+  PET_REID_VISUAL_FLOOR: ${PET_REID_VISUAL_FLOOR:-0.50}
+  PET_REID_VISUAL_CEILING: ${PET_REID_VISUAL_CEILING:-0.90}
+  VISUAL_BEST_WEIGHT: ${VISUAL_BEST_WEIGHT:-0.7}
+  MATCHING_ANALYSIS_WAIT_SECONDS: ${MATCHING_ANALYSIS_WAIT_SECONDS:-30}
+  MATCHING_NOTIFY_MIN_COVERAGE: ${MATCHING_NOTIFY_MIN_COVERAGE:-0.35}
+  MATCHING_NOTIFY_MIN_FEATURE: ${MATCHING_NOTIFY_MIN_FEATURE:-0.65}
+  MATCHING_NOTIFY_MIN_GEO: ${MATCHING_NOTIFY_MIN_GEO:-0.35}
+  MATCHING_NOTIFY_THRESHOLD: ${MATCHING_NOTIFY_THRESHOLD:-0.82}
   MAIL_DELIVERY_MODE: ${MAIL_DELIVERY_MODE:-disabled}
   PHOTO_REMINDER_DELAY_MINUTES: ${PHOTO_REMINDER_DELAY_MINUTES:-30}
   SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
@@ -47,6 +79,8 @@ services:
   db:
     build: {context: ./infrastructure/docker/postgres}
     restart: unless-stopped
+    mem_limit: ${DATABASE_MEMORY_LIMIT:-2g}
+    cpus: 1.5
     environment:
       POSTGRES_DB: mascomatch
       POSTGRES_USER: mascomatch_owner
@@ -65,6 +99,8 @@ services:
     <<: *safety
     image: redis:7-alpine
     user: redis
+    mem_limit: 512m
+    cpus: 0.5
     command: [redis-server, /run/secrets/redis_config]
     secrets: [redis_config, redis_password]
     volumes: [redis_data:/data]
@@ -78,6 +114,8 @@ services:
   photos:
     <<: *safety
     image: chrislusf/seaweedfs:4.48
+    mem_limit: ${STORAGE_MEMORY_LIMIT:-1g}
+    cpus: 1
     cap_add: [CHOWN, SETUID, SETGID]
     command: server -dir=/data -ip=photos -ip.bind=0.0.0.0 -master.volumeSizeLimitMB=1024 -volume.max=16 -s3 -s3.port=8333 -s3.config=/run/secrets/photos_config -s3.concurrentUploadLimitMB=128
     secrets: [photos_config]
@@ -128,9 +166,10 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --no-proxy-headers --no-access-log
     read_only: true
     tmpfs: ["/tmp:size=268435456,mode=1777"]
-    volumes: [vision_models:/models/clip:ro]
+    volumes: [vision_models:/models:ro]
     networks: [backend, edge]
     mem_limit: 768m
+    cpus: 1
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready',timeout=6)"]
       interval: 30s
@@ -152,6 +191,7 @@ services:
     networks:
       edge: {ipv4_address: 172.30.50.3}
     mem_limit: 512m
+    cpus: 1
     healthcheck:
       test: [CMD, node, -e, "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -162,6 +202,8 @@ services:
   caddy:
     <<: *safety
     image: caddy:2.11.7-alpine
+    mem_limit: 256m
+    cpus: 0.5
     cap_add: [NET_BIND_SERVICE]
     environment: {SITE_DOMAIN: "${SITE_DOMAIN:?Set the purchased domain}"}
     ports: ["80:80", "443:443", "443:443/udp"]
@@ -177,16 +219,22 @@ services:
     environment: {OLLAMA_NO_CLOUD: "1", OLLAMA_NUM_PARALLEL: "1", OLLAMA_MAX_LOADED_MODELS: "1"}
     volumes: [ollama_models:/root/.ollama]
     networks: [backend]
-    mem_limit: 6g
-    cpus: 4
+    mem_limit: ${OLLAMA_MEMORY_LIMIT:-10g}
+    cpus: 3.5
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   worker:
     <<: *safety
     build: {context: ./apps/api, dockerfile: Dockerfile.worker}
     profiles: [ai-local]
-    environment:
+    environment: &worker-environment
       <<: *backend
       RUNTIME_ROLE: worker
+      ANALYSIS_WORKER_KIND: visual
       JWT_SECRET_FILE: ""
       METRICS_TOKEN_FILE: ""
       SMTP_PASSWORD_FILE: ""
@@ -196,15 +244,85 @@ services:
     secrets: [database_url, redis_url, vision_s3_secret]
     read_only: true
     tmpfs: ["/tmp:size=536870912,mode=1777"]
-    volumes: [vision_models:/models/clip:ro]
+    volumes: [vision_models:/models:ro]
     networks: [backend]
-    mem_limit: 2g
+    mem_limit: ${VISUAL_WORKER_MEMORY_LIMIT:-4g}
     cpus: 2
     depends_on: {api: {condition: service_healthy}, ollama: {condition: service_started}}
+    healthcheck:
+      test: [CMD, python, -m, app.ops.ai_health, --worker, visual]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+  model-setup:
+    build: {context: ./apps/api, dockerfile: Dockerfile.worker}
+    profiles: [setup]
+    user: "0:0"
+    environment:
+      APP_ENV: test
+      PET_REID_ENABLED: ${PET_REID_ENABLED:-true}
+      OPENCLIP_ENABLED: ${OPENCLIP_ENABLED:-true}
+      PET_CROP_ENABLED: ${PET_CROP_ENABLED:-true}
+      EMBEDDING_CPU_THREADS: "2"
+    command: python -m app.embeddings.setup
+    read_only: true
+    tmpfs: [/tmp]
+    volumes: [vision_models:/models:rw, ollama_models:/ollama:rw]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 4g
+    cpus: 2
+
+  ai-smoke:
+    build: {context: ./apps/api, dockerfile: Dockerfile.worker}
+    profiles: [smoke]
+    environment:
+      <<: *backend
+      RUNTIME_ROLE: ops
+      DATABASE_URL_FILE: /run/secrets/migrator_database_url
+      JWT_SECRET_FILE: ""
+      METRICS_TOKEN_FILE: ""
+      SMTP_PASSWORD_FILE: ""
+      MAIL_DELIVERY_MODE: disabled
+    secrets: [migrator_database_url, redis_url, s3_secret_key]
+    command: python -m app.ops.ai_smoke --allow-disposable-database --download-fixtures
+    read_only: true
+    tmpfs: ["/tmp:size=268435456,mode=1777"]
+    volumes: [vision_models:/models:ro]
+    networks: [backend]
+    mem_limit: 4g
+    cpus: 2
+
+  worker-ai:
+    <<: *safety
+    build: {context: ./apps/api, dockerfile: Dockerfile.worker}
+    profiles: [ai-local]
+    environment:
+      <<: *worker-environment
+      ANALYSIS_WORKER_KIND: semantic
+      EMBEDDING_CPU_THREADS: "1"
+    secrets: [database_url, redis_url, vision_s3_secret]
+    read_only: true
+    tmpfs: ["/tmp:size=268435456,mode=1777"]
+    volumes: [vision_models:/models:ro]
+    networks: [backend]
+    mem_limit: 1536m
+    cpus: 0.5
+    depends_on: {api: {condition: service_healthy}, ollama: {condition: service_healthy}}
+    healthcheck:
+      test: [CMD, python, -m, app.ops.ai_health, --worker, semantic]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 300s
 
   backup:
     <<: *safety
     build: {context: ./apps/api, dockerfile: Dockerfile.ops}
+    mem_limit: ${BACKUP_MEMORY_LIMIT:-3g}
+    cpus: 1
     environment:
       <<: *backend
       BACKUP_KEY_FILE: /run/secrets/backup_key
@@ -225,6 +343,8 @@ services:
   prometheus:
     <<: *safety
     image: prom/prometheus:v3.15.0
+    mem_limit: 512m
+    cpus: 0.5
     profiles: [monitoring]
     secrets: [metrics_token]
     volumes: [./infrastructure/production/prometheus.yml:/etc/prometheus/prometheus.yml:ro, ./infrastructure/production/alerts.yml:/etc/prometheus/alerts.yml:ro, prometheus_data:/prometheus]

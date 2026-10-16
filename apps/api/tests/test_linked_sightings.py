@@ -63,7 +63,7 @@ def test_anonymous_linked_sighting_only_needs_location_and_date(client, auth_hea
         assert observation.sex == "unknown"
         assert db.scalar(select(func.count()).select_from(AnalysisJob)) == 0
     status = client.get(f"/api/v1/public/lost-animals/{case['id']}/sightings/{response.json()['id']}/status").json()
-    assert set(status) == {"id", "status", "owner_notified"}
+    assert set(status) == {"id", "public_id", "status", "owner_notified"}
     notifications = client.get("/api/v1/notifications", headers=auth_headers)
     assert notifications.status_code == 200
     assert notifications.headers["cache-control"] == "no-store"
@@ -134,8 +134,8 @@ def test_owner_does_not_receive_alert_for_their_own_sighting(client, auth_header
     assert not response.json()["owner_notified"]
 
 
-@pytest.mark.parametrize("species,color,expected", [("dog", "brown", "POSSIBLE_MATCH"), ("cat", "brown", "NOT_COMPATIBLE"), ("dog", "white", "NOT_COMPATIBLE"), ("dog", "unknown", "UNVERIFIED")])
-def test_only_independent_photo_traits_generate_a_possible_match(client, auth_headers, db_factory, monkeypatch, species, color, expected):
+@pytest.mark.parametrize("species,color,expected", [("dog", "brown", "UNVERIFIED"), ("cat", "brown", "NOT_COMPATIBLE"), ("dog", "white", "NOT_COMPATIBLE"), ("dog", "unknown", "UNVERIFIED")])
+def test_photo_traits_alone_do_not_assert_identity(client, auth_headers, db_factory, monkeypatch, species, color, expected):
     _, case = lost_notice(client, auth_headers)
     mock_storage(monkeypatch)
     monkeypatch.setattr(settings, "ai_enabled", True)
@@ -170,7 +170,7 @@ def test_photo_comparison_waits_for_all_images_and_hides_unrelated_photos(client
         feature_set(db, jobs[0], species="dog", primary_color="brown")
         assert linked.evaluate_sighting(db, identity) == "PENDING"
         feature_set(db, jobs[1], species="dog", primary_color="brown")
-        assert linked.evaluate_sighting(db, identity) == "POSSIBLE_MATCH"
+        assert linked.evaluate_sighting(db, identity) == "UNVERIFIED"
         db.commit()
     notice = client.get("/api/v1/notifications", headers=auth_headers).json()["items"][0]
     from app.routers import notifications
@@ -212,7 +212,11 @@ def test_worker_completion_triggers_matching_without_a_browser(client, auth_head
         job_id = job.id
     monkeypatch.setattr(tasks, "SessionLocal", db_factory)
     monkeypatch.setattr(tasks, "get_provider", lambda *_: FakeProvider())
-    monkeypatch.setattr(tasks, "load_analysis_image", lambda *_: (b"clean-photo", "image/jpeg"))
+    from io import BytesIO
+    from PIL import Image
+    image=BytesIO()
+    Image.new("RGB",(50,50),"brown").save(image,format="JPEG")
+    monkeypatch.setattr(tasks, "load_analysis_image", lambda *_: (image.getvalue(), "image/jpeg"))
     assert tasks.process_analysis(str(job_id), 0) == "SUCCEEDED"
     assert client.get("/api/v1/notifications", headers=auth_headers).json()["total"] == 1
 

@@ -49,9 +49,8 @@ def update_pet(pet_id: UUID, payload: PetUpdate, db: Session = Depends(get_db), 
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(pet, field, value)
     db.flush()
-    for case in pet.lost_cases:
-        schedule_text(db, "lost_case", case.id)
-    mark_related_pending(db, "pet", pet.id)
+    from app.embeddings.reschedule import reschedule_owner
+    reschedule_owner(db,"pet",pet.id)
     db.commit()
     db.refresh(pet)
     return pet

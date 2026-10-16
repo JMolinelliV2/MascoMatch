@@ -21,9 +21,9 @@ def known(value):
 
 
 def feature_similarity(expected, observed):
-    if expected.get("species") and observed.get("species") and expected["species"] != observed["species"]:
+    if known(expected.get("species")) and known(observed.get("species")) and expected["species"] != observed["species"]:
         return 0, 0, [], True
-    if expected.get("sex") and observed.get("sex") and expected["sex"] != observed["sex"]:
+    if known(expected.get("sex")) and known(observed.get("sex")) and expected["sex"] != observed["sex"]:
         return 0, 0, [], True
     coverage = matched = 0
     reasons = []
@@ -51,9 +51,23 @@ def cosine(left, right):
     return max(-1, min(1, numerator / norm)) if norm else 0
 
 
-def combine(feature, raw_visual, distance, radius, days, accuracy=0):
+def aggregate_visual_similarity(values):
+    values=sorted((float(value) for value in values if math.isfinite(float(value))),reverse=True)
+    if not values:
+        return None
+    return values[0] if len(values)==1 else settings.visual_best_weight*values[0]+(1-settings.visual_best_weight)*values[1]
+
+
+def combine(feature, raw_visual, distance, radius, days, accuracy=0, *, provider="open_clip", quality=1.0):
     geo = math.exp(-2 * max(0, distance - accuracy) / max(1, radius))
     temporal = max(.2, math.exp(-max(0, days) / settings.matching_temporal_days))
-    visual = None if raw_visual is None else max(0, min(1, (raw_visual - settings.matching_visual_floor) / (settings.matching_visual_ceiling - settings.matching_visual_floor)))
-    score = .50 * feature + .30 * geo + .20 * temporal if visual is None else .45 * visual + .25 * feature + .20 * geo + .10 * temporal
+    prefix="pet_reid" if provider=="pet_reid" else "openclip"
+    floor,ceiling=getattr(settings,prefix+"_visual_floor"),getattr(settings,prefix+"_visual_ceiling")
+    visual = None if raw_visual is None else max(0,min(1,(raw_visual-floor)/(ceiling-floor)))
+    score = .50*feature+.30*geo+.20*temporal if visual is None else .45*max(0,min(1,quality))*visual+.25*feature+.20*geo+.10*temporal
     return score, visual, geo, temporal
+
+
+def notification_evidence(score,coverage,feature,geo):
+    return (score>=settings.matching_notify_threshold and coverage>=settings.matching_notify_min_coverage
+            and feature>=settings.matching_notify_min_feature and geo>=settings.matching_notify_min_geo)

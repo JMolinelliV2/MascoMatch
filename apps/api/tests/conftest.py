@@ -12,6 +12,26 @@ from app import models  # noqa: F401
 from app.core.config import settings
 
 
+@pytest.fixture(autouse=True)
+def clear_model_metadata():
+    from app.analysis.providers import clear_capability_cache
+    clear_capability_cache()
+    yield
+    clear_capability_cache()
+
+
+@pytest.fixture()
+def confirm_account(client,db_factory):
+    def confirm(email):
+        from sqlalchemy import select
+        from app.account_mail import decrypt_token
+        with db_factory() as db:
+            ticket=db.scalar(select(models.AccountToken).join(models.User,models.AccountToken.user_id==models.User.id).where(models.User.email==email,models.AccountToken.kind=="VERIFY_EMAIL"))
+            code=decrypt_token(ticket.encrypted_token)
+        assert client.post("/api/v1/auth/verify-email",json={"code":code}).status_code==200
+    return confirm
+
+
 @pytest.fixture()
 def db_factory():
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
@@ -37,6 +57,10 @@ def client(db_factory, monkeypatch):
     monkeypatch.setattr("app.notifications.email.delivery_loop", idle_worker)
     monkeypatch.setattr("app.matching.engine.general_matching_loop", idle_worker)
     monkeypatch.setattr("app.account_mail.delivery_loop", idle_worker)
+    monkeypatch.setattr("app.photo_reminders.delivery_loop", idle_worker)
+    monkeypatch.setattr("app.account_management.cleanup_loop", idle_worker)
+    monkeypatch.setattr("app.contact_mail.delivery_loop", idle_worker)
+    monkeypatch.setattr("app.operational_tracking.cleanup_loop", idle_worker)
 
     def override_get_db():
         db = db_factory()
@@ -52,8 +76,20 @@ def client(db_factory, monkeypatch):
 
 
 @pytest.fixture()
-def auth_headers(client):
+def unverified_headers(client):
     response = client.post("/api/v1/auth/register", json={"email": "owner@example.com", "password": "a-strong-passphrase", "name": "Owner"})
     assert response.status_code == 201
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+@pytest.fixture()
+def auth_headers(client, unverified_headers, db_factory):
+    # Publish fixtures exercise the real confirmation flow, not a bypass of the guard.
+    from sqlalchemy import select
+    from app.account_mail import decrypt_token
+    with db_factory() as db:
+        ticket = db.scalar(select(models.AccountToken).where(models.AccountToken.kind == "VERIFY_EMAIL"))
+        code = decrypt_token(ticket.encrypted_token)
+    assert client.post("/api/v1/auth/verify-email", json={"code": code}).status_code == 200
+    return unverified_headers
 

@@ -83,7 +83,7 @@ def compare_traits(target: dict, observed: dict):
     return compatible, score, reasons, contradiction
 
 
-def set_result(db, observation, case, pet, status, reasons, score=None):
+def set_result(db, observation, case, pet, status, reasons, score=None, evidence=None):
     match=db.scalar(select(Match).where(Match.observation_id==observation.id,Match.lost_case_id==case.id))
     if status in REPORTED_STATUSES:
         if match is None:
@@ -98,6 +98,9 @@ def set_result(db, observation, case, pet, status, reasons, score=None):
         coordinates=(case.latitude,case.longitude,observation.latitude,observation.longitude)
         match.distance_meters=distance_meters(*coordinates) if all(value is not None and math.isfinite(value) for value in coordinates) else 0
         match.explanation=reasons
+        if evidence:
+            for field,value in evidence.items():
+                setattr(match,field,value)
         match.is_active=True
         if status == "POSSIBLE_MATCH":
             record_recommendation(match, "LINKED")
@@ -165,7 +168,10 @@ def evaluate_sighting(db: Session, observation_id: UUID) -> str:
     expected = target_traits(db, case, pet)
     target, target_jobs = expected
     pending = {"PENDING", "DISPATCHING", "QUEUED", "RUNNING"}
-    if any(job.status in pending for job in jobs + target_jobs):
+    from app.matching.engine import should_wait,vectors,visual_evidence,evidence as collect_evidence
+    from app.matching.scoring import feature_similarity,combine,notification_evidence
+    visual_jobs=list(db.scalars(select(AnalysisJob).where(AnalysisJob.owner_type=="observation",AnalysisJob.owner_id==observation.id,AnalysisJob.source_type=="embedding")))
+    if any(should_wait(job) for job in jobs + target_jobs + [job for job in visual_jobs if is_current(db,job)]):
         return set_result(db, observation, case, pet, "PENDING", geographic + ["Analizando las fotos y las características del aviso"])
     observed_results = []
     for photo in photos:
@@ -175,15 +181,25 @@ def evaluate_sighting(db: Session, observation_id: UUID) -> str:
         traits = traits_from_result(result)
         if traits:
             observed_results.append(traits)
-    if not observed_results:
-        return set_result(db, observation, case, pet, "UNVERIFIED", geographic + ["Las fotos necesitan revisión por una persona"])
     comparisons = [compare_traits(target, traits) for traits in observed_results]
     if any(item[3] for item in comparisons):
         return set_result(db, observation, case, pet, "NOT_COMPATIBLE", ["Las fotos muestran una especie o un color diferente al aviso"])
-    positives = [item for item in comparisons if item[0]]
-    if positives:
-        _, score, reasons, _ = max(positives, key=lambda item: item[1])
-        return set_result(db, observation, case, pet, "POSSIBLE_MATCH", geographic + reasons, score)
+    # A linked report inherits the proposed species; that alone is not independent evidence.
+    observed,_=collect_evidence(db,"observation",observation.id,{})
+    target,_=collect_evidence(db,"lost_case",case.id,{"species":pet.species,"sex":pet.sex,
+        "primary_color":pet.primary_color,"size":pet.size,"distinctive_features":pet.distinctive_features})
+    target,_=collect_evidence(db,"pet",pet.id,target)
+    feature,coverage,reasons,contradiction=feature_similarity(target,observed)
+    if contradiction or target.get("_species_conflict") or observed.get("_species_conflict"):
+        return set_result(db,observation,case,pet,"NOT_COMPATIBLE",["Las características presentan contradicciones con el aviso"])
+    observed_vectors=vectors(db,(Photo.owner_type=="observation") & (Photo.owner_id==observation.id)) if settings.embeddings_enabled else []
+    raw,provider,quality=visual_evidence(db,observed_vectors,case)
+    days=(aware(observation.observed_at)-aware(case.lost_at)).total_seconds()/86400
+    score,visual,geo,temporal=combine(feature,raw,distance,min(case.search_radius_meters,settings.matching_max_radius_meters),days,allowance,provider=provider or "open_clip",quality=quality)
+    if raw is not None and notification_evidence(score,coverage,feature,geo):
+        return set_result(db,observation,case,pet,"POSSIBLE_MATCH",geographic+reasons+["Similitud visual entre las fotos"],score,
+            {"feature_score":feature,"visual_score":visual,"visual_similarity":raw,"geo_score":geo,
+             "temporal_score":temporal,"evidence_coverage":coverage})
     return set_result(db, observation, case, pet, "UNVERIFIED", geographic + ["Las fotos no aportaron suficientes rasgos para una comparación automática"])
 
 

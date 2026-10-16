@@ -13,7 +13,7 @@ from app.models import AnalysisJob, Embedding, FeatureSet, LostCase, Match, Noti
 
 def setup_evidence(db, monkeypatch, far=False):
     monkeypatch.setattr(settings,"ai_enabled",True)
-    owner=User(email="match-owner@example.test",name="Owner",password_hash="unused")
+    owner=User(email="match-owner@example.test",name="Owner",password_hash="unused",email_verified_at=utcnow())
     reporter=User(email="match-reporter@example.test",name="Reporter",password_hash="unused")
     db.add_all([owner,reporter]);db.flush()
     pet=Pet(owner_id=owner.id,name="Luna",species="dog",primary_color="brown",size="medium")
@@ -126,11 +126,12 @@ def test_feedback_and_results_are_scoped_to_their_users(client,auth_headers,db_f
     assert client.patch(f"/api/v1/matches/{mid}/feedback",json={"status":"RESOLVED"}).status_code==401
 
 
-def test_private_contact_requires_explicit_consent(client,auth_headers,db_factory):
+def test_private_contact_requires_explicit_consent(client,auth_headers,db_factory,confirm_account):
     pet=client.post("/api/v1/pets",headers=auth_headers,json={"name":"Luna","species":"dog","primary_color":"brown","size":"medium"}).json()
     case=client.post("/api/v1/lost-cases",headers=auth_headers,json={"pet_id":pet["id"],"lost_at":(utcnow()-timedelta(hours=1)).isoformat(),"latitude":-34.9,"longitude":-56.1}).json()
     reporter=client.post("/api/v1/auth/register",json={"email":"reporter-consent@example.test","password":"test-only-passphrase","name":"Reporter"}).json()
     headers={"Authorization":f"Bearer {reporter['access_token']}"}
+    confirm_account("reporter-consent@example.test")
     for consent in (False,True):
         obs=client.post("/api/v1/observations",headers=headers,json={"species":"dog","primary_color":"brown","size":"medium","description":"Matching dog","observed_at":utcnow().isoformat(),"latitude":-34.901,"longitude":-56.101,"share_contact":consent}).json()
         with db_factory() as db:evaluate_observation(db,UUID(obs["id"]));db.commit()
@@ -195,7 +196,7 @@ def test_dispatcher_queues_only_enabled_sources(db_factory, monkeypatch):
         def enqueue(self, *args, **kwargs):
             calls.append(args)
     monkeypatch.setattr(queue, "SessionLocal", db_factory)
-    monkeypatch.setattr(queue, "get_queue", lambda: LocalQueue())
+    monkeypatch.setattr(queue, "get_queue", lambda *args: LocalQueue())
     monkeypatch.setattr(settings, "ai_enabled", False)
     assert queue.dispatch_pending() == 1
     assert len(calls) == 1

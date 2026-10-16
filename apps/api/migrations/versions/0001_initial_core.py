@@ -6,9 +6,6 @@ Revises:
 from alembic import op
 import sqlalchemy as sa
 
-from app.db.base import Base
-from app import models  # noqa: F401
-
 revision = "0001_initial_core"
 down_revision = None
 branch_labels = None
@@ -27,7 +24,28 @@ def upgrade() -> None:
         sa.Column("created_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()),
         sa.Column("updated_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()))
     op.create_index("ix_users_email","users",["email"],unique=True)
-    Base.metadata.create_all(bind=op.get_bind(), tables=[Base.metadata.tables[name] for name in ("pets","photos")])
+    op.create_table("pets",
+        sa.Column("id",sa.Uuid(),primary_key=True),
+        sa.Column("owner_id",sa.Uuid(),sa.ForeignKey("users.id",ondelete="RESTRICT"),nullable=False),
+        sa.Column("name",sa.String(120),nullable=False),sa.Column("species",sa.String(40),nullable=False),
+        sa.Column("breed",sa.String(120),nullable=False),sa.Column("sex",sa.String(24),nullable=False),
+        sa.Column("size",sa.String(24),nullable=False),sa.Column("age_estimate",sa.String(80)),
+        sa.Column("primary_color",sa.String(40),nullable=False),sa.Column("secondary_colors",sa.JSON(),nullable=False),
+        sa.Column("coat_type",sa.String(40),nullable=False),sa.Column("distinctive_features",sa.JSON(),nullable=False),
+        sa.Column("collar_description",sa.String(255)),sa.Column("microchip_reference",sa.String(80)),
+        sa.Column("created_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()),
+        sa.Column("updated_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()))
+    for column in ("owner_id","species"):
+        op.create_index("ix_pets_"+column,"pets",[column])
+    op.create_table("photos",
+        sa.Column("id",sa.Uuid(),primary_key=True),sa.Column("owner_type",sa.String(24),nullable=False),
+        sa.Column("owner_id",sa.Uuid(),nullable=False),sa.Column("storage_key",sa.String(512),nullable=False,unique=True),
+        sa.Column("url",sa.String(2048)),sa.Column("mime_type",sa.String(120),nullable=False),
+        sa.Column("width",sa.Integer()),sa.Column("height",sa.Integer()),
+        sa.Column("created_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()),
+        sa.Column("updated_at",sa.DateTime(timezone=True),nullable=False,server_default=sa.func.now()))
+    for column in ("owner_type","owner_id"):
+        op.create_index("ix_photos_"+column,"photos",[column])
     # Keep initial evidence tables fixed as later migrations add columns to the current ORM model.
     op.create_table(
         "lost_cases",
@@ -66,5 +84,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    Base.metadata.drop_all(bind=op.get_bind(), tables=[Base.metadata.tables[name] for name in CORE_TABLE_NAMES])
+    for name in reversed(CORE_TABLE_NAMES):
+        op.drop_table(name)
 

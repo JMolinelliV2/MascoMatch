@@ -16,15 +16,20 @@ from app.models import AnalysisJob
 QUEUE_NAME = "mascomatch-analysis"
 
 
-def get_queue() -> Queue:
+def queue_name(source="text",priority=50):
+    kind="visual" if source=="embedding" else "semantic"
+    tier="urgent" if priority>=90 else "normal" if priority>=50 else "backfill"
+    return f"{QUEUE_NAME}-{kind}-{tier}"
+
+
+def get_queue(source="text",priority=50) -> Queue:
     connection = Redis.from_url(settings.redis_url, socket_connect_timeout=2, socket_timeout=2)
-    return Queue(QUEUE_NAME, connection=connection, serializer=JSONSerializer)
+    return Queue(queue_name(source,priority), connection=connection, serializer=JSONSerializer)
 
 
 def dispatch_pending() -> int:
     if not (settings.ai_enabled or settings.embeddings_enabled):
         return 0
-    queue = get_queue()
     now = utcnow()
     enabled_source = True if settings.ai_enabled and settings.embeddings_enabled else AnalysisJob.source_type != "embedding" if settings.ai_enabled else AnalysisJob.source_type == "embedding"
     with SessionLocal() as db:
@@ -43,7 +48,7 @@ def dispatch_pending() -> int:
         db.commit()
         ids = list(db.scalars(select(AnalysisJob.id).where(
             AnalysisJob.status == "PENDING", AnalysisJob.available_at <= now, enabled_source,
-        ).order_by(AnalysisJob.created_at).limit(20)))
+        ).order_by(AnalysisJob.priority.desc(),AnalysisJob.created_at).limit(20)))
 
     dispatched = 0
     for job_id in ids:
@@ -54,13 +59,15 @@ def dispatch_pending() -> int:
             job.status = "DISPATCHING"
             job.dispatch_generation += 1
             generation = job.dispatch_generation
+            source,priority=job.source_type,job.priority
             job.lease_expires_at = now + timedelta(seconds=30)
             db.commit()
         try:
+            queue=get_queue(source,priority)
             queue.enqueue(
                 "app.analysis.tasks.process_analysis", str(job_id), generation,
                 job_id=f"{job_id}-{generation}", unique=True,
-                job_timeout=settings.ai_job_timeout_seconds, result_ttl=86400, failure_ttl=86400,
+                job_timeout=settings.timeout_for_source(source), result_ttl=3600, failure_ttl=86400,
             )
         except Exception:
             # A database outbox keeps reports and pending analysis when Redis is down.
@@ -77,7 +84,7 @@ def dispatch_pending() -> int:
             db.execute(update(AnalysisJob).where(
                 AnalysisJob.id == job_id, AnalysisJob.status == "DISPATCHING",
                 AnalysisJob.dispatch_generation == generation,
-            ).values(status="QUEUED", lease_expires_at=now + timedelta(seconds=settings.ai_job_timeout_seconds + 600), error_code=None))
+            ).values(status="QUEUED", lease_expires_at=now + timedelta(seconds=settings.timeout_for_source(source) + 600), error_code=None))
             db.commit()
         dispatched += 1
     return dispatched

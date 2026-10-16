@@ -1,0 +1,12 @@
+{
+  "instructions": "Replace paths with distinct photos you are authorized to evaluate. Same identity never crosses train/calibration/test. No training runs automatically.",
+  "images": [
+    {"file":"test/dog-a-reference.jpg","identity":"dog-a","species":"dog","role":"gallery","split":"test"},
+    {"file":"test/dog-a-sighting.jpg","identity":"dog-a","species":"dog","role":"query","split":"test"},
+    {"file":"test/dog-b-reference.jpg","identity":"dog-b","species":"dog","role":"gallery","split":"test"},
+    {"file":"test/dog-b-sighting.jpg","identity":"dog-b","species":"dog","role":"query","split":"test"},
+    {"file":"calibration/cat-c-reference.jpg","identity":"cat-c","species":"cat","role":"gallery","split":"calibration"},
+    {"file":"calibration/cat-c-sighting.jpg","identity":"cat-c","species":"cat","role":"query","split":"calibration"}
+  ],
+  "hard_negatives": [["test/dog-a-reference.jpg","test/dog-b-sighting.jpg"]]
+}

@@ -85,6 +85,12 @@ def test_operational_metrics_require_private_token(client, monkeypatch):
     monkeypatch.setattr("app.routers.operations.readiness", lambda:{"database":True,"queue":True,"photos":True})
     assert client.get("/internal/metrics").status_code == 404
     assert client.get("/internal/metrics", headers={"Authorization":"Bearer wrong"}).status_code == 404
+    assert client.get("/internal/ready/ai").status_code == 404
+    monkeypatch.setattr("app.ops.ai_health.ai_readiness",lambda:{"worker_visual":False})
+    token=settings.metrics_token.get_secret_value()
+    assert client.get("/internal/ready/ai",headers={"Authorization":"Bearer "+token}).status_code==503
+    monkeypatch.setattr("app.ops.ai_health.ai_readiness",lambda:{"worker_visual":True})
+    assert client.get("/internal/ready/ai",headers={"Authorization":"Bearer "+token}).status_code==200
     assert client.get("/health/ready").status_code == 200
     monkeypatch.setattr("app.routers.operations.readiness", lambda:{"database":False})
     assert client.get("/health/ready").status_code == 503

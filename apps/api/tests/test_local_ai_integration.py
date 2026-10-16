@@ -4,7 +4,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from rq import SpawnWorker
+from app.analysis.worker import PersistentWorker
 from rq.serializers import JSONSerializer
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -27,12 +27,13 @@ def test_real_queue_worker_and_local_model(tmp_path, monkeypatch):
     monkeypatch.setenv("AI_ENABLED", "true")
     Base.metadata.create_all(factory.kw["bind"])
     monkeypatch.setattr(settings, "ai_enabled", True)
+    monkeypatch.setattr(settings, "embeddings_enabled", False)
     monkeypatch.setattr(queue, "SessionLocal", factory)
     monkeypatch.setattr(tasks, "SessionLocal", factory)
     real_queue = get_queue()
     from rq import Queue
     isolated_queue = Queue(f"mascomatch-check-{uuid4().hex}", connection=real_queue.connection, serializer=JSONSerializer)
-    monkeypatch.setattr(queue, "get_queue", lambda: isolated_queue)
+    monkeypatch.setattr(queue, "get_queue", lambda *args: isolated_queue)
     storage_key = None
     try:
         with factory() as db:
@@ -57,7 +58,7 @@ def test_real_queue_worker_and_local_model(tmp_path, monkeypatch):
             db.commit()
         assert queue.dispatch_pending() == (3 if photo_id else 2)
         factory.kw["bind"].dispose()
-        SpawnWorker([isolated_queue], connection=isolated_queue.connection, serializer=JSONSerializer).work(burst=True)
+        PersistentWorker([isolated_queue], connection=isolated_queue.connection, serializer=JSONSerializer,log_job_description=False).work(burst=True)
         with factory() as db:
             job = db.get(AnalysisJob, job_id)
             assert job.status == "SUCCEEDED", job.error_code

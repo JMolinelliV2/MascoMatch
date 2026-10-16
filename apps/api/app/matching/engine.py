@@ -7,13 +7,19 @@ from app.analysis.logging import log_event
 from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.embeddings.provider import model_id, VERSION
+from app.embeddings.specs import EmbeddingSpec,compatible
 from app.matching.linked import aware, distance_meters
-from app.matching.scoring import WEIGHTS, known, feature_similarity, combine, cosine
+from app.matching.scoring import WEIGHTS, known, feature_similarity, combine, cosine, aggregate_visual_similarity, notification_evidence
 from app.matching.tracking import record_recommendation
 from app.models import AnalysisJob, Embedding, FeatureSet, LostCase, Match, Notification, Observation, Pet, Photo, User
 
 PENDING = {"PENDING", "DISPATCHING", "QUEUED", "RUNNING"}
+
+
+def should_wait(job):
+    enabled=settings.embeddings_enabled if job.source_type=="embedding" else settings.ai_enabled
+    return (enabled and job.status in PENDING and job.attempts==0 and
+            (utcnow()-aware(job.created_at)).total_seconds()<settings.matching_analysis_wait_seconds)
 
 
 def request_matching(db, owner_type, owner_id):
@@ -38,12 +44,11 @@ def evidence(db, owner_type, owner_id, declared):
         if not is_current(db, job):
             continue
         if job.source_type == "embedding":
-            if job.model == model_id() and job.prompt_version == VERSION and settings.embeddings_enabled:
-                pending = pending or job.status in PENDING
+            pending = pending or should_wait(job)
             continue
         if job.provider != settings.ai_provider or job.model != (settings.ai_vision_model if job.source_type == "image" else settings.ai_text_model) or job.prompt_version != (VISION_PROMPT_VERSION if job.source_type == "image" else TEXT_PROMPT_VERSION):
             continue
-        pending = pending or (settings.ai_enabled and job.status in PENDING)
+        pending = pending or should_wait(job)
         if job.status != "SUCCEEDED":
             continue
         result = db.scalar(select(FeatureSet).where(FeatureSet.analysis_job_id == job.id))
@@ -83,22 +88,43 @@ def candidates(db, observation):
 
 def vectors(db, scope):
     rows = db.execute(select(Embedding, Photo, AnalysisJob).join(Photo, Embedding.photo_id == Photo.id).join(AnalysisJob, Embedding.analysis_job_id == AnalysisJob.id).where(
-        scope, Embedding.model == model_id(), Embedding.dimension == 512, AnalysisJob.prompt_version == VERSION, AnalysisJob.status == "SUCCEEDED"))
-    return [item[0] for item in rows if is_current(db, item[2])]
+        scope, Embedding.dimension == 512, Embedding.space_id != "legacy", AnalysisJob.status == "SUCCEEDED"))
+    return [item[0] for item in rows if is_current(db,item[2]) and row_spec(item[0]).space_id==item[0].space_id
+            and row_spec(item[0]).to_dict()==item[2].input_snapshot.get("spec")]
+
+
+def row_spec(row):
+    return EmbeddingSpec(row.provider,row.model,row.revision,row.dimension,row.preprocessing_version)
 
 
 def visual_similarity(db, observed, case):
+    return visual_evidence(db,observed,case)[0]
+
+
+def visual_evidence(db,observed,case):
     if not observed:
-        return None
+        return None,None,0.0
     scope = or_(and_(Photo.owner_type == "lost_case", Photo.owner_id == case.id), and_(Photo.owner_type == "pet", Photo.owner_id == case.pet_id))
     eligible = vectors(db, scope)
     if not eligible:
-        return None
-    if db.bind.dialect.name == "postgresql":
-        # pgvector orders the eligible photo representations using cosine distance.
-        identities = [item.analysis_job_id for item in eligible]
-        return max(1 - float(db.scalar(select(Embedding.vector.cosine_distance(item.vector)).where(Embedding.analysis_job_id.in_(identities)).order_by(Embedding.vector.cosine_distance(item.vector)).limit(1))) for item in observed)
-    return max(cosine(left.vector,right.vector) for left in observed for right in eligible)
+        return None,None,0.0
+    groups={}
+    for left in observed:
+        for right in eligible:
+            if not compatible(row_spec(left),row_spec(right)):
+                continue
+            quality=min((left.quality or {}).get("visual_reliability",.5),(right.quality or {}).get("visual_reliability",.5))
+            groups.setdefault(left.space_id,[]).append((cosine(left.vector,right.vector),quality,left.provider))
+    if not groups:
+        return None,None,0.0
+    # Current selection normally yields one space. If there are several, do not combine raw cosines.
+    if len(groups)!=1:
+        return None,None,0.0
+    pairs=sorted(next(iter(groups.values())),reverse=True)
+    raw=aggregate_visual_similarity([item[0] for item in pairs])
+    weight=settings.visual_best_weight
+    quality=pairs[0][1] if len(pairs)==1 else weight*pairs[0][1]+(1-weight)*pairs[1][1]
+    return raw,pairs[0][2],quality
 
 
 def evaluate_observation(db, identity):
@@ -136,11 +162,11 @@ def evaluate_observation(db, identity):
             waiting = True
             continue
         feature, coverage, reasons, contradiction = feature_similarity(target, observed_traits)
-        raw_visual = visual_similarity(db, observed_vectors, case)
+        raw_visual,visual_provider,visual_quality = visual_evidence(db, observed_vectors, case)
         if contradiction or coverage < (.25 if raw_visual is not None else .35) or feature < .5:
             continue
         days = (aware(observation.observed_at) - aware(case.lost_at)).total_seconds() / 86400
-        score, visual, geo, temporal = combine(feature, raw_visual, distance, radius, days, accuracy)
+        score, visual, geo, temporal = combine(feature, raw_visual, distance, radius, days, accuracy,provider=visual_provider or "open_clip",quality=visual_quality)
         if score < settings.matching_candidate_threshold:
             continue
         reasons += [f"Avistamiento a {distance / 1000:.1f} km de la última ubicación", "Fecha posterior a la pérdida"]
@@ -156,7 +182,7 @@ def evaluate_observation(db, identity):
         record_recommendation(match, "GENERAL")
         db.flush()
         ranked.append(match)
-        if score >= settings.matching_notify_threshold and match.status not in {"FALSE_MATCH", "RESOLVED"} and observation.author_id != pet.owner_id:
+        if notification_evidence(score,coverage,feature,geo) and match.status not in {"FALSE_MATCH", "RESOLVED"} and observation.author_id != pet.owner_id:
             notification = db.scalar(select(Notification).where(Notification.lost_case_id == case.id, Notification.observation_id == identity))
             if notification is None:
                 notification = Notification(owner_id=pet.owner_id,lost_case_id=case.id,observation_id=identity,match_id=match.id,kind="POSSIBLE_MATCH",

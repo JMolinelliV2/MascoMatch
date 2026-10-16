@@ -26,3 +26,13 @@ groups:
         for: 5m
         labels: {severity: warning}
         annotations: {summary: "Aumentaron los errores de la API"}
+      - alert: MascoMatchAIUnavailable
+        expr: mascomatch_ai_ready == 0
+        for: 3m
+        labels: {severity: warning}
+        annotations: {summary: "Un worker, modelo o servicio local de IA no está listo"}
+      - alert: MascoMatchUrgentAnalysisDelayed
+        expr: mascomatch_analysis_urgent_oldest_seconds > 300
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "Un avistamiento o caso activo espera análisis hace más de cinco minutos"}

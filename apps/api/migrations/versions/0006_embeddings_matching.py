@@ -1,8 +1,7 @@
 """Local visual embeddings and ranked observation candidates."""
 from alembic import op
 import sqlalchemy as sa
-from app.db.base import Base
-from app import models
+from pgvector.sqlalchemy import Vector
 
 revision = "0006_embeddings_matching"
 down_revision = "0005_linked_sightings"
@@ -12,7 +11,30 @@ depends_on = None
 
 def upgrade():
     bind = op.get_bind()
-    Base.metadata.create_all(bind=bind, tables=[models.Embedding.__table__, models.Match.__table__])
+    op.create_table("embeddings",
+        sa.Column("analysis_job_id", sa.Uuid(), sa.ForeignKey("analysis_jobs.id", ondelete="CASCADE"), primary_key=True),
+        sa.Column("photo_id", sa.Uuid(), sa.ForeignKey("photos.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("model", sa.String(120), nullable=False), sa.Column("dimension", sa.Integer(), nullable=False),
+        sa.Column("input_hash", sa.String(64), nullable=False),
+        sa.Column("vector", Vector(512).with_variant(sa.JSON(), "sqlite"), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False))
+    op.create_index("ix_embeddings_photo_id", "embeddings", ["photo_id"])
+    op.create_index("ix_embeddings_model", "embeddings", ["model"])
+    op.create_table("matches",
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("lost_case_id", sa.Uuid(), sa.ForeignKey("lost_cases.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("observation_id", sa.Uuid(), sa.ForeignKey("observations.id", ondelete="CASCADE"), nullable=False),
+        *[sa.Column(name, sa.Float(), nullable=name in {"visual_score","visual_similarity"}) for name in
+          ("feature_score","visual_score","visual_similarity","geo_score","temporal_score","final_score","evidence_coverage","distance_meters")],
+        sa.Column("explanation", sa.JSON(), nullable=False), sa.Column("status", sa.String(32), nullable=False),
+        sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
+        sa.Column("feedback_at", sa.DateTime(timezone=True)),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.UniqueConstraint("lost_case_id","observation_id",name="uq_match_case_observation"))
+    for name in ("lost_case_id","observation_id","final_score"):
+        op.create_index("ix_matches_"+name,"matches",[name])
     with op.batch_alter_table("observations") as batch:
         batch.add_column(sa.Column("matching_checked_at", sa.DateTime(timezone=True)))
     unique = next(item for item in sa.inspect(bind).get_unique_constraints("notifications") if item["column_names"] == ["observation_id"])
@@ -43,5 +65,5 @@ def downgrade():
         batch.create_unique_constraint("uq_notifications_observation_id", ["observation_id"])
     with op.batch_alter_table("observations") as batch:
         batch.drop_column("matching_checked_at")
-    models.Match.__table__.drop(bind=bind)
-    models.Embedding.__table__.drop(bind=bind)
+    op.drop_table("matches")
+    op.drop_table("embeddings")

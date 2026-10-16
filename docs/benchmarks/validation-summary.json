@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-16",
+  "environment": "local Docker Desktop, Linux x86_64; not a public VPS",
+  "backend": {"passed": 204, "optional_skipped": 6, "seconds": 65.11},
+  "optional_integrations": {
+    "postgres_migrations": {"passed": 1, "seconds": 5.75},
+    "encrypted_recovery": {"passed": 1, "seconds": 2.44},
+    "matching_providers": {"passed": 2, "seconds": 22.40},
+    "gemma_and_linked_mailpit": {"passed": 2, "seconds": 288.41}
+  },
+  "frontend": {"passed": 31, "failed": 0, "build": "passed"},
+  "dependency_audits": {"api_known_vulnerabilities": 0, "worker_known_vulnerabilities": 0, "web_known_vulnerabilities": 0},
+  "production_bff_smtp_assertions_passed": 10,
+  "production_ai_smoke_assertions_passed": 12,
+  "offline_visual_models_loaded": 3,
+  "prometheus_rules_validated": 7,
+  "production_compose": "valid",
+  "git_diff_check": "passed",
+  "remote_ci_executed": false,
+  "committed_or_pushed": false,
+  "identity_accuracy_measured": false
+}

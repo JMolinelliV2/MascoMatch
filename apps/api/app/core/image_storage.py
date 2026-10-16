@@ -120,7 +120,17 @@ def _load_clean_jpeg(storage_key: str, mime_type: str, max_edge: int) -> tuple[b
 
 
 def load_analysis_image(storage_key: str, mime_type: str) -> tuple[bytes, str]:
-    return _load_clean_jpeg(storage_key, mime_type, 1024)
+    # Uploads already have bounded dimensions, corrected EXIF and stripped metadata.
+    # Keep their useful pixels for the detector; the VLM has its own preprocessing.
+    response = _client(settings.s3_endpoint).get_object(Bucket=settings.s3_bucket, Key=storage_key)
+    body = response["Body"]
+    try:
+        payload = body.read(settings.max_photo_size_bytes + 1)
+    finally:
+        body.close()
+    if not payload or len(payload) > settings.max_photo_size_bytes:
+        raise ValueError("Invalid stored image size")
+    return payload, mime_type
 
 
 def load_display_image(storage_key: str, mime_type: str) -> tuple[bytes, str]:

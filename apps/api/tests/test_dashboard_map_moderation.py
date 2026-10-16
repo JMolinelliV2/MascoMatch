@@ -11,7 +11,7 @@ def publication(client,headers):
     return pet,case
 
 
-def test_owner_dashboard_and_atomic_edit(client,auth_headers):
+def test_owner_dashboard_and_atomic_edit(client,auth_headers,confirm_account):
     pet,case=publication(client,auth_headers)
     assert client.get("/api/v1/me/dashboard").status_code==401
     dashboard=client.get("/api/v1/me/dashboard",headers=auth_headers).json()
@@ -21,6 +21,7 @@ def test_owner_dashboard_and_atomic_edit(client,auth_headers):
     assert edited.status_code==200
     assert not client.get("/api/v1/public/lost-animals").json()["items"]
     other=client.post("/api/v1/auth/register",json={"email":"different@example.test","password":"test-only-passphrase","name":"Other","role":"ADMIN"}).json()
+    confirm_account("different@example.test")
     assert other["user"]["role"]=="USER"
     other_headers={"Authorization":f"Bearer {other['access_token']}"}
     assert client.get("/api/v1/me/dashboard",headers=other_headers).json()["cases"]==[]

@@ -18,9 +18,8 @@ export function MapReportCard({ point, href, onShowOnMap }: { point: MapReportPo
   return <article className={`map-report-card map-report-${point.layer}`}>
     <div className="map-report-photo">{photo}</div>
     <div className="map-report-content">
-      <span className="map-report-type">{reportLabels[point.layer]}</span>
+      <div className="report-card-meta"><span className="map-report-type">{reportLabels[point.layer]}</span><ReportId id={point.id} publicId={point.public_id} label={point.layer === "lost" ? "ID del aviso" : "ID del reporte"} /></div>
       <h3>{href ? <Link href={href}>{point.title}</Link> : point.title}</h3>
-      <ReportId id={point.id} publicId={point.public_id} label={point.layer === "lost" ? "ID del aviso" : "ID del reporte"} />
       <p className="map-report-species">{observationTraits(point)}</p>
       <p className="map-report-area"><Icon name="pin" />{point.area || "Zona aproximada"}</p>
       <p className="map-report-date"><Icon name="calendar" /><span>{dateLabels[point.layer]} <time dateTime={point.when}>{point.layer === "lost" ? lostDate(point.when) : observationDate(point.when)}</time></span></p>

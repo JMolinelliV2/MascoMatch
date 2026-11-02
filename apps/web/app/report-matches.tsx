@@ -33,9 +33,8 @@ export function ReportMatches({ observationId }: { observationId: string }) {
       <p>Comparamos las características, la zona, la fecha y las fotos disponibles. La identidad necesita confirmación.</p></div></header>
     {(!result || ["PENDING", "WAITING_ANALYSIS"].includes(result.status)) && !error && <div className="report-analysis-progress" role="status"><span className="report-analysis-progress-icon"><span className="report-analysis-spinner" /></span><div><h3>Buscando avisos compatibles</h3><p>Comparamos tu reporte con las mascotas perdidas. Si hay posibles coincidencias, aparecerán acá.</p></div></div>}
     {result && !result.items.length && !["PENDING", "WAITING_ANALYSIS"].includes(result.status) && <p>No encontramos avisos con suficiente información compatible por ahora. Conservamos tu reporte para compararlo con nuevos avisos.</p>}
-    {result?.items.map(item => <article className="match-card" key={item.match.id}><DogPhoto dog={item.animal} /><div><h3>{item.animal.name}</h3>
+    {result?.items.map(item => <article className="match-card" key={item.match.id}><DogPhoto dog={item.animal} /><div><div className="report-card-meta"><h3>{item.animal.name}</h3><ReportId id={item.animal.id} publicId={item.animal.public_id} /></div>
       <MatchScore score={item.match.final_score} />
-      <ReportId id={item.animal.id} publicId={item.animal.public_id} />
       <ul>{item.match.explanation.map(reason => <li key={reason}>{reason}</li>)}</ul>
       <Link href={`/perdidos/${item.animal.id}`} className="text-button">Ver aviso</Link></div></article>)}
     {error && <p role="alert" className="notice notice-warning">{error}</p>}

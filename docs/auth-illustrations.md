@@ -1,0 +1,22 @@
+# Ilustraciones de ingreso y registro
+
+Generadas el 2 de noviembre de 2026 con la herramienta integrada `imagegen`, sin CLI ni claves de la API del proyecto. Las referencias son las dos imágenes de interiores con personas, perros y gatos aportadas por el usuario en esta entrega. Se utilizaron como referencia de composición y estilo, generando escenas adaptadas a la paleta de MascoMatch.
+
+Los originales PNG tienen 1254 × 1254 píxeles y transparencia real. La conversión a WebP conserva tamaño, composición y alfa, con calidad 90. No se realizó recorte ni alteración posterior del contenido. Se conserva el original de cada generación en Codex.
+
+| Uso | Archivo publicado | Original generado |
+| --- | --- | --- |
+| Ingreso | [auth-login-illustration.webp](../apps/web/public/images/auth-login-illustration.webp) | `exec-1100fd9e-7e6a-4bfa-bf83-1f5939f81872.png` |
+| Registro | [auth-register-illustration.webp](../apps/web/public/images/auth-register-illustration.webp) | `exec-5b1ba4d9-3138-4edd-8c4e-95db91aeb84d.png` |
+
+## Prompt de ingreso
+
+```text
+Use case: style-transfer. Asset type: original flat editorial illustration for the LOGIN panel of MascoMatch, a community website for missing dogs and cats. The supplied image is a composition and mood reference, not a screenshot to reproduce. Redraw a warm home scene in the MascoMatch visual language: one fully clothed smiling adult man sitting in a rounded armchair, gently hugging his small black dog; a relaxed orange cat curls up on a small side cabinet to the right. A simple pale window, small plant and one shelf subtly establish the living room. Remove the aquarium and fish, keep only dog and cat. Friendly clean flat vector-like illustration, generous rounded shapes, restrained very fine navy details, no photographic textures, no 3D, no dramatic shading. Exact brand palette: navy #0b2a4a, coral #d93646 and light coral #f26a76, blue #0863b4 and pale blue #d9edfa, cream #fcfbf8, pale pink #fff1f2, muted green #087f5b only for leaves; natural warm human skin and natural pet fur. Coral sweater, navy trousers, pale blue armchair, light coral cabinet. Square canvas. Keep the complete scene inside the central 80% with all heads, paws, feet and furniture visible, unclipped, with generous transparent margins. Large clearly recognizable human, dog and cat, with believable anatomy. Retain a few pale interior shapes behind the subjects, but the entire outer canvas must be genuinely transparent alpha, no solid white rectangle. No lettering, text, UI, logos, numbers, brand marks or watermark. No extra people or pets. Optimized to read clearly as a medium website illustration, paired with another matching household illustration.
+```
+
+## Prompt de registro
+
+```text
+Use case: style-transfer. Asset type: original flat editorial illustration for the CREATE ACCOUNT panel of MascoMatch, a community website for missing dogs and cats. The supplied image is a composition and mood reference, not a screenshot to reproduce. Redraw a welcoming home scene in the MascoMatch visual language: one fully clothed adult woman with dark hair in a bun sitting cross-legged on a sofa, reading a coral book, her small black cat resting comfortably in her lap and a friendly brown dog sitting beside her. Simple pale window with light coral curtains behind the sofa, one indoor plant on the left, one small side table with an open laptop and mug. Laptop display has simple blank shapes without any text. Friendly clean flat vector-like illustration, generous rounded shapes, restrained very fine navy details, no photographic textures, no 3D, no dramatic shading. Exact brand palette: navy #0b2a4a, coral #d93646 and light coral #f26a76, blue #0863b4 and pale blue #d9edfa, cream #fcfbf8, pale pink #fff1f2, muted green #087f5b only for leaves; natural warm human skin and natural pet fur. Coral shirt, cream trousers, pale blue sofa with navy cushions and legs. Square canvas. Keep the complete scene inside the central 80% with all heads, paws, legs and furniture visible, unclipped, with generous transparent margins. Large clearly recognizable human, dog and cat, with believable anatomy. Retain a few pale interior shapes behind the subjects, but the entire outer canvas must be genuinely transparent alpha, no solid white rectangle. No lettering, text, UI, logos, numbers, brand marks or watermark. No extra people or pets. Optimized to read clearly as a medium website illustration, paired with another matching household illustration.
+```

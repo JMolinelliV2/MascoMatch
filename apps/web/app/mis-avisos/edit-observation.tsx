@@ -1,5 +1,8 @@
 "use client";
 
+import { LoadingState } from "../ui/loading-state";
+import { ReportTraitFields } from "../ui/report-trait-fields";
+import { readPetDetails, petDetailsError } from "@/lib/pet-details";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -25,6 +28,7 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [speciesChoice, setSpeciesChoice] = useState(observation.species);
   const found = observation.source_type === "FOUND_ANIMAL";
   const linked = Boolean(observation.linked_case_id);
 
@@ -33,6 +37,8 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
     if (busy) return;
     setSaved(false); setError("");
     const form = new FormData(event.currentTarget);
+    const details = readPetDetails(form);
+    if (petDetailsError(details)) { setError(petDetailsError(details)); return; }
     const when = new Date(String(form.get("observedAt")));
     if (!Number.isFinite(when.getTime()) || when.getTime() > Date.now() + 60_000) { setError("Ingresá una fecha y hora válidas, que no estén en el futuro."); return; }
     const description = String(form.get("description") || "").trim();
@@ -40,7 +46,8 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
     if (!location && String(form.get("locationSearch") || "").trim()) { setError("Elegí un resultado de la búsqueda para guardar ese lugar."); return; }
     const payload = {
       description, observed_at: when.toISOString(), share_contact: form.get("shareContact") === "on",
-      ...(!linked ? { species: form.get("species"), sex: form.get("sex"), primary_color: form.get("color"), size: form.get("size") } : {}),
+      ...details,
+      ...(!linked ? { species: form.get("species"), sex: form.get("sex"), size: form.get("size") } : {}),
       ...(locationChanged && location ? { latitude: location.latitude, longitude: location.longitude, location_accuracy_meters: location.accuracyMeters ?? null,
         public_location: location.locality ?? null, analytics_geo: analyticsGeo(location) } : {}),
     };
@@ -61,7 +68,7 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
 
   const select = (name: string, label: string, value: string, options: ReadonlyArray<readonly [string, string]>) => {
     const choices = options.some(([key]) => key === value) ? options : [[value, value], ...options];
-    return <label className="field-label">{label}<select name={name} className="form-input" defaultValue={value}>{choices.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>;
+    return <label className="field-label">{label}<select onChange={e => { if (name === "species") setSpeciesChoice(e.target.value); }} name={name} className="form-input" defaultValue={value}>{choices.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>;
   };
 
   return <div className="observation-edit-layout">
@@ -73,9 +80,10 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
         {!linked && <div className="form-grid">
           {select("species", "Mascota", observation.species, speciesOptions)}
           {select("sex", "Sexo", observation.sex, [["unknown", "No lo sé"], ["male", "Macho"], ["female", "Hembra"]])}
-          {select("color", "Color principal", observation.primary_color, [["unknown", "No lo sé"], ["brown", "Marrón"], ["black", "Negro"], ["white", "Blanco"], ["gray", "Gris"], ["cream", "Crema"], ["orange", "Naranja"], ["tan", "Beige / canela"], ["red", "Rojizo"], ["multicolor", "Varios colores"]])}
+
           {select("size", "Tamaño", observation.size, [["unknown", "No lo sé"], ["tiny", "Muy pequeño"], ["small", "Pequeño"], ["medium", "Mediano"], ["large", "Grande"]])}
         </div>}
+        <div className="form-grid"><ReportTraitFields value={observation} species={speciesChoice} /></div>
         <label className="field-label">{found ? "Cuándo lo encontraste" : "Cuándo lo viste"}<input name="observedAt" className="form-input" type="datetime-local" required defaultValue={localDateTime(new Date(observation.observed_at))} /></label>
         <label className="field-label">Descripción{linked && <span className="optional">(opcional)</span>}<textarea name="description" className="form-input" required={!linked} maxLength={4000} rows={4} defaultValue={editableReportDescription(observation.description,observation.description_format,linked)} placeholder="Ej.: tiene una mancha blanca en el pecho, una oreja caída y un collar azul." /></label>
         <div><h3>Ubicación</h3><p className="field-help">Si no elegís otro lugar, conservamos la ubicación actual.</p>
@@ -112,7 +120,7 @@ function OwnedEditor({ id }: { id: string }) {
     return () => controller.abort();
   }, [id, refresh]);
   if (error) return <div className="notice notice-warning observation-edit-error" role="alert">{error}<button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
-  return observation ? <EditObservationForm key={observation.id} observation={observation} /> : <p role="status" className="page-intro">Cargando tu reporte…</p>;
+  return observation ? <EditObservationForm key={observation.id} observation={observation} /> : <LoadingState title="Cargando tu reporte" description="Estamos preparando los datos y las fotos para editarlo." />;
 }
 
 export function EditObservation({ id }: { id: string }) {

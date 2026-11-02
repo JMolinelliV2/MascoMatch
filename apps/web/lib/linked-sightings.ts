@@ -19,3 +19,7 @@ export function sightingMessage(result: SightingResult, hasPhoto = false): strin
 export function localDateTime(date = new Date()): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
+
+export function foundReportMessage(result: SightingResult, hasPhoto = false): string {
+  return `Informaste que la mascota está a salvo con vos. ${sightingMessage(result, hasPhoto).replaceAll("avistamiento", "reporte")}`;
+}

@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { AccountSession } from "../account-session";
@@ -58,7 +59,7 @@ function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriod
     <p className="field-help">El período se aplica a la recepción de la denuncia. Las correcciones del final conservan su listado de registros recientes.</p>
     <div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-status`} label="Estado de la denuncia" help="Pendiente significa que falta revisión; con acción aplicada indica que administración intervino; descartada indica que se revisó sin mantener una acción sobre la publicación." /><select id={`${fieldId}-status`} className="form-input" value={status} onChange={event => { setStatus(event.target.value); setOffset(0); }}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></div>
     {error && <p className="notice notice-warning" role="alert">{error}</p>}{saved && <p className="notice" role="status">{saved}</p>}
-    {!data && !error && <p role="status">Cargando denuncias…</p>}
+    {!data && !error && <LoadingState compact title="Cargando las denuncias" />}
     {data && <><p className="field-help">{data.total} denuncias con estos filtros.</p>{!data.items.length && <p>No hay denuncias con estos filtros.</p>}
       {data.items.map(report => <article key={report.id} className="notification-card"><h3>{report.title}</h3>{report.public_id && <ReportId publicId={report.public_id} />}<p>{reasons[report.reason] || report.reason} · {report.visibility === "HIDDEN" ? "Publicación oculta" : report.visibility ? "Publicación visible" : "Publicación eliminada"}</p><p className="field-help">Recibida: {adminDate(report.created_at)}</p><p className="admin-contact-message">{report.detail || "Sin detalles adicionales"}</p>
         {report.publication && <details><summary>Ver publicación denunciada</summary><p>{report.publication.description}</p><div className="notification-photos">{report.publication.photo_ids.map(id => <img key={id} src={`/api/admin/reports/${report.id}/photos/${id}`} alt="Foto de la publicación denunciada" loading="lazy" />)}</div></details>}

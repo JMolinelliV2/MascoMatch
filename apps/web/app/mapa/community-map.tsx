@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "../ui/loading-state";
 import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import type {Map as LeafletMap,LayerGroup} from "leaflet";
@@ -62,7 +63,7 @@ export function CommunityMap(){
     <p className="field-help">El radio se aplica después de elegir “Buscar cerca de mí”. Los puntos aproximados no indican una dirección exacta.</p>
     <fieldset className="map-legend"><legend>Mostrar capas</legend>{mapLayers.map(layer=><label key={layer}><input type="checkbox" checked={layers.includes(layer)} onChange={event=>setLayers(current=>event.target.checked?[...current,layer]:current.filter(item=>item!==layer))}/><span aria-hidden="true" className={`map-legend-dot ${layerClasses[layer]}`} /> {labels[layer]}</label>)}</fieldset>
     <label className="sighting-recent"><input type="checkbox" checked={compatible} onChange={event=>setCompatible(event.target.checked)}/>Solo avistamientos con posibles coincidencias</label>
-    {error&&<p className="notice notice-warning" role="alert">{error}</p>}<p role="status">{busy?"Cargando puntos…":`${visible.length} reportes en las capas seleccionadas`}</p>
+    {error&&<p className="notice notice-warning" role="alert">{error}</p>}{busy ? <LoadingState compact title="Cargando reportes en el mapa" /> : <p role="status">{visible.length} reportes en las capas seleccionadas</p>}
     <p className="field-help" id="community-map-help">Los círculos rojos son avisos de mascotas perdidas y los azules, avistamientos. Pasá el mouse o tocá una foto para ver su tarjeta. Las horas se muestran en horario de Uruguay.</p>
     <div ref={container} className="community-map" role="region" aria-label="Mapa de ubicaciones aproximadas" aria-describedby="community-map-help"/>
     {selection&&createPortal(selection.kind==="lost"?<LostLocationPreview key={selection.data.points[0].id} selection={selection.data} origin="mapa" onRefresh={()=>setRefresh(value=>value+1)}/>:<ObservationLocationPreview key={selection.data.selectedId} selection={selection.data} onRefresh={()=>setRefresh(value=>value+1)}/>,selection.data.content)}

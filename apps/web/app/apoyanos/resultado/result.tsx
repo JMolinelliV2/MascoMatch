@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "../../ui/loading-state";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "../../ui/pictogram";
@@ -59,12 +60,14 @@ export function DonationResult({ identity }: { identity: string | null }) {
     finally { setRefreshing(false); }
   }
 
+  if (loading && !receipt) return <LoadingState title="Consultando tu aporte" description="Estamos consultando el estado de la operación." />;
+
   const confirmed = receipt?.status === "APPROVED";
   const message = receipt ? messages[receipt.status] || messages.PENDING : null;
   return <section className="notification-login account-form donation-result-card" aria-live="polite" aria-busy={loading || refreshing}>
     <span className={`donation-result-icon${confirmed ? " is-confirmed" : ""}`}><Icon name={confirmed ? "heart" : receipt?.status === "REJECTED" ? "close" : "clock"} /></span>
     {receipt?.environment === "test" && <p className="donation-test-label">Operación de prueba · Sin dinero real</p>}
-    <h1>{loading && !receipt ? "Consultando tu aporte…" : confirmed && receipt?.environment === "test" ? "Prueba de aporte confirmada" : message?.title || "No pudimos consultar tu aporte"}</h1>
+    <h1>{confirmed && receipt?.environment === "test" ? "Prueba de aporte confirmada" : message?.title || "No pudimos consultar tu aporte"}</h1>
     {receipt && <p className="donation-result-amount">{formatSupportAmount(receipt.amount_uyu)}<span>Aporte puntual · UYU</span></p>}
     {message && <p>{confirmed && receipt?.environment === "test" ? "La prueba fue confirmada por Mercado Pago. No se movió dinero real." : message.description}</p>}
     {receipt && <p className="field-help">Referencia: {receipt.id}</p>}

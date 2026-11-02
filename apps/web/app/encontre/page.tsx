@@ -1,6 +1,8 @@
 import { ReportForm } from "../report-form";
+import { LinkedSightingForm } from "../linked-sighting-form";
 
-export default function FoundAnimalPage() {
-  return <ReportForm kind="found" />;
+export default async function FoundAnimalPage({ searchParams }: { searchParams: Promise<{ aviso?: string | string[] }> }) {
+  const { aviso } = await searchParams;
+  return typeof aviso === "string" ? <LinkedSightingForm caseId={aviso} kind="found" /> : <ReportForm kind="found" />;
 }
 

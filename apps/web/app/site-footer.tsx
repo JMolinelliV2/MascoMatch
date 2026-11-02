@@ -21,6 +21,14 @@ const navigation = [
     ],
   },
   {
+    id: "footer-community-title",
+    title: "Cómo apoyarnos",
+    links: [
+      { href: "/apoyanos", label: "Conocé cómo apoyar" },
+      { href: "/contacto", label: "Contacto y sugerencias" },
+    ],
+  },
+  {
     id: "footer-legal-title",
     title: "Legales",
     links: [
@@ -40,7 +48,7 @@ export function SiteFooter() {
               <span className="brand-mark"><Icon name="paw" /></span>
               <span>Masco<span className="brand-accent">Match</span></span>
             </Link>
-            <p className="footer-description">Avisos, fotos y avistamientos para ayudar a que más mascotas vuelvan a casa.</p>
+            <p className="footer-description">Avisos y avistamientos para que más mascotas vuelvan a casa.</p>
             <p className="footer-free"><Icon name="heart" />Publicar y buscar es gratis.</p>
           </div>
           <div className="footer-navigation-groups">
@@ -51,16 +59,6 @@ export function SiteFooter() {
               </nav>
             ))}
           </div>
-          <section className="footer-community" aria-labelledby="footer-community-title">
-            <div className="footer-community-copy">
-              <h2 id="footer-community-title">Sumate a MascoMatch</h2>
-              <p>Tus ideas y tu apoyo ayudan a mejorar la plataforma.</p>
-            </div>
-            <div className="footer-community-actions">
-              <Link href="/contacto" className="footer-contact">Contacto y sugerencias <Icon name="arrow" /></Link>
-              <Link href="/apoyanos" className="button footer-support"><Icon name="heart" />Conocé cómo apoyar</Link>
-            </div>
-          </section>
         </div>
         <div className="footer-bottom">
           <p>© {new Date().getFullYear()} MascoMatch</p>

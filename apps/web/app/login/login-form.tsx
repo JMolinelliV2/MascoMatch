@@ -6,6 +6,8 @@ import type { FormEvent } from "react";
 import type { SessionUser } from "../account-session";
 import { useSessionRefresh } from "../use-session-refresh";
 import { AccountLoading } from "../ui/account-loading";
+import { AuthPasswordField } from "../ui/auth-password-field";
+import { Icon } from "../ui/pictogram";
 
 export function LoginForm() {
   const sessionVersion = useSessionRefresh();
@@ -61,14 +63,13 @@ export function LoginForm() {
   if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
   if (user) return <AccountLoading title={user.email_verified ? "Abriendo tus avisos" : "Abriendo la confirmación de correo"} description={user.email_verified ? "Enseguida vas a poder seguir tus búsquedas." : "Ya falta un paso para empezar a publicar."} />;
 
-  return <form className="notification-login account-form" onSubmit={login} aria-busy={busy}>
+  return <form className="auth-form" onSubmit={login} aria-busy={busy}>
     <fieldset className="section-fields" disabled={busy}>
-      <label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required maxLength={320} autoComplete="email" /></label>
-      <label className="field-label">Contraseña<input className="form-input" name="password" type="password" required maxLength={128} autoComplete="current-password" /></label>
-      <button className="button button-primary" type="submit">{busy ? "Ingresando…" : "Ingresar"}</button>
+      <label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required maxLength={320} autoComplete="email" placeholder="nombre@ejemplo.com" /></label>
+      <AuthPasswordField name="password" label="Contraseña" autoComplete="current-password" recovery />
+      <button className="button button-primary auth-submit" type="submit">{busy ? "Ingresando…" : "Ingresar"}<Icon name="arrow" /></button>
     </fieldset>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}
-    <p>¿Todavía no tenés cuenta? <Link className="text-button" href="/crear-cuenta">Crear cuenta</Link></p>
-    <Link className="text-button" href="/recuperar">Olvidé mi contraseña</Link>
+    <p className="auth-alternative">¿Todavía no tenés cuenta? <Link href="/crear-cuenta">Creá tu cuenta</Link></p>
   </form>;
 }

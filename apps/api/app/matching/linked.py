@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.analysis.logging import log_event
 from app.analysis.prompts import TEXT_PROMPT_VERSION, VISION_PROMPT_VERSION
 from app.analysis.service import is_current, utcnow
+from app.report_details import COLOR_LABELS
 from app.core.config import settings
 from app.matching.tracking import record_recommendation
 from app.db.session import SessionLocal
@@ -76,7 +77,7 @@ def compare_traits(target: dict, observed: dict):
     matched = sum(weight for name, weight in WEIGHTS.items() if name in target and target.get(name) == observed.get(name))
     contradiction = "species" in target and "species" in observed and target["species"] != observed["species"]
     # A clear black/white or single-color mismatch is evidence against the proposed identity.
-    if target.get("primary_color") not in (None, "multicolor") and observed.get("primary_color") not in (None, "multicolor"):
+    if target.get("primary_color") in COLOR_LABELS and observed.get("primary_color") in COLOR_LABELS and "multicolor" not in (target["primary_color"], observed["primary_color"]):
         contradiction = contradiction or target["primary_color"] != observed["primary_color"]
     score = matched / available if available else 0
     compatible = not contradiction and matched + 1e-9 >= .5 and score >= settings.linked_match_threshold
@@ -130,6 +131,9 @@ def set_result(db, observation, case, pet, status, reasons, score=None, evidence
         body = "Una persona envió un avistamiento desde tu aviso. " + ("Las fotos necesitan revisión por una persona. La identidad está por confirmar." if has_photo else "No adjuntó fotos; la identidad está por confirmar.")
     else:
         body = "Las características de la foto son compatibles con tu aviso, junto con la ubicación y la fecha. Podría tratarse de tu mascota; revisá el avistamiento."
+    if observation.source_type == "FOUND_ANIMAL":
+        title = f"Una persona tiene una mascota que podría ser {pet.name}"[:180]
+        body = "La persona que envió este reporte indicó que la mascota está a salvo bajo su cuidado. " + body.replace("un avistamiento", "un reporte de mascota encontrada").replace("avistamiento", "reporte")
     if notification is None:
         notification = Notification(owner_id=pet.owner_id, lost_case_id=case.id, observation_id=observation.id, match_id=match.id if match else None, kind=kind, title=title, body=body, email_available_at=utcnow()+timedelta(seconds=settings.mail_group_seconds))
         db.add(notification)

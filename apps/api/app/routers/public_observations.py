@@ -18,6 +18,7 @@ from app.report_text import observation_description
 from app.species import Species, supported_observation_scope
 from app.routers.public_lost_dogs import active_dogs
 from app.routers.photo_gallery import gallery_photo_response
+from app.report_details import ReportDetails
 from app.schemas import PublicPhotoList, PublicPhotoRead
 
 router = APIRouter(prefix="/public/observations", tags=["public-observations"])
@@ -29,7 +30,7 @@ class RelatedNotice(BaseModel):
     name: str
 
 
-class PublicObservationRead(BaseModel):
+class PublicObservationRead(ReportDetails):
     id: UUID
     public_id: str
     species: Species
@@ -78,6 +79,7 @@ def get_public_observation(observation_id: UUID, response: Response, db: Session
     # Explicit allowlist: first name only; no author ID, contacts, storage keys or precise location.
     return PublicObservationRead(
         id=observation.id, public_id=observation.public_id, species=observation.species, sex=observation.sex,
+        **{name: getattr(observation, name) for name in ReportDetails.model_fields},
         primary_color=observation.primary_color, size=observation.size,
         description=observation_description(observation), source_type=observation.source_type,
         public_location=observation.public_location, observed_at=observation.observed_at,

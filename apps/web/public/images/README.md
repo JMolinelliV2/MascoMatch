@@ -5,7 +5,7 @@
 - Resolución: 1536 × 1024 píxeles, proporción 3:2.
 - Formato de publicación: JPEG optimizado, calidad 88, aproximadamente 180 KB.
 - Tratamiento: conversión del PNG generado a JPEG sin recorte ni cambios de composición.
-- Uso: portada; no representa un animal publicado ni un reencuentro real.
+- Uso: portada; no representa una mascota publicada ni un reencuentro real.
 - Distribución: archivo local incluido en el proyecto, servido mediante el componente de imágenes de Next.js.
 
 La portada sustituye la fotografía externa anterior. Se retiró su archivo y su crédito del footer. La trazabilidad de la imagen generada queda documentada aquí.
@@ -22,6 +22,17 @@ Composition/framing: landscape 3:2 image, eye-level medium portrait showing the 
 Lighting/mood: soft natural morning light, welcoming and calm, detailed natural fur, believable proportions, shallow depth of field, natural color balance.
 Constraints: original fictional animal for illustration; no real lost-pet report, no people, no additional animals, no text, no logos, no watermarks, no graphic elements, no copyrighted photograph references.
 ```
+
+# Ilustraciones de ingreso y registro
+
+Creadas con la herramienta integrada **imagegen** el 2 de noviembre de 2026, a partir de las dos referencias de convivencia con perros y gatos aportadas por el usuario. Se adaptaron las escenas a coral, azul oscuro y azul claro de MascoMatch. No representan personas usuarias ni reportes reales.
+
+| Pantalla | Archivo | Dimensiones |
+| --- | --- | --- |
+| Ingresar | [auth-login-illustration.webp](./auth-login-illustration.webp) | 1254 × 1254 |
+| Crear cuenta | [auth-register-illustration.webp](./auth-register-illustration.webp) | 1254 × 1254 |
+
+Los PNG originales se conservan en las imágenes generadas de Codex. Las versiones publicadas son WebP, calidad 90, sin redimensionar ni recortar y conservando el canal alfa. Se sirven desde el propio sitio. Sustituyen la foto en `AuthLayout`; el hero de inicio conserva su imagen original. El detalle de generación y los [prompts completos](../../../../docs/auth-illustrations.md) están documentados en el proyecto.
 
 # Ilustraciones de Cómo funciona
 

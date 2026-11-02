@@ -4,6 +4,7 @@ from app.schemas import ObservationRead
 
 
 LINKED_SIGHTING_DESCRIPTION = "Avistamiento enviado desde un aviso. La identidad de la mascota está por confirmar."
+LINKED_FOUND_DESCRIPTION = "Mascota encontrada reportada desde un aviso. La persona indicó que está a salvo bajo su cuidado. La identidad de la mascota está por confirmar."
 _LEGACY_LINKED_DESCRIPTION = "Avistamiento enviado desde un aviso. La identidad del animal está por confirmar."
 
 

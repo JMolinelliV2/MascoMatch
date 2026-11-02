@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "./ui/loading-state";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { dogTraits, lostDate, lostDogsEndpoint, speciesLabel } from "@/lib/lost-dogs";
@@ -31,8 +32,8 @@ function LostMapPreview({ point, origin, onLayout, onRefresh }: { point: LostMap
   return <div className="home-map-preview">
     {missing ? <><h4>Este aviso ya no está disponible</h4><p>Puede que la mascota haya sido encontrada o que el aviso se haya cerrado.</p><button type="button" className="text-button" onClick={onRefresh}>Actualizar mapa</button></>
       : error ? <><h4>{point.title}</h4><p role="alert">{error}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></>
-        : !animal ? <><h4>{point.title}</h4><p role="status">Cargando miniatura…</p></>
-          : <><DogPhoto dog={animal} href={href} /><span className="lost-status">Sigue perdido</span><h4>{animal.name}</h4><ReportId id={animal.id} publicId={animal.public_id} /><PublicationAuthor name={animal.publisher_name} /><PublicationEditLink id={animal.id} kind="lost_case" compact onLayout={onLayout} /><p className="home-map-traits">{[speciesLabel(animal.species), ...dogTraits(animal)].join(" · ")}</p><p>{animal.public_location || "Zona aproximada"}</p><p className="home-map-date">Perdido desde el {lostDate(animal.lost_at)}</p><Link href={href} className="button button-primary">Ver aviso <Icon name="arrow" /></Link></>}
+        : !animal ? <><h4>{point.title}</h4><LoadingState compact title="Cargando el aviso" /></>
+          : <><DogPhoto dog={animal} href={href} /><div className="report-card-meta"><span className="lost-status">Sigue perdido</span><ReportId id={animal.id} publicId={animal.public_id} /></div><h4>{animal.name}</h4><PublicationAuthor name={animal.publisher_name} /><PublicationEditLink id={animal.id} kind="lost_case" compact onLayout={onLayout} /><p className="home-map-traits">{[speciesLabel(animal.species), ...dogTraits(animal)].join(" · ")}</p><p>{animal.public_location || "Zona aproximada"}</p><p className="home-map-date">Perdido desde el {lostDate(animal.lost_at)}</p><Link href={href} className="button button-primary">Ver aviso <Icon name="arrow" /></Link></>}
   </div>;
 }
 

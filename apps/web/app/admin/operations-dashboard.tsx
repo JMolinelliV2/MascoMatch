@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { AdminDateRange, adminDate, periodQuery } from "./date-range";
@@ -118,7 +119,7 @@ export function OperationsDashboard({section,onNavigate,period,onPeriodChange}:{
       <form className="admin-record-search" onSubmit={event => { event.preventDefault(); setQ(search.trim()); setOffset(0); }}><div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-search`} label="Buscar" help={section === "users" ? "Busca cuentas por nombre o correo." : section === "publications" ? "Busca publicaciones por ID, nombre de la mascota, descripción o autor." : section === "jobs" ? "Busca trabajos por modelo de procesamiento o código de error." : section === "contacts" ? "Busca contactos por nombre, correo o contenido del mensaje." : "Busca registros por tipo de correo o nombre de la acción administrativa."} /><input id={`${fieldId}-search`} type="search" className="form-input" maxLength={120} value={search} placeholder={section === "users" ? "Nombre o correo" : section === "publications" ? "ID, mascota, descripción o autor" : section === "jobs" ? "Modelo o código de error" : section === "contacts" ? "Nombre, correo o mensaje" : "Tipo o acción"} onChange={event => setSearch(event.target.value)} /></div><button type="submit" className="button button-secondary">Buscar</button></form>
     </div>}
     {saved && <p role="status" className="notice">{saved}</p>}{error && <p role="alert" className="notice notice-warning">{error}</p>}
-    {!data && !error && <p role="status" className="admin-matching-loading">Cargando {title?.toLowerCase()}…</p>}
+    {!data && !error && <LoadingState compact title={`Cargando ${title?.toLowerCase() || "los datos"}`} />}
     {data && <>
       {section === "overview" ? <><OverviewWidgets metrics={data.metrics||[]} charts={data.charts} queue={data.mail_queue} onQueue={()=>{navigate("mail");setMailView("mail_queue");}}/><BackupStatusWidget status={data.backups}/></>
         : <>

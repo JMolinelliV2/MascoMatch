@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "./ui/loading-state";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -88,7 +89,7 @@ export function HomeLostMap() {
 
   return <section id="mapa-perdidos" className="home-lost-map" aria-labelledby="home-lost-map-title">
     <div className="home-lost-map-heading"><div><h3 id="home-lost-map-title"><Icon name="pin" />Mascotas reportadas en el mapa</h3><p>Pasá el mouse sobre una foto o tocala para ver la miniatura y abrir el aviso.</p></div><Link href="/mapa" className="text-button">Abrir mapa completo <Icon name="arrow" /></Link></div>
-    <p className="home-map-status" role="status">{busy || !ready && !mapError ? "Cargando mapa…" : error ? "Los avisos del mapa no están disponibles en este momento." : points.length ? `${points.length} ${points.length === 1 ? "mascota reportada con ubicación" : "mascotas reportadas con ubicación"}` : "No hay avisos activos con ubicación por ahora."}</p>
+    {busy || !ready && !mapError ? <LoadingState compact title="Cargando el mapa" /> : <p className="home-map-status" role="status">{error ? "Los avisos del mapa no están disponibles en este momento." : points.length ? `${points.length} ${points.length === 1 ? "mascota reportada con ubicación" : "mascotas reportadas con ubicación"}` : "No hay avisos activos con ubicación por ahora."}</p>}
     <div ref={container} className="home-lost-map-canvas" role="region" aria-label="Mapa de mascotas reportadas" aria-describedby="home-lost-map-help" />
     {selection && createPortal(<LostLocationPreview key={selection.points[0].id} selection={selection} origin="inicio" onRefresh={() => setRefresh(value => value + 1)} />, selection.content)}
     <p className="field-help" id="home-lost-map-help">Los puntos muestran zonas aproximadas. Los avisos sin ubicación se pueden consultar en el catálogo.</p>

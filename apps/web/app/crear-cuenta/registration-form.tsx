@@ -7,6 +7,8 @@ import type { SessionUser } from "../account-session";
 import { VerifyEmailNotice } from "../verify-email-notice";
 import { useSessionRefresh } from "../use-session-refresh";
 import { AccountLoading } from "../ui/account-loading";
+import { AuthPasswordField } from "../ui/auth-password-field";
+import { Icon } from "../ui/pictogram";
 import { track } from "@/lib/product-analytics";
 
 export function RegistrationForm() {
@@ -80,7 +82,7 @@ export function RegistrationForm() {
   if (checking) return <AccountLoading description="Estamos abriendo tu espacio en MascoMatch." />;
   if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
   if (user && !created) return <AccountLoading title="Abriendo tu cuenta" description="Enseguida vas a poder continuar." />;
-  if (user) return <section className="notification-login account-form">
+  if (user) return <section className="auth-form auth-created">
     <h2>Tu cuenta está creada</h2>
     <p role="status">{user.email_verified ? "Ya podés publicar desde tu cuenta." : "Ahora confirmá tu correo para empezar a publicar. Recibirás un mensaje con el enlace."}</p>
     {user.email_verification_required && !user.email_verified && <VerifyEmailNotice email={user.email} />}
@@ -89,17 +91,16 @@ export function RegistrationForm() {
     {error && <p role="alert" className="notice notice-warning">{error}</p>}
   </section>;
 
-  return <form className="notification-login account-form" onSubmit={register} aria-busy={busy} onFocusCapture={()=>{if(!started.current){started.current=true;void track({name:"registration_started",page:"REGISTER"});}}}>
+  return <form className="auth-form" onSubmit={register} aria-busy={busy} onFocusCapture={()=>{if(!started.current){started.current=true;void track({name:"registration_started",page:"REGISTER"});}}}>
     <fieldset className="section-fields" disabled={busy}>
-      <label className="field-label">Nombre o apodo<input className="form-input" name="name" required minLength={1} maxLength={120} autoComplete="nickname" /><span className="field-help">En tus publicaciones mostramos solo la primera palabra de este nombre o apodo.</span></label>
-      <label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required maxLength={320} autoComplete="email" /><span className="field-help">Para recibir alertas y recuperar el acceso a tu cuenta.</span></label>
-      <label className="field-label">Contraseña<input className="form-input" name="password" type="password" required minLength={12} maxLength={128} autoComplete="new-password" /><span className="field-help">Usá al menos 12 caracteres.</span></label>
-      <label className="field-label">Repetí la contraseña<input className="form-input" name="confirmPassword" type="password" required minLength={12} maxLength={128} autoComplete="new-password" /></label>
+      <label className="field-label">Nombre o apodo<input className="form-input" name="name" required minLength={1} maxLength={120} autoComplete="nickname" placeholder="¿Cómo te llamás?" /><span className="field-help">En tus publicaciones mostramos solo la primera palabra.</span></label>
+      <label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required maxLength={320} autoComplete="email" placeholder="nombre@ejemplo.com" /><span className="field-help">Para recibir alertas y recuperar el acceso.</span></label>
+      <AuthPasswordField name="password" label="Contraseña" autoComplete="new-password" minLength={12} hint="Usá al menos 12 caracteres." />
+      <AuthPasswordField name="confirmPassword" label="Repetí la contraseña" autoComplete="new-password" minLength={12} visibilityLabel="confirmación de contraseña" />
       <p className="form-privacy form-legal">Antes de crear tu cuenta, consultá los <Link href="/terminos" target="_blank" rel="noopener noreferrer" aria-label="Términos y condiciones, se abre en otra pestaña">Términos y condiciones</Link>.</p>
-      <button className="button button-primary" type="submit">{busy ? "Creando cuenta…" : "Crear cuenta"}</button>
+      <button className="button button-primary auth-submit" type="submit">{busy ? "Creando cuenta…" : "Crear cuenta"}<Icon name="arrow" /></button>
     </fieldset>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}
-    <p>¿Ya tenés una cuenta? <Link className="text-button" href="/login">Ingresar</Link></p>
-    <Link className="text-button" href="/recuperar">Olvidé mi contraseña</Link>
+    <p className="auth-alternative">¿Ya tenés una cuenta? <Link href="/login">Ingresá</Link></p>
   </form>;
 }

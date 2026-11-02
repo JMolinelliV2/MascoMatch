@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icon } from "./pictogram";
 
-export function ReportPurpose({ kind }: { kind: "sighting" | "found" }) {
+export function ReportPurpose({ kind, caseId }: { kind: "sighting" | "found"; caseId?: string }) {
   const found = kind === "found";
   return <aside className={`report-purpose ${found ? "report-purpose-found" : "report-purpose-sighting"}`} aria-label="Cuándo usar este formulario">
     <div className="report-purpose-main">
@@ -13,7 +13,7 @@ export function ReportPurpose({ kind }: { kind: "sighting" | "found" }) {
     </div>
     <div className="report-purpose-alternative">
       <p>{found ? "¿Solo la viste pasar?" : "¿La tenés a salvo con vos?"}</p>
-      <Link className="report-purpose-switch" href={found ? "/avistamiento" : "/encontre"}><span>{found ? "Reportar un avistamiento" : "Reportar una mascota encontrada"}</span><Icon name="arrow" /></Link>
+      <Link className="report-purpose-switch" href={`${found ? "/avistamiento" : "/encontre"}${caseId ? `?aviso=${encodeURIComponent(caseId)}` : ""}`}><span>{found ? "Reportar un avistamiento" : "Reportar una mascota encontrada"}</span><Icon name="arrow" /></Link>
     </div>
   </aside>;
 }

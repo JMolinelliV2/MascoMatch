@@ -36,7 +36,7 @@ Los detalles de avistamientos y encontrados usan una tarjeta de 240 px dentro de
 
 Términos presenta regreso al inicio, título e introducción, fecha de última actualización, resumen de participación responsable, índice cerrado inicialmente y trece secciones de condiciones. El pie compartido sigue al contenido.
 
-El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, navegación pública, Legales y contacto/apoyo; una línea inferior muestra el año y la marca. El inicio elimina su antiguo pie interno para evitar duplicarlo.
+El layout raíz coloca un único pie después del contenido principal de cada página. Presenta logo y propósito, junto a cuatro grupos con el mismo tratamiento: Explorá, Ayudá a encontrar, Cómo apoyarnos y Legales. Contacto y aportes son enlaces integrados en esa navegación. El espaciado es compacto, con cuatro columnas en escritorio y tablet y dos en celulares; los enlaces de celular conservan un alto táctil de 44 px. Una línea inferior muestra el año y la marca. El inicio elimina su antiguo pie interno para evitar duplicarlo.
 
 Notificaciones muestra cuenta y acceso a preferencias, filtros, explicación de lectura y archivo, contador y acciones, confirmaciones, tarjetas y paginación. Un detalle abierto desde una alerta conserva su regreso a la bandeja y omite los filtros de listado.
 

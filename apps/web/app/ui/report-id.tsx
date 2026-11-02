@@ -1,9 +1,10 @@
 "use client";
 
+import { Icon } from "./pictogram";
 import { useState } from "react";
 
-export function ReportId({ id, publicId, label = "ID del aviso", copyable = false }: {
-  id?: string; publicId?: string; label?: string; copyable?: boolean;
+export function ReportId({ id, publicId, label = "ID del aviso", copyable = false, compact = !copyable }: {
+  id?: string; publicId?: string; label?: string; copyable?: boolean; compact?: boolean;
 }) {
   const [message, setMessage] = useState("");
   const value = publicId || id;
@@ -17,6 +18,8 @@ export function ReportId({ id, publicId, label = "ID del aviso", copyable = fals
       setMessage("No pudimos copiarlo. Seleccioná el ID para copiarlo manualmente.");
     }
   }
+
+  if (compact) return <span className="report-reference-inline" title={`${label}: ${value}`}><span className="sr-only">{label}: </span>{value}{copyable && <button type="button" className="report-id-copy-icon" aria-label={`Copiar ${label.toLowerCase()} ${value}`} onClick={() => void copy()}><Icon name="copy" /></button>}{message && <span className="sr-only" role="status">{message}</span>}</span>;
 
   return <div className="report-reference">
     <span className="report-id"><span>{label}:</span> <strong>{value}</strong></span>

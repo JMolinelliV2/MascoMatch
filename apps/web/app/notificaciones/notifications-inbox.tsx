@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../ui/loading-state";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -183,7 +184,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
 
   return <main id="main-content" className="page notifications-page">
     <h1>Notificaciones</h1><p className="page-intro">Avistamientos que podrían ayudar a encontrar a tus mascotas.</p>
-    {checking ? <p role="status" className="page-intro">Consultando tu sesión…</p> : !user ? <form onSubmit={login} className="notification-login">
+    {checking ? <LoadingState title="Cargando tus notificaciones" description="Estamos consultando tu cuenta." /> : !user ? <form onSubmit={login} className="notification-login">
       <h2>Ingresá con la cuenta de tu aviso</h2><p className="field-help">Así podrás ver los lugares y las fotos que compartieron.</p>
       <fieldset disabled={busy} className="form-controls section-fields">
         <label className="field-label">Correo electrónico<input name="email" type="email" required maxLength={320} autoComplete="email" className="form-input" /></label>
@@ -200,6 +201,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
         <div className="notifications-filters" role="group" aria-label="Mostrar notificaciones">{inboxViews.map(option => <button type="button" key={option.value} className="notification-filter" aria-pressed={view === option.value} disabled={Boolean(action)} onClick={() => { setView(option.value); setOffset(0); setActionMessage(""); setError(""); }}>{option.label}</button>)}</div>
         <p className="field-help">Al abrir una alerta se marca como leída. Las leídas quedan en Todas; podés archivarlas y recuperarlas desde Archivadas.</p>
       </>}
+      {!inbox && !error && <LoadingState title="Cargando tus notificaciones" description="Estamos reuniendo las novedades de tus avisos." />}
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><div className="notifications-toolbar-actions">{!selectedId && view !== "archived" && Boolean(inbox?.unread_count) && <button type="button" className="text-button" disabled={Boolean(action)} onClick={() => void readAll()}>{action?.kind === "read-all" ? "Guardando…" : "Marcar todas como leídas"}</button>}<button type="button" className="text-button" disabled={Boolean(action)} onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div></div>
       {actionMessage && <p className="notice" role="status">{actionMessage}</p>}
       {feedbackMessage && <div className="notice" role="status"><p>{feedbackMessage}</p><Link className="text-button" href="/mis-avisos">Ver el estado en Mis avisos</Link></div>}

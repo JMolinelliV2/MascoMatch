@@ -14,6 +14,7 @@ from app.analysis.service import utcnow
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.matching.linked import aware
+from app.mail_templates import add_grouped_sightings_content, add_sighting_alert_content
 from app.models import LostCase, Notification, Observation, User
 from app.operational_tracking import record_mail
 from app.report_text import notification_body
@@ -26,22 +27,25 @@ def build_message(notification, owner, observation=None, related=None):
     message["Subject"] = " ".join(notification.title.splitlines())
     message["Date"] = format_datetime(utcnow())
     message["Message-ID"] = f"<mascomatch-{notification.id}@mascomatch.local>"
-    context = ""
+    when = None
+    location = None
     if observation:
         try:
             zone, label = ZoneInfo("America/Montevideo"), "hora de Uruguay"
         except ZoneInfoNotFoundError:
             zone, label = timezone.utc, "UTC"
-        when = aware(observation.observed_at).astimezone(zone).strftime("%d/%m/%Y %H:%M")
-        context = f"\n\nFecha del avistamiento: {when} ({label})."
-        if observation.public_location:
-            context += f"\nZona: {observation.public_location}"
-    preferences_url = f"{settings.public_site_url.rstrip('/')}/mi-cuenta#notificaciones"
-    message.set_content(f"{notification.title}\n\n{notification_body(notification.body)}{context}\n\nRevisá el lugar y las fotos en MascoMatch:\n{settings.public_site_url.rstrip('/')}/notificaciones?aviso={notification.id}\n\nSe trata de una posible coincidencia, que necesita revisión.\nPodés cambiar tus preferencias de correo en Mi cuenta:\n{preferences_url}")
+        local_time = aware(observation.observed_at).astimezone(zone).strftime("%d/%m/%Y %H:%M")
+        when = f"{local_time} ({label})"
+        location = observation.public_location
+    base_url = settings.public_site_url.rstrip('/')
+    preferences_url = f"{base_url}/mi-cuenta#notificaciones"
     if related and len(related)>1:
         message.replace_header("Subject", f"{len(related)} reportes nuevos: {notification.title}")
-        links="\n".join(f"{settings.public_site_url.rstrip('/')}/notificaciones?aviso={item.id}" for item in related)
-        message.set_content(f"Recibimos {len(related)} avistamientos potencialmente relacionados con el mismo aviso.\n\nRevisá los lugares, fotos y motivos de cada reporte:\n{links}\n\nLa identidad de las mascotas necesita confirmación.\nPodés cambiar tus preferencias de correo en Mi cuenta:\n{preferences_url}")
+        reports = [(item.title, f"{base_url}/notificaciones?aviso={item.id}") for item in related]
+        add_grouped_sightings_content(message, reports, f"{base_url}/notificaciones", preferences_url)
+    else:
+        add_sighting_alert_content(message, notification.title, notification_body(notification.body),
+            f"{base_url}/notificaciones?aviso={notification.id}", preferences_url, when=when, location=location)
     return message
 
 

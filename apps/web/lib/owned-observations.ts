@@ -1,4 +1,4 @@
-export type OwnedObservation = {
+export type OwnedObservation = import("./pet-details").PetDetails & {
   id: string;
   public_id: string;
   species: string;

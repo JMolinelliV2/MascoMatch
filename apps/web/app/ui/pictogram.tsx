@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 
 const paths = {
   paw: <><ellipse cx="5.5" cy="8" rx="2" ry="2.8" /><ellipse cx="10" cy="5.5" rx="2" ry="2.8" /><ellipse cx="15.5" cy="5.5" rx="2" ry="2.8" /><ellipse cx="20" cy="9" rx="2" ry="2.8" /><path d="M6 18c0-3 3-7 6.5-7S19 15 19 18c0 2-1.5 3-3.5 2.5-2-.7-4-.7-6 0C7.5 21 6 20 6 18Z" /></>,
+  copy: <><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></>,
   camera: <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z" /><circle cx="12" cy="13" r="4" /></>,
   pin: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
   eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></>,
+  eyeOff: <><path d="m3 3 18 18M10.6 5.1A11 11 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.8M6.1 6.1A20 20 0 0 0 2 12s3.5 7 10 7a12 12 0 0 0 5.1-1.2M10 10a3 3 0 0 0 4 4" /></>,
   heart: <path d="M20.5 4.5a5 5 0 0 0-7 0L12 6l-1.5-1.5a5 5 0 0 0-7 7L12 20l8.5-8.5a5 5 0 0 0 0-7Z" />,
   bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" /><path d="M12 2V1" /></>,
   user: <><circle cx="12" cy="7" r="4" /><path d="M20 22v-3a8 8 0 0 0-16 0v3Z" /></>,

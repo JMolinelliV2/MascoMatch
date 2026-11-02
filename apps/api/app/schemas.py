@@ -1,3 +1,4 @@
+from app.report_details import ReportDetails, ReportDetailsCreate, ReportDetailsUpdate
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
@@ -51,7 +52,7 @@ class TokenResponse(BaseModel):
     user: UserRead
 
 
-class PetCreate(BaseModel):
+class PetCreate(ReportDetailsCreate):
     name: str = Field(min_length=1, max_length=120)
     species: Species
     breed: str = Field(default="unknown", max_length=120)
@@ -59,14 +60,14 @@ class PetCreate(BaseModel):
     size: str = Field(default="unknown", max_length=24)
     age_estimate: str | None = Field(default=None, max_length=80)
     primary_color: str = Field(default="unknown", max_length=40)
-    secondary_colors: list[str] = Field(default_factory=list)
+    secondary_colors: list[str] = Field(default_factory=list, max_length=5)
     coat_type: str = Field(default="unknown", max_length=40)
     distinctive_features: list[str] = Field(default_factory=list)
     collar_description: str | None = Field(default=None, max_length=255)
     microchip_reference: str | None = Field(default=None, max_length=80)
 
 
-class PetUpdate(BaseModel):
+class PetUpdate(ReportDetailsUpdate):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     species: Species | None = None
     breed: str | None = Field(default=None, max_length=120)
@@ -74,7 +75,7 @@ class PetUpdate(BaseModel):
     size: str | None = Field(default=None, max_length=24)
     age_estimate: str | None = Field(default=None, max_length=80)
     primary_color: str | None = Field(default=None, max_length=40)
-    secondary_colors: list[str] | None = None
+    secondary_colors: list[str] | None = Field(default=None, max_length=5)
     coat_type: str | None = Field(default=None, max_length=40)
     distinctive_features: list[str] | None = None
     collar_description: str | None = Field(default=None, max_length=255)
@@ -95,7 +96,7 @@ class PetUpdate(BaseModel):
         return value
 
 
-class PetRead(ORMModel):
+class PetRead(ORMModel, ReportDetails):
     id: UUID
     owner_id: UUID
     name: str
@@ -205,7 +206,7 @@ class PublicPhotoList(BaseModel):
     items: list[PublicPhotoRead]
 
 
-class PublicLostDogRead(BaseModel):
+class PublicLostDogRead(ReportDetails):
     id: UUID
     public_id: str
     name: str
@@ -219,6 +220,7 @@ class PublicLostDogRead(BaseModel):
     lost_at: datetime
     photo_url: str | None
     publisher_name: str | None = None
+    photo_ids: list[UUID] = Field(default_factory=list)
 
 
 class PublicLostDogList(BaseModel):
@@ -228,7 +230,7 @@ class PublicLostDogList(BaseModel):
     offset: int
 
 
-class ObservationCreate(BaseModel):
+class ObservationCreate(ReportDetailsCreate):
     analytics_geo: CoarseGeo=Field(default_factory=CoarseGeo)
     species: Species
     sex: Sex = "unknown"
@@ -251,7 +253,7 @@ class ObservationCreate(BaseModel):
         return self
 
 
-class ObservationUpdate(BaseModel):
+class ObservationUpdate(ReportDetailsUpdate):
     analytics_geo: CoarseGeo | None=None
     species: Species | None = None
     sex: Sex | None = None
@@ -287,7 +289,7 @@ class ObservationUpdate(BaseModel):
         return value
 
 
-class OwnedObservationRead(ORMModel):
+class OwnedObservationRead(ORMModel, ReportDetails):
     """Private edit data. Exact coordinates are returned only to the report author."""
     id: UUID
     public_id: str
@@ -307,7 +309,7 @@ class OwnedObservationRead(ORMModel):
     linked_case_id: UUID | None
 
 
-class ObservationRead(ORMModel):
+class ObservationRead(ORMModel, ReportDetails):
     id: UUID
     public_id: str
     species: str

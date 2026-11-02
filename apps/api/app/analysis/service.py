@@ -20,6 +20,14 @@ def input_hash(snapshot: dict) -> str:
     return hashlib.sha256(json.dumps(snapshot, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
+def optional_details(owner, *, include_breed=False):
+    # Empty new columns must not invalidate analysis hashes of historical reports.
+    fields = ("collar_status", "collar_color", "clothing_status", "clothing_description", "clothing_color")
+    if include_breed:
+        fields += ("breed", "secondary_colors", "collar_description")
+    return {name: value for name in fields if (value := getattr(owner, name)) not in (None, "unknown", [])}
+
+
 def text_snapshot(db: Session, owner_type: str, owner_id: UUID) -> dict | None:
     if not owner_is_supported(db, owner_type, owner_id):
         return None
@@ -27,7 +35,10 @@ def text_snapshot(db: Session, owner_type: str, owner_id: UUID) -> dict | None:
         observation = db.get(Observation, owner_id)
         if observation is None:
             return None
-        return {"description": observation.description, "declared_features": {"species": observation.species, "primary_color": observation.primary_color, "size": observation.size}}
+        return {"description": observation.description, "declared_features": {
+            "species": observation.species, "primary_color": observation.primary_color, "size": observation.size,
+            **optional_details(observation, include_breed=True),
+        }}
     if owner_type == "lost_case":
         case = db.get(LostCase, owner_id)
         if case is None:
@@ -41,10 +52,10 @@ def text_snapshot(db: Session, owner_type: str, owner_id: UUID) -> dict | None:
         return None
     # Names, contact information, microchips and coordinates are not model inputs.
     return {"description": description, "declared_features": {
-        name: getattr(pet, name) for name in (
+        **{name: getattr(pet, name) for name in (
             "species", "breed", "size", "primary_color", "secondary_colors",
             "coat_type", "distinctive_features", "collar_description",
-        )
+        )}, **optional_details(pet)
     }}
 
 

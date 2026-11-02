@@ -47,7 +47,7 @@ def lock_photo_cases(db, owner_type, owner_id):
 def build_message(case, pet, owner):
     message = EmailMessage()
     message["From"], message["To"] = settings.smtp_from, owner.email
-    message["Subject"] = "Una foto puede ayudar a encontrar a tu mascota"
+    message["Subject"] = "Varias fotos pueden ayudar a encontrar a tu mascota"
     message["Date"] = format_datetime(utcnow())
     message["Message-ID"] = f"<mascomatch-photo-{case.id}@mascomatch.com>"
     url = f"{settings.public_site_url.rstrip('/')}/mis-avisos?foto={case.id}#fotos-{case.id}"

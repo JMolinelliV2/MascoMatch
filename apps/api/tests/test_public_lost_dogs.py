@@ -34,7 +34,7 @@ def test_public_dogs_need_no_login_and_expose_only_notice_fields(client, auth_he
     assert listing.headers["cache-control"] == "no-store"
     assert listing.json()["total"] == 1
     dog = listing.json()["items"][0]
-    assert set(dog) == {"id", "public_id", "name", "species", "sex", "breed", "size", "primary_color", "description", "public_location", "lost_at", "photo_url", "publisher_name"}
+    assert set(dog) == {"id", "public_id", "name", "species", "sex", "breed", "size", "primary_color", "description", "public_location", "lost_at", "photo_url", "publisher_name", "photo_ids", "secondary_colors", "collar_status", "collar_color", "collar_description", "clothing_status", "clothing_description", "clothing_color"}
     assert dog["name"] == "Luna"
     assert dog["sex"] == "unknown"
     assert dog["public_location"] == "El Pinar, Canelones, Uruguay"

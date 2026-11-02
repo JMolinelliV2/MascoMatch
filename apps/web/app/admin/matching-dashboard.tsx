@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import { ReportId } from "../ui/report-id";
 import { AdminDateRange, periodQuery } from "./date-range";
@@ -46,7 +47,7 @@ function ResponseHistory({ id }: { id: string }) {
   return <div className="admin-response-history">
     <AdminHeading level={4} label="Historial de respuestas" />
     {error ? <p role="alert">{error} <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></p>
-      : !events ? <p role="status">Cargando respuestas…</p>
+      : !events ? <LoadingState compact title="Cargando las respuestas" />
         : !events.length ? <p>El dueño todavía no respondió.</p>
           : <ol>{events.map(event => <li key={event.id}><strong>{feedbackLabels[event.status] || event.status}{event.recovered && " · Ya la recuperó"}</strong><time dateTime={event.created_at}>{date(event.created_at)}</time>{event.legacy && <span className="field-help">Respuesta anterior al seguimiento; no hay historial previo disponible.</span>}</li>)}</ol>}
     {events && events.length === 50 && <p className="field-help">Se muestran las últimas 50 respuestas.</p>}
@@ -87,7 +88,7 @@ export function MatchingDashboard({period,onPeriodChange,fixedFilters}:{period:A
       <div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-dataset`} label="Registro" help="Distingue registros creados desde el inicio del seguimiento de registros anteriores recuperados de la información disponible. Los anteriores pueden tener un historial incompleto." /><select id={`${fieldId}-dataset`} className="form-input" value={dataset} onChange={event => filter(setDataset, event.target.value)}><option value="all">Todos los registros</option><option value="live">Desde el inicio del seguimiento</option><option value="legacy">Registros anteriores</option></select></div>
     </div>
     {error && <p role="alert" className="notice notice-warning">{error}</p>}
-    {!data && !error && <p role="status" className="admin-matching-loading">Preparando el seguimiento de coincidencias…</p>}
+    {!data && !error && <LoadingState compact title="Cargando el seguimiento de coincidencias" />}
     {data && counts && <>
       <div className="admin-matching-summary">
         <div className="admin-metric"><AdminLabel label="Recomendaciones únicas" /><strong>{number(counts.total)}</strong><small>Un aviso y un reporte, una recomendación.</small></div>

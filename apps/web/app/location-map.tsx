@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "./ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker, TileLayer } from "leaflet";
 
@@ -84,7 +85,7 @@ export function LocationMap({ latitude, longitude, onMove, editable = true, labe
   return <div className="location-map-section">
     <p id={`${id}-help`} className="field-help">{editable ? "Arrastrá el pin o tocá el mapa para elegir otro punto. También podés mover el pin con las flechas del teclado." : label || "Lugar indicado por la persona que envió el avistamiento."}</p>
     <div ref={container} className="location-map" role="region" aria-label={label || (editable ? "Mapa para ajustar la ubicación" : "Mapa del avistamiento")} aria-describedby={`${id}-help`} />
-    {!ready && !error && <p role="status" className="status-text">Cargando mapa…</p>}
+    {!ready && !error && <LoadingState compact title="Cargando el mapa" />}
     {error && <div className="notice notice-warning" role="alert">{error} {ready && <button type="button" className="text-button" onClick={() => { setError(""); tilesRef.current?.redraw(); }}>Reintentar</button>}</div>}
   </div>;
 }

@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.routers.operations import readiness
 from app.ops.ai_health import ai_readiness
 from app.ops.backup_status import read_status
+from app.mail_templates import add_delivery_check_content
 
 
 def main():
@@ -30,7 +31,7 @@ def main():
         message["From"]=settings.smtp_from
         message["To"]=target
         message["Subject"]="MascoMatch · comprobación de correo"
-        message.set_content("Este correo fue solicitado por la administración para comprobar la configuración de MascoMatch.")
+        add_delivery_check_content(message, settings.public_site_url.rstrip('/'))
         send_message(message)
         checks["smtp_accepted_test"]=True
     print(json.dumps({"ready":all(checks.values()),"checks":checks,"backups":read_status()}))

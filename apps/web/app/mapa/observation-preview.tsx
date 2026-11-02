@@ -1,4 +1,6 @@
 "use client";
+import { LoadingState } from "../ui/loading-state";
+import { ReportAccessories } from "../ui/report-accessories";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { observationDate, observationTraits, publicObservationsEndpoint } from "@/lib/public-observations";
@@ -30,13 +32,12 @@ function ObservationPreview({ id, onLayout, onRefresh }: { id: string; onLayout:
   useEffect(() => { onLayout(); }, [report, missing, error, onLayout]);
   if (missing) return <div className="home-map-preview observation-map-preview"><h3>Este reporte ya no está disponible</h3><button type="button" className="text-button" onClick={onRefresh}>Actualizar mapa</button></div>;
   if (error) return <div className="home-map-preview observation-map-preview"><p role="alert">{error}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
-  if (!report) return <div className="home-map-preview observation-map-preview"><p role="status">Cargando detalles del reporte…</p></div>;
+  if (!report) return <div className="home-map-preview observation-map-preview"><LoadingState compact title="Cargando el reporte" /></div>;
   const found = report.source_type === "FOUND_ANIMAL";
   return <div className={`home-map-preview observation-map-preview map-report-${found ? "found" : "sighting"}`}>
     <ObservationPhoto id={report.id} hasPhoto={Boolean(report.photo_url)} found={found} onLoad={onLayout} />
-    <span className="map-report-type">{found ? "Mascota encontrada" : "Avistamiento"}</span>
+    <div className="report-card-meta"><span className="map-report-type">{found ? "Mascota encontrada" : "Avistamiento"}</span><ReportId id={report.id} publicId={report.public_id} label="ID del reporte" compact copyable /></div>
     <h3>{speciesLabel(report.species)} {found ? "encontrado" : "avistado"}</h3>
-    <ReportId id={report.id} publicId={report.public_id} label="ID del reporte" copyable />
     <PublicationAuthor name={report.publisher_name} />
     <p className="home-map-traits">{observationTraits(report)}</p>
     <p className="map-report-area"><Icon name="pin" />{report.public_location || "Zona aproximada"}</p>
@@ -45,6 +46,7 @@ function ObservationPreview({ id, onLayout, onRefresh }: { id: string; onLayout:
     <h4 className="observation-map-description-title">Detalles del reporte</h4>
     <p className="observation-map-description">{report.description}</p>
     <ObservationEditLink id={report.id} found={found} onLayout={onLayout} />
+    <ReportAccessories details={report} />
     {report.related_notice && <div className="observation-map-related"><p>Enviado para el aviso de <strong>{report.related_notice.name}</strong>. El vínculo no confirma que sea la misma mascota.</p><ReportId id={report.related_notice.id} publicId={report.related_notice.public_id} /><Link className="text-button" href={`/perdidos/${encodeURIComponent(report.related_notice.id)}?origen=mapa`}>Ver aviso relacionado <Icon name="arrow" /></Link></div>}
   </div>;
 }

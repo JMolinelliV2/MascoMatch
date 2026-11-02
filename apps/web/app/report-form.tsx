@@ -1,5 +1,7 @@
 "use client";
 
+import { ReportTraitFields } from "./ui/report-trait-fields";
+import { readPetDetails, accessoryLabels, colorLabel, petDetailsError } from "@/lib/pet-details";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -98,6 +100,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
   const [missingPhotoNotice, setMissingPhotoNotice] = useState(false);
   const [preview, setPreview] = useState("");
   const copy = labels[kind];
+  const [speciesChoice, setSpeciesChoice] = useState("");
   const needsVerification = Boolean(sessionUser && !sessionUser.email_verified);
   const stepTitles = [kind === "lost" ? "Contanos sobre tu mascota" : "Contanos sobre la mascota", copy.event, "Revisá el reporte y dejá tu contacto"];
   const stepIntros = ["Empezá por sus características. Los campos opcionales pueden quedar vacíos.", "La fecha y la hora pueden ser aproximadas. Elegí el lugar por su nombre o dirección.", "Podés editar los datos antes de publicar. Tu contacto se guarda con tu cuenta."];
@@ -210,6 +213,10 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       return invalid(formElement, 2, "locationSearch", message);
     }
     if (target === 1) {
+      const traits = readPetDetails(new FormData(formElement));
+      if (petDetailsError(traits)) {
+        return invalid(formElement, 1, "secondary_colors", petDetailsError(traits));
+      }
       const photoError = photoSelectionError(photos);
       if (photoError) return invalid(formElement, 1, "photo", photoError);
     }
@@ -227,7 +234,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
     const text = (key: string) => String(form.get(key) ?? "").trim();
     const selected = (key: string) => formElement.querySelector<HTMLSelectElement>(`[name="${key}"]`)?.selectedOptions[0]?.textContent ?? "";
     setReview({
-      animal: [kind === "lost" ? text("petName") : "", selected("species"), text("sex") !== "unknown" ? selected("sex") : "", text("color") !== "unknown" ? selected("color") : "", text("size") !== "unknown" ? selected("size") : ""].filter(Boolean).join(" · "),
+      animal: [kind === "lost" ? text("petName") : "", selected("species"), text("breed"), ...accessoryLabels(readPetDetails(form)), text("sex") !== "unknown" ? selected("sex") : "", text("color") !== "unknown" ? colorLabel(String(form.get("color") || "")) : "", text("size") !== "unknown" ? selected("size") : ""].filter(Boolean).join(" · "),
       description: text("description"),
       when: text("observedAt"),
       note: kind === "lost" ? "" : text("eventNote"),
@@ -273,7 +280,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       if (!accountUser.email_verified) return;
       const species = text("species");
       const sex = text("sex");
-      const color = text("color");
+      const details = readPetDetails(form);
       const size = text("size");
       // Only authored text belongs in the description. Traits and location have
       // their own fields and remain available to matching without being appended.
@@ -288,7 +295,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       let ownerType: "lost_case" | "observation";
       if (kind === "lost") {
         const pet = await send<{ id: string }>("/pets", {
-          name: text("petName"), species, sex, primary_color: color, size, breed: "unknown",
+          name: text("petName"), species, sex, size, ...details,
         });
         report = await send("/lost-cases", {
           pet_id: pet.id, lost_at: when.toISOString(), last_seen_at: when.toISOString(),
@@ -298,7 +305,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
         ownerType = "lost_case";
       } else {
         report = await send("/observations", {
-          species, sex, primary_color: color, size, public_location: location?.locality ?? null, description, observed_at: when.toISOString(), ...locationData,
+          species, sex, size, ...details, public_location: location?.locality ?? null, description, observed_at: when.toISOString(), ...locationData,
           share_contact: form.get("shareContact") === "on",
           source_type: kind === "found" ? "FOUND_ANIMAL" : "USER_SIGHTING",
         });
@@ -351,7 +358,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
           <Section title={kind === "lost" ? "Mascota" : "Datos de la mascota"} number={1} active={step}>
             <div className="form-grid">
               <label className="field-label">Mascota
-                <select name="species" required defaultValue="" className={inputClass} {...fieldAttributes("species")}>
+                <select onChange={e => setSpeciesChoice(e.target.value)} name="species" required defaultValue="" className={inputClass} {...fieldAttributes("species")}>
                   <option value="" disabled>Seleccioná una opción</option>
                   {speciesOptions.map(([value,label])=><option key={value} value={value}>{label}</option>)}
                 </select>
@@ -363,20 +370,13 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
                 {fieldFeedback("petName")}
               </label>}
               <SexSelector />
-              <label className="field-label">Color <span className="optional">(opcional)</span>
-                <select name="color" defaultValue="unknown" className={inputClass}>
-                  <option value="unknown">No lo sé</option><option value="brown">Marrón</option>
-                  <option value="black">Negro</option><option value="white">Blanco</option><option value="gray">Gris</option>
-                  <option value="cream">Crema</option><option value="orange">Naranja</option><option value="tan">Beige / canela</option>
-                  <option value="red">Rojizo</option><option value="multicolor">Varios colores</option>
-                </select>
-              </label>
               <label className="field-label">Tamaño <span className="optional">(opcional)</span>
                 <select name="size" defaultValue="unknown" className={inputClass}>
                   <option value="unknown">No lo sé</option><option value="tiny">Muy pequeño</option>
                   <option value="small">Pequeño</option><option value="medium">Mediano</option><option value="large">Grande</option>
                 </select>
               </label>
+              <ReportTraitFields key={resetCount} species={speciesChoice} secondaryError={errorField === "secondary_colors" ? error : ""} />
             </div>
             <label className="field-label">Descripción
               <textarea name="description" required minLength={1} maxLength={2500} rows={3} placeholder="Ej.: tiene una mancha blanca en el pecho, una oreja caída y un collar azul." className={inputClass} {...fieldAttributes("description", "description-help")} />

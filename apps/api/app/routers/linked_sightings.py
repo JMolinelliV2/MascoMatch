@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 from uuid import UUID
+from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from sqlalchemy import select
@@ -18,7 +19,8 @@ from app.models import LostCase, Notification, Observation, Photo, User
 from app.photo_albums import MAX_REPORT_PHOTOS, set_cover
 from app.species import is_supported_species, owner_is_supported
 from app.schemas import CoarseGeo, LinkedSightingRead
-from app.report_text import LINKED_SIGHTING_DESCRIPTION
+from app.report_details import ReportDetailsCreate
+from app.report_text import LINKED_SIGHTING_DESCRIPTION, LINKED_FOUND_DESCRIPTION
 from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/public/lost-animals", tags=["linked-sightings"])
@@ -40,6 +42,8 @@ def create_linked_sighting(
     location_accuracy_meters: int | None = Form(default=None, ge=0, le=100000),
     public_location: str | None = Form(default=None, max_length=350),
     analytics_geo: str | None = Form(default=None,max_length=350),
+    details: str | None = Form(default=None, max_length=3000),
+    source_type: Literal["USER_SIGHTING", "FOUND_ANIMAL"] = Form(default="USER_SIGHTING"),
     photos: list[UploadFile] | None = File(default=None),
     primary_index: int = Form(default=0,ge=0,le=4),
     db: Session = Depends(get_db),
@@ -49,6 +53,10 @@ def create_linked_sighting(
         user=lock_active_user(db,user)
     try:geo=CoarseGeo.model_validate_json(analytics_geo).model_dump() if analytics_geo else CoarseGeo().model_dump()
     except ValueError:raise HTTPException(422,"La zona general no es válida.")
+    try:
+        traits = ReportDetailsCreate.model_validate_json(details).model_dump() if details else ReportDetailsCreate().model_dump()
+    except ValueError:
+        raise HTTPException(422, "Revisá los detalles opcionales de la mascota.")
     case = db.scalar(select(LostCase).where(LostCase.id == case_id, LostCase.status == "ACTIVE").with_for_update())
     if case is None or not is_supported_species(case.pet.species) or case.moderation_status != "VISIBLE" or case.pet.owner.status != "ACTIVE":
         raise HTTPException(status_code=404, detail="El aviso ya no está activo.")
@@ -74,6 +82,11 @@ def create_linked_sighting(
                 "photos": [hashlib.sha256(payload).hexdigest() for _, payload in images]}
     if primary_index:
         snapshot["primary_index"] = primary_index
+    supplied = {key: value for key, value in traits.items() if value not in (None, "unknown", [])}
+    if supplied:
+        snapshot["details"] = supplied
+    if source_type != "USER_SIGHTING":
+        snapshot["source_type"] = source_type
     digest = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
     previous = db.get(Observation, request_id)
     if previous:
@@ -83,9 +96,9 @@ def create_linked_sighting(
     # Species is a routing hint from the selected notice, never independent proof of identity.
     observation = Observation(
         id=request_id, author_id=user.id if user else None, linked_case_id=case_id, submission_hash=digest,
-        species=case.pet.species, sex="unknown", description=LINKED_SIGHTING_DESCRIPTION, description_format="SYSTEM",
+        **traits, species=case.pet.species, sex="unknown", description=LINKED_FOUND_DESCRIPTION if source_type == "FOUND_ANIMAL" else LINKED_SIGHTING_DESCRIPTION, description_format="SYSTEM",
         observed_at=observed_at, latitude=latitude, longitude=longitude, location_accuracy_meters=location_accuracy_meters,
-        public_location=public_location, source_type="USER_SIGHTING", matching_status="PENDING",analytics_geo=geo,
+        public_location=public_location, source_type=source_type, matching_status="PENDING",analytics_geo=geo,
     )
     stored_keys = []
     try:

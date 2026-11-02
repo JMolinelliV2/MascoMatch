@@ -24,6 +24,6 @@ La migración `0015_photo_reminders` crea una tabla vacía: no programa recordat
 
 ## Mensaje y destino
 
-El correo tiene texto plano y HTML con la marca, logo incrustado y botón centrado. Explica el beneficio de una foto sin prometer resultados ni porcentajes y recuerda que el aviso permanece publicado sin imagen.
+El correo tiene texto plano y HTML con la marca, logo incrustado y botón centrado. Recomienda agregar varias fotos, hasta cinco, y elegir una miniatura. Incluye consejos: cara y ojos de frente, cuerpo entero de perfil, distintos ángulos y rasgos distintivos, imágenes recientes con buena luz y enfoque y sin filtros ni recortes que tapen a la mascota. No promete resultados ni porcentajes y recuerda que el aviso permanece publicado sin imágenes. El recordatorio mantiene su condición de envío: solo se programa y envía mientras el aviso no tenga fotos.
 
-**Agregar una foto** abre `/mis-avisos?foto=<id>#fotos-<id>`. La persona debe ingresar con la cuenta dueña; el formulario de carga se abre dentro de su aviso y se desplaza hasta él. El parámetro solo admite un UUID, no inicia sesión ni autoriza subidas. Si la cuenta no posee el aviso, se informa que no está disponible en esa cuenta. Los logs de entrega no incluyen correos, descripciones ni credenciales.
+**Agregar fotos** abre `/mis-avisos?foto=<id>#fotos-<id>`. La persona debe ingresar con la cuenta dueña; el formulario de carga se abre dentro de su aviso y se desplaza hasta él. El parámetro solo admite un UUID, no inicia sesión ni autoriza subidas. Si la cuenta no posee el aviso, se informa que no está disponible en esa cuenta. Los logs de entrega no incluyen correos, descripciones ni credenciales.

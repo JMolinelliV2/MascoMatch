@@ -1,4 +1,5 @@
 "use client";
+import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useState } from "react";
 import { AdminDateRange, adminDate, periodQuery } from "./date-range";
 import type { AdminPeriod } from "./date-range";
@@ -36,7 +37,7 @@ export function DonationsDashboard({ period, onPeriodChange }: { period: AdminPe
     </div>
     <p className="field-help">El período se aplica a la fecha de inicio del aporte. No se guardan datos de tarjetas ni la identidad de quien aporta.</p>
     {error && <p className="notice notice-warning" role="alert">{error}</p>}
-    {!data && !error && <p role="status">Consultando aportes…</p>}
+    {!data && !error && <LoadingState compact title="Cargando los aportes" />}
     {data && <>
       <div className="admin-widget"><AdminHeading level={3} label={environment === "test" ? "Total confirmado de prueba" : "Total confirmado"} help="Suma de importes de aportes con estado actual Confirmado, en el entorno y período elegidos. Excluye reembolsos, reembolsos parciales, contracargos y operaciones pendientes. No descuenta comisiones de Mercado Pago ni representa el saldo disponible." /><strong className="support-selection-amount">$U {new Intl.NumberFormat("es-UY").format(BigInt(data.approved_amount_uyu))}</strong><p className="field-help">{data.summary.APPROVED || 0} confirmados · {data.queue.pending} confirmaciones en cola · {data.queue.retrying} con reintento. La cola corresponde al estado actual del entorno, sin filtro de fechas.</p><p className="field-help">Recepción {data.enabled ? "habilitada" : "desactivada"} · Entorno activo: {data.active_environment === "test" ? "pruebas" : "producción"}.</p></div>
       <p className="field-help">{data.total} aportes con estos filtros.</p>

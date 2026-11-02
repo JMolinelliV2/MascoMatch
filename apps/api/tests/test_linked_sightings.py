@@ -87,6 +87,43 @@ def test_sighting_and_notification_are_idempotent(client, auth_headers, db_facto
         assert db.scalar(select(func.count()).select_from(Notification)) == 1
 
 
+def test_found_report_from_notice_keeps_link_notifies_custody_and_requires_owner_confirmation(client, auth_headers, db_factory):
+    _, case = lost_notice(client, auth_headers)
+    payload = data(source_type="FOUND_ANIMAL")
+    response = submit(client, case, payload)
+    assert response.status_code == 201
+    assert response.json()["owner_notified"] is True
+    assert submit(client, case, payload).json() == response.json()
+    assert submit(client, case, {**payload, "source_type": "USER_SIGHTING"}).status_code == 409
+    with db_factory() as db:
+        observation = db.get(Observation, UUID(response.json()["id"]))
+        assert observation.source_type == "FOUND_ANIMAL"
+        assert str(observation.linked_case_id) == case["id"]
+        assert observation.author_id is None
+        assert "bajo su cuidado" in observation.description
+        assert db.get(LostCase, UUID(case["id"])).status == "ACTIVE"
+        notice = db.scalar(select(Notification).where(Notification.observation_id == observation.id))
+        assert "tiene una mascota" in notice.title
+        assert "bajo su cuidado" in notice.body
+        assert "por confirmar" in notice.body
+        from app.models import User
+        message = email.build_message(notice, db.get(User, notice.owner_id), observation)
+        plain = message.get_body(preferencelist=("plain",)).get_content()
+        assert "bajo su cuidado" in plain
+        assert "tiene una mascota" in str(message["Subject"])
+    public = client.get(f"/api/v1/public/observations/{response.json()['id']}").json()
+    assert public["source_type"] == "FOUND_ANIMAL"
+    assert public["related_notice"]["id"] == case["id"]
+
+
+def test_linked_report_rejects_unknown_type_and_preserves_sighting_default(client, auth_headers):
+    _, case = lost_notice(client, auth_headers)
+    assert submit(client, case, data(source_type="UNSUPPORTED")).status_code == 422
+    response = submit(client, case)
+    assert response.status_code == 201
+    assert client.get(f"/api/v1/public/observations/{response.json()['id']}").json()["source_type"] == "USER_SIGHTING"
+
+
 @pytest.mark.parametrize("changes,status", [({"latitude": "nan"}, 422), ({"longitude": "181"}, 422), ({"observed_at": "2099-01-01T00:00:00Z"}, 422), ({"latitude": "-33"}, 201), ({"observed_at": "2020-01-01T00:00:00Z"}, 201)])
 def test_invalid_payloads_are_rejected_and_accepted_incompatible_reports_notify(client, auth_headers, changes, status):
     _, case = lost_notice(client, auth_headers)
@@ -250,8 +287,9 @@ def test_email_outbox_retries_and_sends_each_notification_once(client, auth_head
     assert email.deliver_pending(db_factory) == 0
     assert len(messages) == 1
     assert messages[0]["To"] == "owner@example.com"
-    assert "/notificaciones?aviso=" in messages[0].get_content()
-    assert "-34.90123" not in messages[0].get_content()
+    plain = messages[0].get_body(preferencelist=("plain",)).get_content()
+    assert "/notificaciones?aviso=" in plain
+    assert "-34.90123" not in plain
 
 
 def test_email_preference_and_inactive_notice_prevent_sends(client, auth_headers, db_factory, monkeypatch):

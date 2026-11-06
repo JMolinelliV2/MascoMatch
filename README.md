@@ -1,8 +1,75 @@
-# MascoMatch
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/mascomatch-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/mascomatch-logo-light.svg">
+    <img src=".github/assets/mascomatch-logo-light.svg" alt="MascoMatch" width="390" height="96">
+  </picture>
 
-Plataforma para publicar perros y gatos perdidos, aportar avistamientos y reportar mascotas bajo cuidado. Combina evidencia declarada y modelos locales para proponer coincidencias que revisa el dueño. Publicar y buscar es gratuito; los aportes voluntarios puntuales tienen integración con Mercado Pago.
+  <h3>Cada pista suma. Cada reencuentro importa.</h3>
+  <p>Tecnología y comunidad para ayudar a que más mascotas vuelvan a casa.</p>
 
-Repositorio: [JMolinelliV2/MascoMatch](https://github.com/JMolinelliV2/MascoMatch).
+  <p>
+    <a href="https://github.com/JMolinelliV2/MascoMatch/actions/workflows/ci.yml"><img src="https://github.com/JMolinelliV2/MascoMatch/actions/workflows/ci.yml/badge.svg?branch=main" alt="Estado de las verificaciones"></a>
+    <a href="docs/FLUJOS_DEL_SISTEMA.md"><img src="https://img.shields.io/badge/Mascotas-perros%20y%20gatos-d93646?style=flat-square" alt="Perros y gatos"></a>
+    <a href="docs/ai-production.md"><img src="https://img.shields.io/badge/IA-local-0b2a4a?style=flat-square" alt="IA local"></a>
+    <a href="docs/FLUJOS_DEL_SISTEMA.md#3-publicar-una-mascota-perdida"><img src="https://img.shields.io/badge/Publicar-gratis-087f5b?style=flat-square" alt="Publicar es gratis"></a>
+  </p>
+
+  <p>
+    <a href="#levantar-en-local"><strong>Empezar</strong></a> ·
+    <a href="docs/FLUJOS_DEL_SISTEMA.md">Cómo funciona</a> ·
+    <a href="docs/README.md">Documentación</a> ·
+    <a href="#tecnologías">Tecnologías</a> ·
+    <a href="https://github.com/JMolinelliV2/MascoMatch/issues">Ideas y problemas</a>
+  </p>
+</div>
+
+---
+
+MascoMatch conecta avisos de perros y gatos perdidos con las pistas de quienes los ven o los tienen a salvo. Reúne fotos, mapas, posibles coincidencias y contacto privado en un mismo lugar. **Publicar y buscar es gratuito**, con aportes voluntarios para sostener el proyecto.
+
+## Qué podés hacer
+
+| Función | Qué aporta |
+| --- | --- |
+| 🐾 **Publicar una búsqueda** | Avisos con código único, características y hasta cinco fotos, eligiendo la miniatura. |
+| 📍 **Compartir una pista** | Avistamientos con dirección, pin ajustable y fotos; desde un aviso se pueden enviar sin cuenta. |
+| 🤝 **Avisar que la tenés a salvo** | Desde un aviso: fotos y datos de la mascota primero; contacto después de que el dueño confirme su identidad. |
+| 🔎 **Revisar posibles coincidencias** | Comparación de fotos y características con modelos locales, acompañada de revisión humana. |
+| 🔔 **Seguir las novedades** | Alertas en la web y por correo, con lectura, archivo y preferencias por cuenta. |
+| 🛠️ **Administrar la comunidad** | Panel privado con moderación, usuarios, trabajos, correos, respaldos y seguimiento de recomendaciones. |
+
+## De una pista a un reencuentro
+
+```mermaid
+flowchart LR
+    A["Publicá su aviso"] --> B["La comunidad aporta pistas"]
+    B --> C["Revisá fotos y coincidencias"]
+    C --> D["Confirmá el reencuentro"]
+    classDef coral fill:#fff1f2,stroke:#d93646,color:#0b2a4a
+    classDef blue fill:#eff8ff,stroke:#0863b4,color:#0b2a4a
+    classDef green fill:#ecfdf5,stroke:#087f5b,color:#0b2a4a
+    class A coral
+    class B,C blue
+    class D green
+```
+
+Los reportes enviados desde una ficha llegan al dueño aunque la IA siga pendiente. En **La tengo conmigo**, el contacto se revela después de reconocer a la mascota. Reconocerla y confirmar que ya volvió a casa son acciones distintas.
+
+## Tecnologías
+
+| Parte del proyecto | Tecnologías |
+| --- | --- |
+| Interfaz | Next.js · React · TypeScript · Tailwind CSS |
+| API y datos | Python · FastAPI · SQLAlchemy · Alembic |
+| Búsqueda y persistencia | PostgreSQL · PostGIS · pgvector |
+| IA en infraestructura propia | Gemma / Ollama · Pet-ReID · RF-DETR · OpenCLIP |
+| Trabajos en segundo plano | Redis · RQ |
+| Mapas y direcciones | Leaflet · OpenStreetMap · Photon |
+| Despliegue y fotos | Docker Compose · Caddy · SeaweedFS en producción / MinIO en desarrollo |
+| Correo, operación y aportes | SMTP · Prometheus · Backblaze B2 · Mercado Pago |
+
+La [guía de arquitectura](docs/architecture.md) explica qué hace cada pieza y cómo se relacionan.
 
 ## Documentación
 
@@ -115,3 +182,14 @@ tools/                      Inicialización, despliegue y validación aislada
 test-data/                  Fixtures y formatos de evaluación
 docs/                       Guías vigentes
 ```
+
+## Ideas, mejoras y apoyo
+
+¿Encontraste un problema o se te ocurrió una mejora? [Abrí un issue](https://github.com/JMolinelliV2/MascoMatch/issues) con el recorrido, lo que esperabas y lo que ocurrió. Para cambios de código, una pull request debe explicar el propósito y las comprobaciones realizadas.
+
+Los aportes voluntarios puntuales se integran mediante Mercado Pago en UYU; su configuración y pruebas están en la [guía de aportes](docs/mercado-pago-configuracion.md). Ayudan a sostener infraestructura, correo, respaldos y procesamiento de IA.
+
+<div align="center">
+  <img src="apps/web/public/images/loading-dog.webp" width="128" height="128" alt="El perrito de MascoMatch corriendo con su pañuelo coral" loading="lazy">
+  <p><strong>Por más mascotas de vuelta en casa. 🐾</strong></p>
+</div>

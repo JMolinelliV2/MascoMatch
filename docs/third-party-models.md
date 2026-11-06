@@ -1,6 +1,6 @@
 # Modelos de terceros
 
-Revisión de procedencia y contrato de inferencia: 15 de octubre de 2026. Los pesos se instalan mediante comandos explícitos y permanecen en volúmenes privados del servidor. No se ejecuta código de repositorios remotos ni se utiliza `trust_remote_code`.
+Inventario de los artefactos fijados en el repositorio, contrastado con sus instaladores y especificaciones el **5 de noviembre de 2026**. La revisión de procedencia registrada corresponde al 15 de octubre de 2026. Los pesos se instalan mediante comandos explícitos y permanecen en volúmenes privados del servidor. No se ejecuta código de repositorios remotos ni se utiliza `trust_remote_code`.
 
 ## Pet-ReID
 
@@ -51,6 +51,8 @@ MascoMatch implementa su propio adaptador del contrato ONNX. No incorpora el có
 - Los datos de entrenamiento y limitaciones están descritos por Google en su model card. No se entrenó ni modificó el checkpoint para esta entrega.
 
 ## Instalación e integridad
+
+Las referencias exactas están en [specs.py](../apps/api/app/embeddings/specs.py), [setup.py](../apps/api/app/embeddings/setup.py), [gemma_setup.py](../apps/api/app/analysis/gemma_setup.py) y [requirements-vision.lock](../apps/api/requirements-vision.lock). Un cambio de peso, revisión o preparación exige revisar este inventario y el espacio de comparación; no basta con conservar la dimensión 512.
 
 `app.embeddings.setup` descarga únicamente nombres/revisiones/rutas de la lista fija, verifica tamaño y SHA-256 y ejecuta una inferencia local de carga. `--check` no usa red. `app.analysis.gemma_setup` verifica cada blob y el manifiesto exacto; `--check` permite reutilizar la instalación existente. No se aceptan URLs ni rutas de modelos procedentes del usuario público. No se usa pickle para pesos.
 

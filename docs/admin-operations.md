@@ -1,8 +1,16 @@
 # Panel privado: operación y moderación
 
-## Funciones
+Revisado el **5 de noviembre de 2026**. Esta guía reúne acceso, operación, moderación y seguimiento de recomendaciones. El [contrato de métricas](analytics.md) define las visitas, exposiciones y atribuciones de impacto.
 
-Acceso desde **Mi cuenta → Administración**, reservado a la cuenta confirmada y asignada como administradora. Se mantienen todas las comprobaciones del servidor descritas en [admin-matching.md](admin-matching.md). Ningún permiso depende de ocultar botones en el navegador.
+## Acceso exclusivo
+
+`/admin` exige sesión vigente, cuenta activa, correo confirmado, rol administrativo y la asignación única de `admin_access`. Todas las rutas administrativas lo comprueban. La tabla admite una sola asignación (`id = 1`); un rol aislado o conocer la URL no otorgan acceso.
+
+La asignación se administra desde el servidor con `python -m app.admin`. Puede reservar una dirección antes de que exista o esté confirmada la cuenta. La confirmación válida vincula el UUID de esa cuenta; un cambio posterior de correo conserva su identidad. Eliminarla elimina la asignación y no reasigna el panel automáticamente. En otra base debe reservarse de nuevo, salvo que se haya recuperado su asignación mediante un respaldo compatible. Ver [comando de producción](production.md#administración).
+
+El menú ofrece Administración solo cuando `/auth/me` devuelve `admin_access: true`. Las respuestas privadas usan `no-store`; los proxies web controlan sesión, rutas permitidas y origen de escrituras. Ningún permiso depende de ocultar botones.
+
+## Funciones
 
 | Sección | Información y controles |
 | --- | --- |
@@ -13,6 +21,9 @@ Acceso desde **Mi cuenta → Administración**, reservado a la cuenta confirmada
 | Contactos | Nombre y correo declarados, mensaje recibido y estado de reenvío a administración. |
 | Publicaciones | Avisos perdidos, avistamientos y encontrados, ID público, autor y estado. Ocultar y restaurar con motivo. |
 | Auditoría | Acción, fecha, referencia del objetivo y motivo registrado. |
+| Analytics | Visitas, recorridos, matching, impacto e inventario contextual; exportación agregada donde se ofrece. |
+| Aportes | Operaciones puntuales de Mercado Pago, separadas entre pruebas y producción; consulta sin movimientos financieros. |
+| Respaldos | Estado local/B2 informado por el servicio; no ejecuta restauraciones desde el panel. |
 | Seguimiento de coincidencias | Recomendaciones únicas y respuestas de los dueños, con filtro de fecha y hora. |
 | Denuncias y correcciones | Denuncias con período, estado y paginación; se conservan las correcciones de descripción y moderación de reseñas. |
 
@@ -54,14 +65,37 @@ Bloquear una cuenta revoca sus sesiones y oculta sus avisos, avistamientos y enc
 
 Ocultar una publicación conserva sus datos y excluye su visibilidad pública y comparación. Restaurar verifica que su autor esté habilitado; esta comprobación también se aplica a restauraciones desde denuncias. Los reportes anónimos pueden ocultarse/restaurarse, pero no tienen una cuenta que bloquear. Ocultar/restaurar no cambia el estado de búsqueda activa, recuperada o cerrada.
 
-Las nuevas acciones directas piden motivo y confirmación y registran estado anterior/nuevo y actor en `admin_audit`, en la misma transacción. Las acciones originadas en una denuncia conservan la referencia y motivo de denuncia. Los controles no eliminan cuentas ni publicaciones. No se aplicaron bloqueos reales para preparar o revisar esta ampliación.
+Las nuevas acciones directas piden motivo y confirmación y registran estado anterior/nuevo y actor en `admin_audit`, en la misma transacción. Las acciones originadas en una denuncia conservan la referencia y motivo de denuncia. Los controles no eliminan cuentas ni publicaciones.
 
-### Despliegue
+## Coincidencias y respuestas
 
-La migración `0021_admin_operations`, posterior a `0020_admin_matching`, agrega `last_active_at`, actividad, historial SMTP, fecha de inicio del seguimiento e índices de trabajos. Se aplicó en la base local. En cualquier despliegue debe ejecutarse `alembic upgrade head` antes de arrancar API/workers con estos modelos. Compose ya realiza migraciones al iniciar la API; para entornos nuevos se mantiene el paso dedicado de migración. Reiniciar los workers carga el código actualizado.
+Una recomendación es una pareja única de aviso y observación. En comparación general se registra cuando supera los filtros de candidatos; desde una ficha, cuando el motor declara `POSSIBLE_MATCH`. Una pista pendiente, incompatible, sin foto o de mascota bajo cuidado no se convierte por su mera recepción en una recomendación automática.
 
-Rutas nuevas: `GET /api/v1/admin/operations`, `GET /api/v1/admin/operations/{users|jobs|mail|mail_queue|contacts|publications|audit}` y `PATCH /api/v1/admin/publications/{lost_case|observation}/{id}/visibility`. Los filtros temporales se agregan a coincidencias y denuncias. Cada ruta comprueba `administrator`; las respuestas de lectura usan `no-store`. El proxy conserva la cookie de sesión, exige mismo origen en escrituras y admite solo rutas, parámetros, UUID y tamaños previstos. Las respuestas permiten únicamente campos seleccionados; no exponen snapshots de entrada, tokens de trabajos ni secretos.
+| Resultado | Criterio |
+| --- | --- |
+| Confirmadas | Última respuesta del dueño `RESOLVED`: reconoció a su mascota. No exige recuperación física. |
+| Falsas | Última respuesta `FALSE_MATCH`. |
+| Dudosas | Última respuesta `CONFIRMED_RELEVANT`: todavía no confirma identidad. |
+| Sin respuesta | No hay una respuesta de las categorías anteriores. |
 
-## Diseño del panel
+Se cuenta una vez cada pareja, usando la última respuesta humana. Los recálculos no reemplazan esa respuesta ni vuelven a contar la recomendación. La tasa de confirmación utiliza confirmadas / (confirmadas + falsas); sin denominador no hay porcentaje. No mide omisiones del modelo ni precisión sobre todos los casos: las respuestas son voluntarias y pueden tener sesgo.
 
-La navegación lateral, los temas claro y oscuro, los gráficos con datos reales, los filtros compartidos y el ancho común de páginas se describen en [dashboard-design.md](dashboard-design.md).
+`Match` conserva fecha, origen, puntaje y configuración de la primera recomendación. `match_feedback_events` conserva cambios de respuesta dentro de la transacción del aviso. Los datos recuperados de registros anteriores se identifican como históricos, sin inventar transiciones desconocidas. Cerrar/recuperar/ocultar conserva el seguimiento; eliminar los registros puede reducir sus totales.
+
+El filtro temporal se refiere a la generación de la recomendación, no a la fecha del feedback. Se puede filtrar origen y registros nuevos/anteriores. El estado restringe la lista y no redefine silenciosamente el conjunto de indicadores. La lista pagina de a 25; el historial muestra las últimas 50 respuestas. Rutas privadas: `GET /api/v1/admin/matching` y `GET /api/v1/admin/matching/{id}/history`.
+
+## Presentación y recarga
+
+El dashboard ocupa todo el ancho disponible, con navegación lateral y menú adaptable a móvil. La preferencia claro/oscuro se conserva localmente y no cambia el tema público. Los gráficos usan datos consultados; sin datos muestran un estado vacío. No hay porcentajes de crecimiento ficticios.
+
+Las etiquetas y filtros incluyen una «i» con definición y alcance temporal. Se abre con puntero, foco o toque y se cierra con Escape o fuera. Las ayudas no alteran filtros ni ejecutan acciones.
+
+El botón circular flotante **Recargar datos** permanece visible durante el scroll, con icono y nombre accesible sin texto visible. Vuelve a consultar la sección sin recargar la página; conserva filtros, pestañas, paginación e historiales. En analytics fuerza un nuevo cálculo del mismo filtro y reemplaza la caché. Evita solicitudes manuales simultáneas y respeta movimiento reducido.
+
+El período se comparte entre secciones; cada tabla informa qué fecha filtra. Los temas y la disposición se mantienen en los componentes de `apps/web/app/admin` y [globals.css](../apps/web/app/globals.css).
+
+## Datos, rutas y mantenimiento
+
+Los modelos operativos incluyen actividad por minuto e historial SMTP; no reconstruyen un pasado que no fue registrado. Aplicar las migraciones completas de la revisión antes de iniciar API y workers con ella. No se documenta como paso vigente una migración aislada de una entrega anterior.
+
+Las consultas operativas utilizan `/api/v1/admin/operations` y sus listados de usuarios, trabajos, correos, cola, contactos, publicaciones y auditoría. Las mutaciones de visibilidad utilizan las rutas autorizadas de publicaciones o denuncias. Ver [routers](../apps/api/app/routers), [dependencias de acceso](../apps/api/app/dependencies.py), [métricas](analytics.md) y [operación del servidor](production.md).

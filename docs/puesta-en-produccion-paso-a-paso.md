@@ -1,6 +1,6 @@
 # MascoMatch: procedimiento de puesta en producción
 
-Fecha: 22 de octubre de 2026. Preparado a partir del código y los scripts del repositorio; no se ejecutó un despliegue en un VPS real durante la preparación de esta guía.
+Revisado el **5 de noviembre de 2026** a partir del código y los scripts del repositorio. La guía no certifica una instalación ya desplegada; los resultados se comprueban en el servidor que se vaya a utilizar.
 
 ## Alcance y resultado esperado
 
@@ -172,7 +172,7 @@ git log -1 --oneline
 git status --short
 ```
 
-La revisión `86f0db3` contiene la integración B2; utilizar esa revisión aprobada o una posterior que también haya sido revisada. No desplegar una copia antigua que no tenga `compose.production.yml` y los scripts actuales.
+Seleccionar la revisión concreta que se haya revisado para publicar. Debe incluir `compose.production.yml`, los scripts y las migraciones correspondientes a esa misma versión; no usar un commit antiguo citado por una entrega previa como referencia del estado actual.
 
 ### Si GitHub indica que el repositorio es privado
 
@@ -253,7 +253,7 @@ python3 tools/production_init.py --domain mascomatch.com
 Esto crea:
 
 - `.env.production`: dominio, opciones de correo, IA, país, backups y otros valores de despliegue.
-- `.secrets/`: claves aleatorias distintas para base, Redis, sesiones, fotos, métricas y cifrado de backups; archivos B2/SMTP inicialmente vacíos.
+- `.secrets/`: claves aleatorias distintas para base, Redis, sesiones, fotos, métricas y cifrado de backups; archivos B2, SMTP y Mercado Pago inicialmente vacíos.
 
 El generador se niega a sobrescribir una instalación existente. Si informa que los archivos ya existen, conservarlos y editar esa instalación; no borrar claves para conseguir que vuelva a ejecutar.
 
@@ -487,13 +487,14 @@ Abrir el mensaje en la casilla real y revisar spam. `SMTP aceptado` no equivale 
 | Recuperar contraseña | Correo con enlace de producción, cambio de contraseña y nuevo ingreso |
 | Perdí una mascota | Pasos, campos, fotos, ubicación, pin ajustable y publicación |
 | Sin foto | Aviso inmediato y posterior recordatorio conforme a la configuración |
-| Mascotas perdidas | Miniatura, ficha, ID único y fotos ampliables |
+| Mascotas reportadas | Filtros, miniatura elegida, carrusel, ficha, ID único y fotos ampliables |
 | Mapa | Pines, miniaturas, ubicación y regreso al mapa desde el aviso |
-| Avistamiento desde una ficha | Flujo breve, pista vinculada y notificación al dueño |
-| Avistamiento general / encontrado | Explicación correcta del formulario y reporte visible |
+| La vi desde una ficha | Sin cuenta, lugar/fecha y fotos opcionales; alerta al dueño incluso con IA pendiente |
+| La tengo conmigo desde una ficha | Fotos, descripción, nombre/teléfono; sin lugar/fecha; contacto oculto hasta reconocer identidad y recuperación separada |
+| Avistamiento general / encontrado | Cuenta confirmada, explicación del formulario y coincidencias; encontrado no aparece como capa en `/mapa` |
 | Coincidencias | Trabajos terminan; dueño puede responder sin confundir identificación con recuperación |
 | Mascota recuperada | El aviso cambia de estado y se puede solicitar una reseña |
-| Mi cuenta | Contactos, preferencias y confirmación de guardado |
+| Mi cuenta | Contacto, cambio/recuperación de contraseña, avatar ajustable, preferencias y confirmación de guardado |
 | Notificaciones | Lectura/archivo y acceso condicionado a sesión |
 | Contacto | El mensaje llega a `info@mascomatch.com` |
 | Administración | Trabajos, intentos de correo, contactos, avisos y respaldos consultables |
@@ -512,127 +513,27 @@ Ese smoke descarga fixtures de prueba y crea/elimina su DB y registros desechabl
 
 ## 15. Crear y proteger el bucket B2 de producción
 
-**Dónde: Backblaze B2 Cloud Storage.**
+**Dónde: Backblaze.** Seguir [preparación de cuenta, bucket y clave dedicada](backblaze-backup.md#1-preparar-la-cuenta-y-el-bucket). Esa guía es la fuente única de permisos, Object Lock COMPLIANCE, lifecycle y alcance de las credenciales.
 
-1. Crear la cuenta y proteger el acceso del propietario.
-2. Crear un bucket privado exclusivo, por ejemplo un nombre disponible basado en `mascomatch-production-backups`.
-3. Elegir región y guardar nombre, región y endpoint S3 exactos.
-4. Habilitar **Object Lock** y default **COMPLIANCE, 30 días**.
-5. Configurar lifecycle sobre `backups/`:
-
-```json
-[
-  {
-    "fileNamePrefix": "backups/",
-    "daysFromUploadingToHiding": 31,
-    "daysFromHidingToDeleting": 1,
-    "daysFromStartingToCancelingUnfinishedLargeFiles": 1
-  }
-]
-```
-
-Object Lock, una vez habilitado, no puede desactivarse en ese bucket; COMPLIANCE no permite quitar la protección vigente para borrar anticipadamente. El archivo permanece protegido por 30 días más el margen de transferencia aplicado por el código. Lifecycle oculta y elimina posteriormente, según su procesamiento; no significa eliminación exacta al cumplir 30 días. [Object Lock](https://www.backblaze.com/docs/cloud-storage-object-lock), [lifecycle](https://www.backblaze.com/docs/en/cloud-storage-lifecycle-rules).
-
-Crear una **Application Key dedicada**, restringida al bucket y preferentemente a `backups/`, con:
-
-```text
-listBuckets,readBuckets,listFiles,readFiles,writeFiles,readBucketRetentions,readFileRetentions,writeFileRetentions
-```
-
-Si el panel no permite seleccionar ese conjunto exacto, seguir el alta con CLI de la [guía B2 del repositorio](backblaze-backup.md#3-application-key-dedicada). No usar master key ni otorgar borrado/administración de buckets. `listAllBucketNames` no se solicita por defecto porque este código no enumera todos los buckets; comprobar los permisos mínimos con el comando de conexión real. [Capacidades S3 de B2](https://www.backblaze.com/docs/cloud-storage-s3-compatible-app-keys).
-
-Guardar el key ID y la application key en un gestor privado: la clave se muestra al crearla y no se recupera después desde el listado.
-
-**Resultado esperado:** bucket privado con bloqueo/lifecycle y una clave exclusiva de alcance limitado.
+**Resultado esperado:** bucket privado exclusivo, región/endpoint identificados, retención y reglas guardadas, clave restringida almacenada de forma privada. No reutilizar el almacenamiento operativo de fotos.
 
 ## 16. Configurar y activar B2 en el VPS
 
-**Dónde: VPS.**
+Seguir [configuración en el VPS](backblaze-backup.md#4-instalar-la-configuración-en-el-vps) y [comandos de comprobación](backblaze-backup.md#5-comandos-de-producción). Los archivos vacíos B2 ya se prepararon al generar secretos.
 
-Los archivos vacíos ya los creó `production_init`. Si se actualiza una instalación anterior, añadir solo los faltantes con `python3 tools/production_init.py --prepare-b2-secrets`.
+Mantener el destino desactivado hasta preparar las claves; comprobar acceso, subir una copia cifrada, listar su versión y verificarla mediante descarga profunda. Evitar otro escritor simultáneo y recrear `backup` después de aplicar la configuración.
 
-```sh
-chmod 600 .secrets/b2_key_id .secrets/b2_application_key
-nano .secrets/b2_key_id
-nano .secrets/b2_application_key
-chmod 444 .secrets/b2_key_id .secrets/b2_application_key
-```
-
-Pegar solo cada valor en su archivo. Editar `.env.production`, conservando todavía la bandera en `false`:
-
-```dotenv
-OFFSITE_BACKUP_ENABLED=false
-B2_ENDPOINT=https://s3.REGION.backblazeb2.com
-B2_REGION=REGION
-B2_BUCKET=BUCKET
-B2_OBJECT_LOCK_ENABLED=true
-B2_OBJECT_LOCK_DAYS=30
-B2_OPERATION_TIMEOUT_SECONDS=900
-OFFSITE_RETRY_INTERVAL_SECONDS=900
-OFFSITE_DEEP_VERIFY_INTERVAL_SECONDS=604800
-```
-
-Reemplazar región y bucket por sus valores reales; no usar el endpoint de las fotos operativas. Comprobar acceso sin subir datos:
-
-```sh
-dc run --rm --no-deps -e OFFSITE_BACKUP_ENABLED=true backup python -m app.ops.backup check-offsite
-```
-
-Si confirma bucket privado/retención, detener el daemon para que no compita con los comandos manuales:
-
-```sh
-dc stop backup
-nano .env.production
-```
-
-Cambiar `OFFSITE_BACKUP_ENABLED=true`. Crear una copia local y remota, listar y autenticar la descarga:
-
-```sh
-dc run --rm --no-deps backup python -m app.ops.backup create /backups
-dc run --rm --no-deps backup python -m app.ops.backup list-offsite --retention --limit 20
-dc run --rm --no-deps backup python -m app.ops.backup verify-offsite --deep
-```
-
-Abrir Backblaze y confirmar que aparecen los `.mbak`, sus tamaños y retención. Guardar el `key` y `version_id` de una copia verificada en el registro privado de operación. El SHA no depende de ETag.
-
-Reiniciar el servicio con la configuración nueva:
-
-```sh
-dc up -d --no-deps --force-recreate backup
-dc logs --tail 60 backup
-```
-
-En `/admin`, comprobar última copia local, última copia remota, fecha de captura recuperable y pendientes. Un comando ocupado devuelve 2: esperar o detener el daemon, nunca eliminar el archivo de bloqueo para forzar concurrencia.
-
-**Resultado esperado:** copia remota verificada, Object Lock observado, pendientes procesados y daemon activo para las próximas capturas de seis horas.
+**Resultado esperado:** versión y retención comprobadas, clave AES conservada fuera del VPS, estado local/externo visible en `/admin` y daemon activo para futuras capturas. Ver una subida no prueba por sí mismo la restauración.
 
 ## 17. Hacer un simulacro de recuperación B2
 
-No basta con ver un objeto en Backblaze. Crear **otro bucket de prueba** cuyo nombre empiece por `mascomatch-drill-`, con igual privacidad, Object Lock, lifecycle y una clave exclusiva de ese bucket.
+Seguir [el simulacro desechable](backblaze-backup.md#8-simulacro-real-opt-in-en-un-entorno-desechable) con bucket y claves exclusivos de prueba `mascomatch-drill-*`. No ejecutar ese ensayo contra datos operativos.
 
-El simulacro puede ejecutarse en la PC con Docker Desktop disponible o en otro entorno de pruebas con recursos suficientes. No correrlo en paralelo al primer despliegue/inferencia en un VPS ajustado de memoria. Su stack es separado y no publica puertos, pero consume CPU, RAM y disco.
+El simulacro crea datos sintéticos, sube un respaldo cifrado, comprueba retención, descarga/autentica y restaura en destinos vacíos. Registrar el resultado, la fecha de captura, la versión y el tiempo necesario. La copia remota de prueba queda retenida hasta su lifecycle; el ensayo no intenta eliminarla anticipadamente.
 
-**En el entorno de pruebas, dentro del repositorio:**
+Para una pérdida del VPS, utilizar [recuperación manual en otro servidor](backblaze-backup.md#9-recuperación-manual-desde-b2-ante-pérdida-del-servidor).
 
-```sh
-python3 tools/production_validate.py --keep
-```
-
-En Windows usar `python` si es el nombre de su Python instalado. Esto genera el entorno y archivos privados de `real-data/production-preview` con correo capturado en Mailpit; no manda correos reales.
-
-1. Colocar los dos secretos del **bucket de prueba** en `real-data/production-preview/.secrets/b2_key_id` y `b2_application_key` mediante un editor privado.
-2. Crear `real-data/b2-drill.env` con solo endpoint, región, bucket `mascomatch-drill-*`, `B2_OBJECT_LOCK_ENABLED=true` y `B2_OBJECT_LOCK_DAYS=30`.
-3. Ejecutar:
-
-```sh
-python3 tools/production_validate.py --with-b2 --b2-env-file real-data/b2-drill.env
-```
-
-La prueba sube un respaldo sintético cifrado, comprueba bloqueo, descarga, autentica, restaura en DB/fotos vacías y compara registros y hashes. Imprime el objeto/versión retenidos. El archivo de prueba queda protegido en B2 hasta su vencimiento/lifecycle; no se borra anticipadamente ni se deja sin referencia. El stack temporal se elimina al terminar salvo que se use `--keep`.
-
-Guardar resultado y duración. Esto prueba la integración y el recorrido de restore con datos sintéticos. La recuperación de un backup de producción en un servidor nuevo tiene su procedimiento específico y destinos vacíos en [la guía B2](backblaze-backup.md#9-recuperación-manual-desde-b2-ante-pérdida-del-servidor).
-
-**Resultado esperado:** simulacro terminado correctamente, clave AES recuperable fuera del VPS y tiempos anotados. No declarar operativo el disaster recovery antes de completar esta comprobación.
+**Resultado esperado:** recuperación comprobada y datos de operación registrados de forma privada.
 
 ## 18. Completar monitoreo y envío de alertas
 
@@ -683,66 +584,15 @@ Completar esta lista y registrar cualquier excepción antes de anunciar la URL:
 - [ ] Condiciones del servicio de direcciones/mapas compatibles con el tráfico esperado.
 - [ ] Casos públicos de prueba cerrados/retirados y avisos reales revisados.
 
-Los aportes puntuales tienen integración con Mercado Pago, desactivada por defecto. Falta completar las credenciales, URL pública HTTPS y webhooks, probar el entorno de prueba y habilitar producción según [el procedimiento de Mercado Pago](mercado-pago-configuracion.md). Publicar la web no habilita cobros por sí solo. La eficacia de las coincidencias se evalúa con respuestas de dueños en el panel; un smoke correcto no garantiza que identifique cada animal.
+Los aportes puntuales tienen integración con Mercado Pago, desactivada por defecto. Falta completar las credenciales, URL pública HTTPS y webhooks, probar el entorno de prueba y habilitar producción según [el procedimiento de Mercado Pago](mercado-pago-configuracion.md). Publicar la web no habilita cobros por sí solo. La eficacia de las coincidencias se evalúa con respuestas de dueños en el panel; un smoke correcto no garantiza que identifique cada mascota.
 
 Para una primera apertura controlada, invitar un grupo pequeño, revisar avisos/cola/correos a diario y ampliar la convocatoria después de observar funcionamiento, capacidad y calidad de resultados. No hay réplicas ni failover automático: la recuperación ante pérdida del VPS es manual con B2.
 
 ## 20. Operación habitual y actualizaciones
 
-**VPS, dentro de `~/MascoMatch`, con `dc` definida:**
+Continuar con [Operación del servidor](production.md): estado y registros, actualización de la revisión, migraciones, cambios de secretos, correo, respaldos, monitoreo y recuperación ante fallos. Mantiene los comandos diarios en un solo lugar.
 
-```sh
-dc ps
-dc logs --tail 80 api worker worker-ai backup caddy
-docker stats --no-stream
-df -h /
-python3 tools/production_apply.py check
-```
-
-Revisar `/admin`, pendientes de correo, retrasos de trabajos, fecha de captura B2 y espacio. Los backups completos pueden crecer con las fotos. Con B2 caído se conservan pendientes aunque superen 14 copias; ampliar capacidad y resolver la caída antes de quedarse sin disco.
-
-Para una actualización aprobada, primero comprobar cambios locales y revisión:
-
-```sh
-cd ~/MascoMatch
-git status --short
-git fetch origin
-git log --oneline HEAD..origin/main
-```
-
-Si hay una modificación local, por ejemplo la regla www, integrarla con la versión aprobada antes de continuar; no descartarla automáticamente. Cuando no haya conflicto y se apruebe la revisión:
-
-```sh
-git pull --ff-only origin main
-python3 tools/production_apply.py deploy --with-ai
-python3 tools/production_apply.py check
-```
-
-El despliegue detiene brevemente API/workers para respaldar/migrar; coordinar esa ventana. La aceptación inicial de Gemma se conserva mediante los pesos verificados; si faltan o cambian, detenerse y revisar antes de aceptar/instalar nuevamente.
-
-Después de modificar solo SMTP/otros secretos que carga la API:
-
-```sh
-dc up -d --no-deps --force-recreate api
-```
-
-Después de modificar secretos B2, recrear `backup` con el mismo criterio. `restart` no garantiza aplicar variables ni reemplazar montajes de archivos editados. Si cambia un valor incorporado al build, como país de búsqueda, reconstruir/desplegar la web.
-
-Para pausar Gemma ante un problema operativo, usando el mecanismo ya implementado:
-
-```sh
-python3 tools/production_apply.py pause-ai
-```
-
-Para volver al perfil completo cuando los modelos estén instalados y se haya corregido la causa:
-
-```sh
-python3 tools/production_apply.py resume-ai
-```
-
-No ejecutar `docker compose down -v`, `docker volume prune` ni borrados generales como solución a errores: pueden eliminar datos y copias locales. Ante un despliegue fallido, conservar los volúmenes, revisar el paso y volver a ejecutar el procedimiento correspondiente. Ante pérdida real de datos, restaurar en destinos nuevos y vacíos según la guía B2; no hacer un checkout antiguo sobre un esquema nuevo como supuesto rollback.
-
-Mantener Ubuntu/Docker y dependencias mediante cambios revisados, y repetir el simulacro cuando cambie el formato, el servidor o el tamaño de los respaldos. Para un reinicio del VPS, coordinarlo y comprobar después `dc ps`, el chequeo de aplicación y los flujos esenciales.
+Antes de una actualización comprobar cambios locales y revisión aprobada. El despliegue detiene brevemente API/workers para respaldar y migrar. Conservar los volúmenes; una restauración exige destinos nuevos y vacíos, no un checkout antiguo sobre un esquema nuevo.
 
 ## Resumen: quién hace qué
 
@@ -753,4 +603,4 @@ Mantener Ubuntu/Docker y dependencias mediante cambios revisados, y repetir el s
 | Comprobación conjunta | HTTPS, correo real, recorridos públicos, recuperación, rendimiento y recepción de alertas |
 | Integración pendiente | Receptor de alertas operativas; configuración y validación externa de Mercado Pago; proveedor de direcciones de mayor capacidad si el piloto supera la demo pública |
 
-La siguiente acción concreta es disponer del VPS Ubuntu 24.04 amd64, su IP y acceso administrativo. Con esos datos se puede comenzar por el paso 2 sin tocar la instalación local de desarrollo.
+El estado de cada requisito se comprueba en la instalación; esta guía no registra qué servicios contrató o configuró el propietario.

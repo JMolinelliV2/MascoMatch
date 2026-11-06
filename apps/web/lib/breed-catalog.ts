@@ -1,5 +1,5 @@
 // Breed names only, collected from every Purina ES directory page on 2026-11-02.
-// See docs/purina-breeds.md for the complete list and pagination audit.
+// Sources and collection scope: docs/frontend.md#formularios-y-sugerencias.
 export const purinaBreedOptions: Record<"dog" | "cat", string[]> = {
   dog: [
     "Affenpinscher",

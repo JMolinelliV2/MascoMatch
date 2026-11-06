@@ -1,6 +1,6 @@
 # Medición de producto, coincidencias e impacto
 
-Contrato de métricas de MascoMatch, 21 de octubre de 2026. El servicio se publica como producto completo y gratuito para buscar y reportar mascotas. Los aportes son voluntarios. No se implementan anuncios, campañas, cobros ni cuentas comerciales.
+Contrato de métricas revisado el **5 de noviembre de 2026**. Buscar y reportar mascotas es gratuito. Los aportes puntuales voluntarios utilizan la integración separada de [Mercado Pago](mercado-pago-configuracion.md). No se implementan anuncios, campañas ni cuentas comerciales.
 
 ## Fuentes de verdad
 
@@ -106,7 +106,7 @@ Las notificaciones individuales no se presentan como Top 1. Top 1/3/5 utiliza ú
 
 Tasa de confirmación entre decididas = confirmadas / (confirmadas + falsas). Tasa de falsas entre decididas = falsas / (confirmadas + falsas). Revisión = (confirmadas + falsas + dudosas) / recomendadas. Pendientes y dudosas también se muestran sobre recomendadas. **Ninguna de estas cifras es accuracy general del modelo.**
 
-Los cambios de opinión permanecen en el historial; el resumen usa la última respuesta. Se corrigió la duplicación de auditoría que producía reenviar una recuperación ya guardada.
+Los cambios de opinión permanecen en el historial; el resumen usa la última respuesta. Reenviar una recuperación ya guardada no debe duplicar su auditoría.
 
 ## Versiones y evaluación
 
@@ -114,7 +114,7 @@ La primera recomendación conserva proveedor visual realmente utilizado, Embeddi
 
 Se pueden separar PET_REID y OPENCLIP, modelo/revisión, GENERAL/LINKED y resultado. El detalle privado muestra componentes de características, visual calibrado, similitud visual cruda, geografía, tiempo, cobertura, distancia, puntaje original y actual, fechas y rank. No se presenta el puntaje como probabilidad de identidad.
 
-No cambian modelos, pesos, umbrales ni ranking. Pillow se actualiza a 13.0.0 por los avisos encontrados en la auditoría; se conserva su versión en el snapshot. [Notas oficiales de Pillow 13](https://pillow.readthedocs.io/en/stable/releasenotes/13.0.0.html).
+El contrato de métricas no modifica el ranking ni los modelos. La versión del procesamiento de imágenes se conserva en el snapshot; las versiones instaladas están fijadas en los archivos de dependencias del checkout.
 
 ## Recuperación e impacto
 
@@ -146,7 +146,7 @@ Estos son **proxies de oportunidades potenciales**, no anuncios servidos, impres
 
 ## Persistencia, seguridad y conservación
 
-- `AnalyticsTracking`: fecha de instalación del seguimiento, visible en todas las secciones. Localmente: 2026-10-21 22:05:47 UTC. Cada base nueva obtiene su propia fecha.
+- `AnalyticsTracking`: fecha de instalación del seguimiento, visible en todas las secciones. Cada base obtiene su propia fecha; no se usa la de una instalación local como inicio universal.
 - `AnalyticsVisitor` / `AnalyticsSession`: identidad básica y sesiones; no se almacenan referrers, IP ni user-agent.
 - `ProductEvent`: hechos individuales acotados durante 90 días, con categorías y contexto de aviso opcional.
 - `ProductMilestone`: claves estables de deduplicación, para no volver a contar un umbral después de expirar los eventos.
@@ -190,4 +190,4 @@ Prometheus conserva su almacenamiento y acceso privados existentes. Las lecturas
 
 0024 agrega analytics, visibilidad y recovery; 0025 agrega contexto por aviso; 0026 separa hechos y reintentos de agregados. Todas son aditivas. Las nuevas revisiones rechazan un downgrade destructivo automático. Un rollback de aplicación debe conservar el esquema añadido; una restauración completa requiere un respaldo verificado y los servicios detenidos.
 
-Ver [despliegue](production.md), [informe de entrega](analytics-delivery-report.md) y [diseño del panel](analytics-design.md). No se hicieron commits, pushes ni modificaciones de ramas remotas.
+Ver [operación](production.md) y [administración](admin-operations.md). Los resultados de pruebas y el estado Git se comprueban para la revisión que se vaya a desplegar; no forman parte de este contrato de métricas.

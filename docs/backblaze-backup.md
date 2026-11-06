@@ -1,6 +1,6 @@
 # Respaldos externos en Backblaze B2
 
-Guía operativa · 22 de octubre de 2026. La integración está desactivada por defecto. B2 recibe únicamente archivos `.mbak` ya cifrados; las fotos de uso cotidiano siguen en SeaweedFS.
+Guía operativa revisada contra el código el **5 de noviembre de 2026**. La integración está desactivada por defecto. B2 recibe únicamente archivos `.mbak` ya cifrados; las fotos de uso cotidiano siguen en SeaweedFS.
 
 ## 1. Preparar la cuenta y el bucket
 
@@ -118,10 +118,10 @@ El último comando comprueba acceso, privacidad y COMPLIANCE de 30 días. Luego 
 dc run --rm --no-deps backup python -m app.ops.backup create /backups
 dc run --rm --no-deps backup python -m app.ops.backup list-offsite --retention --limit 20
 dc run --rm --no-deps backup python -m app.ops.backup verify-offsite --deep
-dc up -d --no-deps backup
+dc up -d --no-deps --force-recreate backup
 ```
 
-`run` usa la configuración nueva; para un proceso ya activo, `up` recrea el contenedor cuando cambia su configuración. Si ya está corriendo un respaldo, el bloqueo compartido impide ejecutar otro escritor simultáneo: esperar a que termine. Los nombres remotos siguen `backups/YYYY/MM/DD/<nombre-original>.mbak`. Guardar el `key` y `version_id` de un respaldo comprobado en el registro privado del simulacro.
+`run` usa la configuración nueva; para el daemon se utiliza `up --force-recreate`, también cuando solo cambió el contenido de un secreto y su ruta sigue igual. Si ya está corriendo un respaldo, el bloqueo compartido impide ejecutar otro escritor simultáneo: esperar a que termine. Los nombres remotos siguen `backups/YYYY/MM/DD/<nombre-original>.mbak`. Guardar el `key` y `version_id` de un respaldo comprobado en el registro privado del simulacro.
 
 Comandos adicionales, sin recrear el respaldo:
 
@@ -239,4 +239,4 @@ Para un simulacro periódico, preferir el comando opt-in de la sección 8: crea 
 
 ## 11. Activación y criterio de aprobación
 
-El código y las pruebas simuladas pueden validarse sin cuenta B2. **No declarar el respaldo off-site operativo** hasta completar el setup real, `check-offsite`, subida, verificación profunda, Object Lock observado, restore desechable y recepción de alertas. Conservar la clave AES fuera del host y repetir el simulacro. Consultar los resultados de esta entrega en [el informe](backblaze-delivery-report.md).
+El código y las pruebas simuladas pueden validarse sin cuenta B2. **No declarar el respaldo off-site operativo** hasta completar el setup real, `check-offsite`, subida, verificación profunda, Object Lock observado, restore desechable y recepción de alertas. Conservar la clave AES fuera del host y repetir el simulacro. Registrar los resultados del entorno real de forma privada. El procedimiento inicial está en [puesta en producción](puesta-en-produccion-paso-a-paso.md) y las comprobaciones diarias en [operación](production.md#respaldos-y-recuperación).

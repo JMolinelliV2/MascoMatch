@@ -1,6 +1,6 @@
 # Cómo funciona MascoMatch
 
-Guía del proyecto al 9 de octubre de 2026. Describe las tecnologías elegidas y su uso concreto en este repositorio. La configuración de producción se encuentra en [production.md](production.md).
+Revisado contra el código el **5 de noviembre de 2026**. Describe las tecnologías elegidas y su uso concreto en este repositorio. Los recorridos están en [Flujos del sistema](FLUJOS_DEL_SISTEMA.md); la instalación y operación se separan en el [índice de documentación](README.md).
 
 ## La idea general
 
@@ -23,7 +23,11 @@ flowchart TD
     Worker --> Ollama[Ollama y Gemma: extraer características]
     Worker --> CLIP[Pet-ReID y PyTorch: comparar fotos]
     Worker --> DB
-    API --> Correo[Brevo por SMTP: enviar alertas]
+    API --> Correo[SMTP: acceso y alertas]
+    API --> Pago[Mercado Pago: aportes puntuales]
+    DB --> Backup[Backup cifrado: base y fotos]
+    Fotos --> Backup
+    Backup --> B2[Backblaze B2 opcional]
 ```
 
 El procesamiento de IA se habilita por configuración. La publicación de avisos funciona aunque esos modelos estén desactivados.
@@ -67,6 +71,7 @@ La web tiene rutas que actúan como intermediarias hacia la API. Por ejemplo, el
 | **SeaweedFS** | Es el almacenamiento de fotos elegido para el despliegue nuevo de producción. Su configuración conserva versiones y separa credenciales de aplicación, visión y administración. |
 | **S3** | Es la interfaz que usa el código para guardar y leer objetos. MinIO y SeaweedFS la implementan; usar esa interfaz no implica contratar Amazon AWS. |
 | **Boto3** | Es la biblioteca Python que hace las operaciones S3. La configuramos para conectarse al almacenamiento del proyecto. |
+| **Backblaze B2** | Recibe copias completas cifradas cuando se habilita el destino externo. No sirve las fotos cotidianas. |
 | **Pillow** | Valida y procesa las imágenes: corrige orientación, reduce dimensiones y elimina metadatos EXIF antes de guardarlas. |
 
 La base conserva una referencia a cada foto; el archivo de imagen está en el almacenamiento de objetos. Por eso un respaldo completo necesita tanto PostgreSQL como las fotos.
@@ -89,12 +94,15 @@ Los límites en Redis también permiten que los dos procesos de API respeten el 
 | --- | --- |
 | **Ollama** | Ejecuta el modelo generativo dentro del equipo o servidor del proyecto. No es el modelo en sí: es el servicio que lo carga y recibe las consultas. |
 | **Gemma 3, variante 4B** | Es el modelo elegido para extraer características físicas de descripciones y fotos, como color o tipo de pelaje. Su salida se valida antes de guardarla. |
-| **OpenCLIP, ViT-B-32** | Convierte cada foto en una representación de 512 números que permite medir similitud visual. |
-| **PyTorch y Torchvision** | Ejecutan las redes y las transformaciones de imágenes que utiliza OpenCLIP. |
+| **RF-DETR Nano** | Detecta perros y gatos para proponer un recorte; ante ambigüedad o fallo se utiliza la foto completa. |
+| **Pet-ReID** | Es el modelo visual predeterminado para representar cada mascota en un vector de 512 números. |
+| **ONNX Runtime** | Ejecuta localmente Pet-ReID y el detector, con los contratos y pesos fijados. |
+| **OpenCLIP, ViT-B-32** | Es una alternativa explícita de 512 dimensiones cuando se deshabilita Pet-ReID. Sus vectores no se comparan con los de otro espacio. |
+| **PyTorch y Torchvision** | Ejecutan la alternativa OpenCLIP y sus transformaciones de imágenes. |
 
 Un **embedding** es esa lista de números que representa una imagen. Dos fotos parecidas pueden producir vectores cercanos. El sistema combina esa señal con características, distancia y fecha; no identifica automáticamente a una mascota solo porque dos fotos se parezcan.
 
-Los pesos CLIP llamados `openai` son archivos de modelo descargados para ejecución local; no usamos una API de OpenAI ni una clave de pago para esta tarea. La inferencia de Gemma y CLIP se realiza en nuestra infraestructura. Si se despliega en un servidor contratado, ese servidor sigue teniendo un costo.
+Los pesos CLIP llamados `openai` son archivos de modelo descargados para ejecución local; no usamos una API de OpenAI ni una clave de pago para esta tarea. La inferencia de Gemma, Pet-ReID, el detector y OpenCLIP se realiza en la infraestructura configurada. Si se despliega en un servidor contratado, ese servidor sigue teniendo un costo.
 
 Los umbrales actuales son iniciales. Hay un evaluador para fotografías etiquetadas, pero todavía falta reunir suficientes ejemplos reales y calibrar el sistema. Una puntuación de compatibilidad no expresa una probabilidad comprobada de que sea la misma mascota.
 
@@ -113,7 +121,7 @@ Photon utiliza un servicio externo configurable; la búsqueda envía el texto y,
 
 | Tecnología o mecanismo | Qué hace |
 | --- | --- |
-| **SMTP y Brevo** | SMTP es el protocolo de envío. Brevo es el servicio que aceptará los mensajes para confirmación de correo, recuperación y avisos de posibles coincidencias. La integración está escrita; falta terminar su configuración y probar entrega real. |
+| **SMTP y Brevo** | SMTP es el protocolo de envío. Brevo es el servicio que aceptará los mensajes para confirmación de correo, recuperación y avisos de posibles coincidencias. Cada instalación configura su SMTP y comprueba la recepción real; el repositorio no certifica el estado de una cuenta externa. |
 | **Mailpit** | Recibe correos de prueba en un entorno local para inspeccionarlos sin enviarlos a destinatarios reales. |
 | **JWT y PyJWT** | El token firmado identifica la cuenta y la sesión. La API verifica la firma, vencimiento y registro de sesión vigente en PostgreSQL. |
 | **Cookie HttpOnly** | Guarda la sesión del navegador sin exponer el token al JavaScript de la interfaz. En producción utiliza además `Secure`, `SameSite=Lax` y el prefijo `__Host-`. |
@@ -121,7 +129,7 @@ Photon utiliza un servicio externo configurable; la búsqueda envía el texto y,
 | **AES-256-GCM y cryptography** | Cifran y autentican los respaldos. Los enlaces de cuenta también tienen una copia cifrada para el envío y un hash para su validación. |
 | **Secretos de Docker Compose** | Montan claves privadas en archivos de los servicios que las necesitan. No se incluyen en el repositorio ni en el código de la web. |
 
-La clave SMTP sigue siendo privada en el backend, aunque Brevo sea gratuito. Las cuentas necesitan confirmar su correo para recibir alertas externas en producción. Cambiar la contraseña revoca todas sus sesiones; cerrar sesión revoca la sesión correspondiente.
+La clave SMTP sigue siendo privada en el backend, aunque Brevo sea gratuito. Las cuentas necesitan confirmar su correo para recibir alertas externas en producción. Recuperar la contraseña revoca las sesiones anteriores. Cambiarla desde Mi cuenta conserva la sesión actual y revoca las demás; cerrar sesión revoca la sesión correspondiente.
 
 ## Publicación, mantenimiento y desarrollo
 
@@ -130,7 +138,7 @@ La clave SMTP sigue siendo privada en el backend, aunque Brevo sea gratuito. Las
 | **Docker** | Empaqueta cada servicio con sus dependencias para ejecutarlo en contenedores. Las imágenes de API, web y worker usan un usuario sin privilegios. |
 | **Docker Compose** | Define los servicios, redes, secretos y volúmenes y organiza su inicio. Hay archivos separados para desarrollo local y producción. |
 | **Caddy** | Es la entrada del sitio en producción: recibe tráfico del dominio, administra HTTPS y lo dirige a la web o a lecturas públicas permitidas de la API. Su activación depende del servidor y DNS. |
-| **Prometheus** | Consulta métricas privadas y evalúa alertas de disponibilidad, trabajos demorados, fallos de correo y respaldos atrasados. Falta elegir dónde recibir los avisos operativos. |
+| **Prometheus** | Consulta métricas privadas y evalúa alertas de disponibilidad, trabajos demorados, fallos de correo y respaldos atrasados. El Compose no incluye Alertmanager: el receptor de esas reglas y el monitor externo requieren integración y configuración. |
 | **Git** | Conserva el historial de cambios del código mediante commits. |
 | **GitHub** | Aloja el repositorio y permite compartir o revisar ese historial. |
 | **GitHub Actions** | Ejecuta automáticamente las comprobaciones de API y web, la compilación y las auditorías de dependencias con cada actualización de `main`. |
@@ -143,14 +151,31 @@ La clave SMTP sigue siendo privada en el backend, aunque Brevo sea gratuito. Las
 
 ## Ejemplo completo
 
-1. Una persona publica a Kobe como perdido. React muestra el formulario; Next.js envía los datos a FastAPI con la sesión protegida.
+1. Una persona publica a su perro como perdido. React muestra el formulario; Next.js envía los datos a FastAPI con la sesión protegida.
 2. FastAPI valida y guarda la mascota y el aviso en PostgreSQL. Pillow limpia la foto y la guarda en el almacenamiento privado.
-3. Si está habilitada la IA, Redis/RQ entrega trabajos al worker. Gemma propone características; CLIP genera un vector visual. Los resultados se guardan asociados a la evidencia vigente.
-4. Otra persona informa un avistamiento. Si entra desde la ficha de Kobe, usa el formulario breve vinculado. Si es general, el sistema busca avisos compatibles por especie, zona y fecha.
+3. Si está habilitada la IA, Redis/RQ entrega trabajos al worker. Gemma propone características; Pet-ReID genera un vector visual, o se utiliza OpenCLIP si se seleccionó esa alternativa. Los resultados se guardan asociados a la evidencia vigente.
+4. Otra persona informa un avistamiento. Si entra desde la ficha de esa mascota, usa el formulario breve vinculado. Si es general, el sistema busca avisos compatibles por especie, zona y fecha.
 5. PostGIS ayuda a filtrar por distancia; pgvector compara las representaciones de fotos disponibles; el código de matching combina esas señales y explica los motivos.
 6. El dueño ve una posible coincidencia en sus notificaciones. Si corresponde una alerta por correo y su dirección está confirmada, la API la envía mediante Brevo.
 7. El dueño revisa fotos y ubicación y responde si podría ser, no es o está confirmado. Puede marcar la mascota como encontrada desde sus avisos.
 8. Los respaldos permiten recuperar datos y fotos; las métricas ayudan al operador a detectar fallos o demoras.
+
+## Especies y registros anteriores
+
+Las nuevas publicaciones y la comparación admiten únicamente `dog` y `cat`. [species.py](../apps/api/app/species.py), los esquemas y los controles de base protegen ese alcance. OpenCLIP no habilita otras especies.
+
+Los registros históricos de otras especies se conservan con sus fotos e historial, pero quedan fuera del catálogo, las alertas y los nuevos análisis; sus dueños pueden consultarlos y cerrar sus búsquedas. No se convierten automáticamente en perro o gato ni se reactivan con un backfill. La migración `0027_dog_cat_scope` retira sus trabajos y alertas pendientes sin borrar la historia.
+
+## Datos y privacidad de cada recorrido
+
+- `Pet` es el perfil; `LostCase` es la búsqueda; `Observation` es una pista o un reporte de mascota encontrada. El estado encontrado de una observación no cierra la búsqueda de un dueño.
+- Cada publicación recibe un código `MM-` permanente mediante `publication_numbers`. La numeración se comparte entre pérdidas y observaciones, admite saltos y no se reutiliza al borrar. Las rutas privadas siguen utilizando UUID y autorización.
+- Las descripciones declaradas y las características estructuradas se conservan separadas de `FeatureSet` y embeddings. Elegir otra miniatura no cambia el peso de la evidencia de IA.
+- El contacto de «La tengo conmigo» vinculado vive en `found_report_contacts`. Solo el dueño autorizado puede consultarlo después de confirmar identidad; no forma parte de las respuestas públicas ni del input de IA.
+- Las fotos de la publicación, el avatar y los datos de cuenta tienen permisos distintos. Eliminar una cuenta borra sus mascotas y búsquedas, conserva observaciones sin autor y encola la eliminación física de los objetos que corresponda.
+- Los aportes utilizan `donations` y `donation_sync`, con secretos solo en la API y confirmación contra Mercado Pago. No hay captura de tarjetas ni suscripciones mensuales.
+
+Las tablas y restricciones exactas están en [models.py](../apps/api/app/models.py) y las [migraciones](../apps/api/migrations/versions). Las rutas se consultan en OpenAPI en desarrollo; en producción no se publica esa interfaz.
 
 ## Ubicación del código
 

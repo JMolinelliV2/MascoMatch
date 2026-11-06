@@ -1,6 +1,6 @@
 # IA local: operación y evaluación
 
-Entrega del 15 de octubre de 2026. Ver [instalación del servidor](production.md), [licencias y hashes](third-party-models.md) e [informe de resultados](ai-delivery-report.md).
+Revisado el **5 de noviembre de 2026**. Ver [operación del servidor](production.md), [licencias y hashes](third-party-models.md) y [mediciones históricas](benchmarks/README.md). Los valores siguientes corresponden a la configuración del código, no a una medición del VPS.
 
 ## Flujo
 
@@ -43,6 +43,7 @@ Perros/gatos usan detección local, confianza mínima 0,75 y margen 18%. Ausenci
 - Una contradicción conocida de especie o sexo excluye la pareja. Una contradicción fuerte de especie en imagen bloquea la alerta. El avistamiento debe ser posterior a la pérdida y estar dentro de la zona de candidatos.
 - Matching general: candidato ≥0,55, cobertura mínima 0,25 con foto o 0,35 sin foto, similitud de atributos ≥0,50. Notificación automática: score ≥0,82 **y** cobertura ≥0,35 **y** atributos ≥0,65 **y** geografía ≥0,35; dueño activo, aviso visible/activo, reporte de otra persona y sin rechazo/resolución previa. Se conserva la revisión humana anterior.
 - Avistamiento enviado desde una ficha: siempre se conserva la notificación neutral `REPORTED_SIGHTING` para el dueño, incluso si el análisis es inconcluso. Solo se presenta `POSSIBLE_MATCH` con imagen compatible y atributos independientes suficientes; la especie heredada del aviso no constituye evidencia. Sin foto/fallo de IA: `UNVERIFIED`. Las contradicciones se muestran para revisión.
+- Mascota bajo cuidado enviada desde una ficha: crea una revisión humana `UNVERIFIED` y una alerta neutral. No requiere lugar ni fecha de hallazgo y no depende de compatibilidad de IA. Reconocer la identidad habilita el contacto privado; recuperar físicamente la mascota es una acción posterior.
 - El correo respeta cuenta confirmada, preferencias, aviso activo, agrupación, deduplicación y estado de lectura. El score nunca se llama probabilidad.
 
 ## Cola y degradación
@@ -51,7 +52,7 @@ Dos carriles: visual y semántico, cada uno con urgente, normal y backfill. Obse
 
 Matching espera hasta 30 segundos por análisis nuevo sin intento; luego continúa con evidencia parcial. Fallos/reintentos no bloquean indefinidamente. Un resultado posterior solicita recalcular. Timeouts/conectividad se reintentan con esperas; configuración inválida, checkpoint ausente, JSON inválido/truncado o imagen inválida fallan con código explícito. Publicar sigue disponible si falla un modelo. `PET_REID_ENABLED=false` selecciona OpenCLIP y agenda representaciones compatibles nuevas; no etiqueta un vector Pet-ReID como OpenCLIP.
 
-## Configuración medida de Gemma
+## Configuración predeterminada de Gemma
 
 | Parámetro | Valor |
 | --- | --- |
@@ -65,6 +66,44 @@ Matching espera hasta 30 segundos por análisis nuevo sin intento; luego contin�
 | Threads visuales / detector semántico | 2 / 1 |
 
 `/api/show` se cachea por URL, modelo y configuración. En producción se verifica además el digest de Gemma. Prewarm usa lock Redis, comprueba disponibilidad y carga sin una generación larga; el fallo queda observable y no detiene FastAPI. Keep-alive de 15 minutos mantiene el modelo entre trabajos cercanos y permite liberar memoria en inactividad. Cambiar variables requiere recrear los servicios.
+
+## Instalación en desarrollo local
+
+Este bloque se ejecuta desde la raíz del repositorio en **PowerShell**, con Docker Desktop y el Compose local. No utiliza `compose.production.yml`.
+
+```powershell
+docker compose --profile ai-local build worker worker-ai
+docker compose --profile ai-local up -d ollama
+docker compose --profile ai-local run --rm --no-deps --user 0 worker python -m app.embeddings.setup
+```
+
+Gemma se instala en el volumen real del servicio Ollama. Obtener su nombre evita asumir que todos los checkouts se llaman `buscadorMascotas`:
+
+```powershell
+$ollamaContainerId = docker compose --profile ai-local ps -q ollama
+if ([string]::IsNullOrWhiteSpace($ollamaContainerId)) { throw "El servicio Ollama debe estar levantado." }
+$ollamaDetails = docker inspect $ollamaContainerId | ConvertFrom-Json
+$ollamaVolumeName = ($ollamaDetails[0].Mounts | Where-Object { $_.Destination -eq "/root/.ollama" }).Name
+if ([string]::IsNullOrWhiteSpace($ollamaVolumeName)) { throw "No se encontró el volumen de modelos de este proyecto." }
+```
+
+Solo después de leer y aceptar los términos del modelo:
+
+```powershell
+docker compose --profile ai-local run --rm --no-deps --user 0 -v "${ollamaVolumeName}:/ollama" worker python -m app.analysis.gemma_setup --accept-gemma-terms
+```
+
+Activar `AI_ENABLED=true` y `EMBEDDINGS_ENABLED=true` en el `.env` privado y aplicar:
+
+```powershell
+docker compose --profile ai-local up -d api worker worker-ai web
+docker compose --profile ai-local run --rm --no-deps worker python -m app.embeddings.backfill
+docker compose --profile ai-local run --rm --no-deps worker-ai python -m app.analysis.backfill
+```
+
+Los instaladores descargan únicamente artefactos fijados y comprueban hashes; `--check` reutiliza/verifica sin descargar. No usar `ollama pull` de una etiqueta mutable como sustituto del instalador fijado. El primer análisis requiere modelos instalados y workers activos; levantar solo la web no los prepara.
+
+Si una red corporativa inspecciona TLS, montar su certificado **público** confiable durante la instalación y configurar `SSL_CERT_FILE`; no desactivar la validación ni copiar una clave privada. El volumen de Ollama también dispone del directorio de certificados configurado en el Compose local. Ese ajuste depende de la red, no del modelo.
 
 ## Comandos privados
 
@@ -110,6 +149,6 @@ Formato inicial en `test-data/matching/visual-dataset.example.json`. Usar fotogr
 
 `/health/ready`: DB, Redis, bucket. `/internal/ready/ai`: además workers, modelos y Gemma, con bearer de monitoreo y bloqueado por Caddy. No hace inferencia. La instalación valida hashes completos; el health liviano comprueba presencia/tamaño y digest Gemma.
 
-`/internal/metrics` expone p50/p95 por fase y tipo, cola/antigüedad/urgencia, finalizados por minuto, reintentos, timeouts, JSON/truncamientos, cold-start, prewarm, crop y disponibilidad. Ventana de 24 h limitada a los 10.000 trabajos iniciados más recientes; cada job conserva último intento y contadores agregados, no una traza por intento. No se registran fotos, texto privado, credenciales ni contenido de tokens. Hay siete reglas Prometheus, incluidas IA no disponible y urgente atrasado.
+`/internal/metrics` expone p50/p95 por fase y tipo, cola/antigüedad/urgencia, finalizados por minuto, reintentos, timeouts, JSON/truncamientos, cold-start, prewarm, crop y disponibilidad. Ventana de 24 h limitada a los 10.000 trabajos iniciados más recientes; cada job conserva último intento y contadores agregados, no una traza por intento. No se registran fotos, texto privado, credenciales ni contenido de tokens. Las reglas están en `infrastructure/production/alerts.yml`, incluidas IA no disponible y urgente atrasado; su entrega necesita el receptor descrito en operación.
 
-El servidor es CPU: una imagen Gemma tarda decenas de segundos. El piloto necesita un límite de carga acorde a sus tiempos y monitoreo de cola. No se midió todavía precisión de identidad en casos reales ni capacidad del futuro VPS; las cifras de esta entrega corresponden al equipo local y fixtures pequeñas.
+El servidor es CPU: una imagen Gemma tarda decenas de segundos. El piloto necesita un límite de carga acorde a sus tiempos y monitoreo de cola. No se midió todavía precisión de identidad en casos reales ni capacidad del futuro VPS; las cifras archivadas corresponden al equipo local y a fixtures pequeñas. Los prompts vigentes son `text_feature_extractor_v4_dog_cat` y `vision_feature_extractor_v3_dog_cat`; los benchmarks de octubre utilizaron versiones anteriores y no validan automáticamente estos prompts.

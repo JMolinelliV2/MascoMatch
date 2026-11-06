@@ -1,4 +1,18 @@
-# Configurar Mercado Pago para MascoMatch
+# Aportes puntuales y configuración de Mercado Pago
+
+Revisado contra el código el **5 de noviembre de 2026**. El estado de las credenciales, la cuenta y las pruebas externas se comprueba en cada entorno.
+
+## Alcance implementado
+
+La integración utiliza **Checkout Pro con Orders API**, aportes puntuales en UYU y checkout alojado por Mercado Pago. No crea suscripciones mensuales ni solicita datos de tarjeta en MascoMatch. Inicia desactivada.
+
+Los niveles sugeridos están en [support-levels.ts](../apps/web/app/apoyanos/support-levels.ts): Amigo 100, Colaborador 300, Aliado 600 e Impulsor 1200. El monto propio es entero desde $U 1; su tope técnico es el entero exacto máximo de JavaScript, sin el antiguo límite comercial de 100.000. El proveedor puede aplicar límites propios.
+
+Una intención conserva su clave de idempotencia al reintentar. El retorno no confirma dinero: el servidor consulta la order y comprueba monto, UYU, receptor, aplicación, referencia y entorno. El webhook firmado valida su HMAC y ventana temporal antes de persistir una tarea de conciliación; no se confía en el estado del payload ni en `status=approved` de una URL. Las actualizaciones antiguas no sobrescriben otras más recientes.
+
+`donations` y `donation_sync` conservan las operaciones y sus reintentos. La cookie privada del navegador permite revisar el resultado de un aporte anónimo durante treinta días; la base guarda el hash de su clave. No se crea una cuenta del pagador, no se almacena información de tarjetas ni se guardan respuestas completas del proveedor.
+
+El panel **Aportes** separa pruebas y producción. El total confirmado es bruto: no es saldo disponible ni descuenta comisiones, y excluye pendientes, devoluciones, devoluciones parciales y contracargos. La devolución se gestiona en Mercado Pago; el dashboard no realiza movimientos financieros. Fuentes: [payments.py](../apps/api/app/payments.py), [API](../apps/api/app/routers/donations.py) y [flujos](FLUJOS_DEL_SISTEMA.md#20-aportes-voluntarios).
 
 ## 1. Crear o elegir la aplicación
 
@@ -51,7 +65,7 @@ WEB_ORIGIN=https://pruebas.ejemplo.com
 Desde la carpeta del proyecto:
 
 ```powershell
-docker compose up -d --no-deps api web
+docker compose up -d --no-deps --force-recreate api web
 docker compose exec -T api python -m app.ops.payments inspect-account
 ```
 
@@ -60,7 +74,7 @@ docker compose exec -T api python -m app.ops.payments inspect-account
 Si se desconoce ese ID, se puede dejar `MP_COLLECTOR_ID` vacío mientras `MP_ENABLED=false`. Después de completarlo:
 
 ```powershell
-docker compose up -d --no-deps api
+docker compose up -d --no-deps --force-recreate api
 docker compose exec -T api python -m app.ops.payments check
 ```
 
@@ -88,10 +102,10 @@ MP_APPLICATION_ID=ID_DE_LA_APLICACION
 MP_PUBLIC_BASE_URL=https://pruebas.ejemplo.com
 ```
 
-Respaldar y desplegar la versión con `0031_donations` según el procedimiento general. `production_apply.py deploy` prepara los archivos vacíos faltantes. Con el alias `dc` del procedimiento de producción:
+Respaldar y desplegar las migraciones completas del checkout según el procedimiento general; la tabla de aportes fue introducida por `0031_donations`. `production_apply.py deploy` prepara los archivos vacíos faltantes. Con el alias `dc` de [operación](production.md#comandos-comunes):
 
 ```sh
-dc up -d --no-deps api
+dc up -d --no-deps --force-recreate api
 dc exec -T api python -m app.ops.payments inspect-account
 dc exec -T api python -m app.ops.payments check
 ```
@@ -106,7 +120,7 @@ Si falta el ID del vendedor, se puede consultar con los aportes desactivados, co
 4. Elegir el importe y continuar a Mercado Pago.
 5. Completar el checkout en esa misma ventana con las [tarjetas de prueba oficiales](https://www.mercadopago.com.uy/developers/es/docs/checkout-pro-orders/integration-test/test-purchase-with-card). Mantener la misma ventana conserva la cookie necesaria para consultar el resultado al regresar.
 
-Tomar los datos vigentes de tarjeta, fecha y documento de esa página. La documentación identifica `APRO` como aprobado, `OTHE` como rechazo general y `CONT` como pendiente. No utilizar tarjetas reales en este ensayo.
+Tomar los datos vigentes de tarjeta, fecha y documento de esa página. Utilizar los escenarios de aprobación, rechazo y pendiente indicados allí, sin mantener otra copia de sus valores en esta guía. No utilizar tarjetas reales en este ensayo.
 
 ## 6. Comprobar el circuito completo
 
@@ -147,7 +161,7 @@ La persona operadora realiza y confirma cualquier movimiento con dinero real. En
 - HTTP 401 en webhook: revisar entorno, firma, URL exacta y reloj del servidor.
 - Moneda, importe, vendedor o aplicación incorrectos: nunca se confirma la operación. Revisar el código técnico en administración y la configuración.
 - HTTP 503 al abrir checkout: revisar las claves y disponibilidad de Mercado Pago. Reintentar conserva la solicitud mientras no se cambie el monto.
-- Modificar `.env` no cambia un contenedor en ejecución: recrear la API después de modificar su configuración.
+- Modificar `.env` o un archivo de secreto no cambia la configuración ya cargada: recrear la API con `--force-recreate`, incluso si la ruta del secreto no cambió.
 - Reembolsos y contracargos se consultan en Mercado Pago. El total del panel es bruto, excluye las devoluciones indicadas y no es el saldo del proveedor.
 
 Referencias: [crear order](https://www.mercadopago.com.uy/developers/es/docs/checkout-pro-orders/create-order), [retornos](https://www.mercadopago.com.uy/developers/es/docs/checkout-pro-orders/web-integration/configure-back-urls), [webhooks](https://www.mercadopago.com.uy/developers/es/docs/checkout-pro-orders/notifications).

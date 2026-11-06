@@ -2,7 +2,7 @@
 
 **Fecha de revisión: 5 de noviembre de 2026.**
 
-Este documento describe el comportamiento del código actual, sus pantallas, los procesos en segundo plano y las acciones de operación. Que una integración esté implementada no significa que esté habilitada en una instalación: SMTP, los modelos de IA, Mercado Pago y Backblaze requieren su configuración correspondiente. No se presupone que el proyecto ya esté desplegado en un VPS.
+Este documento describe el comportamiento del código actual, sus pantallas, los procesos en segundo plano y las acciones de operación. Que una integración esté implementada no significa que esté habilitada en una instalación: SMTP, los modelos de IA, Mercado Pago y Backblaze requieren su configuración correspondiente. No se presupone que el proyecto ya esté desplegado en un VPS. Las guías técnicas y operativas se organizan en el [índice de documentación](README.md).
 
 ## 1. Conceptos y participantes
 
@@ -134,7 +134,7 @@ El contacto declarado en este formulario es independiente de Mi cuenta: cambiar 
 Este componente se utiliza en los formularios que necesitan o admiten ubicación y en la edición correspondiente. No se muestra en «La tengo conmigo» vinculado.
 
 1. La persona escribe al menos tres caracteres de una dirección, barrio o lugar.
-2. Se ofrecen sugerencias del país configurado, Uruguay por defecto. La búsqueda puede priorizar cercanía cuando se dispone de un origen válido.
+2. Se ofrecen sugerencias del país obtenido de la referencia del dispositivo, cuando está disponible. Sin esa referencia se utiliza el país configurado, Uruguay por defecto. La búsqueda prioriza cercanía cuando dispone de un origen válido.
 3. Buscar cerca de mí solicita usar el dispositivo para mejorar la prioridad de los resultados. Un permiso ya concedido se puede reutilizar; escribir en el campo no fuerza una solicitud de permiso.
 4. Usar mi ubicación actual selecciona el punto del dispositivo e intenta obtener una dirección legible. Si se rechaza el permiso, se puede seguir buscando manualmente.
 5. Al seleccionar un resultado o un punto válido, el mapa se muestra automáticamente en la misma página.
@@ -159,7 +159,7 @@ Los mismos controles se usan en publicación general, detalles opcionales de rep
 
 ### Al publicar
 
-Se admiten JPEG, PNG y WebP, hasta 10 MB por foto y hasta cinco fotos por reporte. Se selecciona la miniatura antes de enviar. En los avisos perdidos y reportes generales las fotos son opcionales; en el nuevo recorrido vinculado de mascota bajo cuidado se exige al menos una.
+Se admiten JPEG, PNG y WebP, hasta 10 MiB por foto y hasta cinco fotos por reporte. Se selecciona la miniatura antes de enviar. En los avisos perdidos y reportes generales las fotos son opcionales; en el nuevo recorrido vinculado de mascota bajo cuidado se exige al menos una.
 
 El servidor comprueba el archivo real, procesa la imagen y retira metadatos. Las fotos se almacenan como objetos privados y se sirven a través de rutas que verifican la visibilidad o los permisos que correspondan. Una dirección privada del almacenamiento no se publica como enlace de la foto.
 
@@ -234,7 +234,7 @@ La web conserva la sesión en una cookie HttpOnly; en producción se configura a
 
 ### Foto de perfil
 
-Se puede subir una foto de hasta 10 MB, moverla dentro del círculo, ajustar el zoom, guardar, reemplazar, quitar o ajustar el encuadre de la foto actual. Se utiliza en el menú de cuenta y en reseñas públicas no anónimas. Sin foto se muestran iniciales.
+Se puede subir una foto de hasta 10 MiB, moverla dentro del círculo, ajustar el zoom, guardar, reemplazar, quitar o ajustar el encuadre de la foto actual. Se utiliza en el menú de cuenta y en reseñas públicas no anónimas. Sin foto se muestran iniciales.
 
 La foto de perfil no se procesa para buscar coincidencias de mascotas. Publicar una reseña como Anónimo oculta también la foto del perfil en esa reseña.
 
@@ -492,27 +492,22 @@ No se agrega una espera artificial para mostrar la animación. Las respuestas de
 | Aporte pendiente | Aún no hay confirmación válida del proveedor. |
 | Backup local exitoso | Se verificó la copia local; la confirmación de la copia externa es un control adicional. |
 
-## 25. Referencias de implementación y guías relacionadas
+## 25. Guías técnicas y operativas
 
-Este documento consolida el estado actual; algunas guías anteriores conservan descripciones históricas de sus entregas. Las referencias siguientes permiten profundizar en cada recorrido.
+El comportamiento de los recorridos se concentra en este documento. Las guías siguientes describen sus componentes, configuración, métricas y operación sin mantener una guía independiente por cada cambio.
 
-| Área | Código o guía |
+| Área | Guía |
 | --- | --- |
-| Publicación general | [Formulario](../apps/web/app/report-form.tsx), [confirmación](../apps/web/app/report-confirmation.tsx), [detalles y búsqueda](report-details-and-search.md). |
-| Reportes vinculados | [Formulario breve](../apps/web/app/linked-sighting-form.tsx), [API](../apps/api/app/routers/linked_sightings.py), [contacto de encontrados](linked-found-reports.md). |
-| Ubicación | [Selector compartido](../apps/web/app/location-picker.tsx), [mapa ajustable](../apps/web/app/location-map.tsx). |
-| Sugerencias | [Campo compartido](../apps/web/app/ui/suggestion-field.tsx), [catálogo de razas](purina-breeds.md). |
-| Fotos | [Fotos y miniaturas](report-photos.md), [visor](photo-viewer.md), [recordatorios](photo-reminders.md). |
-| Cuenta | [Gestión](account-management.md), [foto de perfil](account-avatar.md), [autenticación en API](../apps/api/app/routers/auth.py). |
-| Edición | [Mis avisos](../apps/web/app/mis-avisos/my-reports.tsx), [edición de observaciones](edit-observations.md), [descripciones originales](report-descriptions.md). |
-| Coincidencias | [Comparación vinculada](../apps/api/app/matching/linked.py), [comparación general](../apps/api/app/matching/engine.py), [confirmación y contacto](../apps/api/app/routers/matches.py). |
-| Notificaciones y correo | [Bandeja](notification-inbox.md), [API](../apps/api/app/routers/notifications.py), [diseños de correo](email-designs.md). |
-| IA | [Arquitectura y operación](ai-production.md), [licencias y modelos](third-party-models.md). |
-| Reseñas | [Reseñas de comunidad](community-reviews.md). |
-| Contacto | [Contacto y sugerencias](contact.md). |
-| Aportes | [Flujo](donations.md), [configuración de Mercado Pago](mercado-pago-configuracion.md). |
-| Administración | [Operación](admin-operations.md), [seguimiento de coincidencias](admin-matching.md), [analytics](analytics.md). |
-| Respaldos | [Operación de backup](../apps/api/app/ops/backup.py), [copia externa](backblaze-backup.md). |
-| Puesta en producción | [Procedimiento detallado](puesta-en-produccion-paso-a-paso.md), [automatización del despliegue](../tools/production_apply.py), [guía de producción](production.md). |
+| Tecnologías, datos, privacidad e invariantes | [Arquitectura](architecture.md) |
+| Formularios, mapas, sugerencias, imágenes y cargas | [Frontend](frontend.md) |
+| Usuarios, moderación, recomendaciones y panel privado | [Administración](admin-operations.md) |
+| Visitas, exposiciones, respuestas e impacto | [Métricas](analytics.md) |
+| Modelos, colas, reglas y evaluación | [IA local](ai-production.md) |
+| Procedencia y artefactos de modelos | [Modelos de terceros](third-party-models.md) |
+| Primer despliegue | [Puesta en producción](puesta-en-produccion-paso-a-paso.md) |
+| Actualizaciones, correo y respaldos locales | [Operación del servidor](production.md) |
+| Copia externa y recuperación | [Backblaze B2](backblaze-backup.md) |
+| Aportes puntuales | [Mercado Pago](mercado-pago-configuracion.md) |
+| Mediciones técnicas fechadas | [Benchmarks históricos](benchmarks/README.md) |
 
-La revisión de base actual incluye `0033_found_report_contacts`. La habilitación externa de SMTP, IA, mapas, pagos, monitoreo y B2 se comprueba en el entorno de despliegue; no se deduce del hecho de que el código o estas guías estén en GitHub.
+La habilitación externa de SMTP, IA, mapas, pagos, monitoreo y B2 se comprueba en el entorno de despliegue; no se deduce del hecho de que el código o estas guías estén en GitHub.

@@ -32,7 +32,7 @@ Creadas con la herramienta integrada **imagegen** el 2 de noviembre de 2026, a p
 | Ingresar | [auth-login-illustration.webp](./auth-login-illustration.webp) | 1254 × 1254 |
 | Crear cuenta | [auth-register-illustration.webp](./auth-register-illustration.webp) | 1254 × 1254 |
 
-Los PNG originales se conservan en las imágenes generadas de Codex. Las versiones publicadas son WebP, calidad 90, sin redimensionar ni recortar y conservando el canal alfa. Se sirven desde el propio sitio. Sustituyen la foto en `AuthLayout`; el hero de inicio conserva su imagen original. El detalle de generación y los [prompts completos](../../../../docs/auth-illustrations.md) están documentados en el proyecto.
+Los PNG originales se conservan en las imágenes generadas de Codex. Las versiones publicadas son WebP, calidad 90, sin redimensionar ni recortar y conservando el canal alfa. Se sirven desde el propio sitio. Sustituyen la foto en `AuthLayout`; el hero de inicio conserva su imagen original. Los criterios de integración se describen en la [guía del frontend](../../../../docs/frontend.md#ilustraciones-y-animación); la procedencia de los archivos publicados queda registrada aquí.
 
 # Ilustraciones de Cómo funciona
 

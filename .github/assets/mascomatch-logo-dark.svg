@@ -11,5 +11,5 @@
     <path d="M6 18c0-3 3-7 6.5-7S19 15 19 18c0 2-1.5 3-3.5 2.5-2-.7-4-.7-6 0C7.5 21 6 20 6 18Z" />
   </g>
   </g>
-  <text x="136" y="87" fill="#f0f6fc" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="800" letter-spacing="-2">Masco<tspan fill="#d93646">Match</tspan></text>
+  <text x="136" y="87" fill="#f0f6fc" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="800" letter-spacing="-2" textLength="366" lengthAdjust="spacingAndGlyphs">Masco<tspan fill="#d93646">Match</tspan></text>
 </svg>

@@ -87,20 +87,22 @@ def test_sighting_and_notification_are_idempotent(client, auth_headers, db_facto
         assert db.scalar(select(func.count()).select_from(Notification)) == 1
 
 
-def test_found_report_from_notice_keeps_link_notifies_custody_and_requires_owner_confirmation(client, auth_headers, db_factory):
+def test_found_report_from_notice_keeps_link_notifies_custody_and_requires_owner_confirmation(client, auth_headers, db_factory, monkeypatch):
     _, case = lost_notice(client, auth_headers)
-    payload = data(source_type="FOUND_ANIMAL")
-    response = submit(client, case, payload)
+    mock_storage(monkeypatch)
+    payload = data(source_type="FOUND_ANIMAL", finder_name="Persona de prueba", finder_phone="+598 99 123 456", description="Tiene una mancha blanca en el pecho.")
+    files = [("photos", ("pet.jpg", b"photo", "image/jpeg"))]
+    response = submit(client, case, payload, files=files)
     assert response.status_code == 201
     assert response.json()["owner_notified"] is True
-    assert submit(client, case, payload).json() == response.json()
-    assert submit(client, case, {**payload, "source_type": "USER_SIGHTING"}).status_code == 409
+    assert submit(client, case, payload, files=files).json() == response.json()
+    assert submit(client, case, {**payload, "source_type": "USER_SIGHTING"}, files=files).status_code == 409
     with db_factory() as db:
         observation = db.get(Observation, UUID(response.json()["id"]))
         assert observation.source_type == "FOUND_ANIMAL"
         assert str(observation.linked_case_id) == case["id"]
         assert observation.author_id is None
-        assert "bajo su cuidado" in observation.description
+        assert observation.description == payload["description"]
         assert db.get(LostCase, UUID(case["id"])).status == "ACTIVE"
         notice = db.scalar(select(Notification).where(Notification.observation_id == observation.id))
         assert "tiene una mascota" in notice.title

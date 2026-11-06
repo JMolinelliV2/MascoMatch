@@ -82,22 +82,34 @@ export function LinkedSightingForm({ caseId, kind = "sighting" }: { caseId: stri
     event.preventDefault();
     if (busy || !target) return;
     setError(""); setLocationError("");
-    if (!location) { setLocationError("Elegí un lugar de la lista o usá tu ubicación actual."); return; }
-    const details = readPetDetails(new FormData(event.currentTarget));
+    if (!found && !location) { setLocationError("Elegí un lugar de la lista o usá tu ubicación actual."); return; }
+    const fields = new FormData(event.currentTarget);
+    const details = readPetDetails(fields);
     if (petDetailsError(details)) { setError(petDetailsError(details)); return; }
     const photoError = photoSelectionError(photos);
     if (photoError) { setError(photoError); return; }
-    const date = recent ? new Date() : new Date(when);
+    if (found && !photos.length) { setError("Adjuntá al menos una foto de la mascota que tenés con vos."); return; }
+    const description = String(fields.get("description") || "").trim();
+    const finderName = String(fields.get("finder_name") || "").trim();
+    const finderPhone = String(fields.get("finder_phone") || "").trim();
+    if (found && (description.length < 10 || finderName.length < 2 || !/^\+?[0-9 ().-]+$/.test(finderPhone) || !/^[0-9]{7,15}$/.test(finderPhone.replace(/\D/g, "")))) { setError("Completá la descripción, tu nombre y un teléfono válido con código de país."); return; }
+    const date = found || recent ? new Date() : new Date(when);
     if (!Number.isFinite(date.getTime()) || date.getTime() > Date.now() + 60000) { setError("Indicá una fecha y hora válidas, que no estén en el futuro."); return; }
     if (!submission.current) submission.current = { id: crypto.randomUUID(), date: date.toISOString() };
     const form = new FormData();
     form.set("details", JSON.stringify(details));
     form.set("source_type", found ? "FOUND_ANIMAL" : "USER_SIGHTING");
-    form.set("request_id", submission.current.id); form.set("observed_at", submission.current.date);
-    form.set("latitude", String(location.latitude)); form.set("longitude", String(location.longitude));
-    if (location.accuracyMeters !== undefined) form.set("location_accuracy_meters", String(Math.min(location.accuracyMeters, 100000)));
-    if (location.locality) form.set("public_location", location.locality);
-    form.set("analytics_geo",JSON.stringify(analyticsGeo(location)));
+    form.set("request_id", submission.current.id);
+    if (found) {
+      form.set("description", description); form.set("finder_name", finderName); form.set("finder_phone", finderPhone);
+      form.set("sex", String(fields.get("sex") || "unknown")); form.set("size", String(fields.get("size") || "unknown"));
+    } else if (location) {
+      form.set("observed_at", submission.current.date);
+      form.set("latitude", String(location.latitude)); form.set("longitude", String(location.longitude));
+      if (location.accuracyMeters !== undefined) form.set("location_accuracy_meters", String(Math.min(location.accuracyMeters, 100000)));
+      if (location.locality) form.set("public_location", location.locality);
+      form.set("analytics_geo",JSON.stringify(analyticsGeo(location)));
+    }
     for (const photo of photos) form.append("photos", photo);
     if (photos.length) form.set("primary_index",String(primaryIndex ?? 0));
     setBusy(true);
@@ -127,21 +139,28 @@ export function LinkedSightingForm({ caseId, kind = "sighting" }: { caseId: stri
         <div className="success-actions"><Link href="/perdidos" className="button button-secondary">Ver mascotas reportadas</Link></div>
       </> : <>
         <h1>{found ? `¿Tenés a ${target.name} con vos?` : `¿Viste a ${target.name}?`}</h1>
-        <p className="page-intro">{found ? "Indicá dónde la encontraste y adjuntá fotos si tenés. Informaremos al dueño que tenés una mascota que podría ser la suya." : "Indicá el lugar y adjuntá fotos si tenés. Tu avistamiento quedará vinculado a este aviso."}</p>
+        <p className="page-intro">{found ? "Mostrale al dueño la mascota que tenés con vos. Si confirma que es la suya, le compartiremos tu nombre y teléfono para que puedan coordinar la entrega." : "Indicá el lugar y adjuntá fotos si tenés. Tu avistamiento quedará vinculado a este aviso."}</p>
         <ReportPurpose kind={kind} caseId={caseId} />
         <div className="sighting-target"><DogPhoto dog={target} /><div><div className="report-card-meta"><strong>{target.name}</strong><ReportId id={target.id} publicId={target.public_id} /></div><p>{speciesLabel(target.species)} · Aviso de mascota perdida</p></div></div>
         <form onChange={changed} onSubmit={submit} className="linked-sighting-form" aria-busy={busy}>
           <fieldset disabled={busy} className="form-controls section-fields">
-            <div><h2>{found ? "¿Dónde la encontraste?" : "¿Dónde la viste?"}</h2><LocationPicker value={location} required onChange={place => { changed(); setLocation(place); setLocationError(""); }} />{locationError && <p role="alert" className="notice notice-error">{locationError}</p>}</div>
+            {!found && <div><h2>¿Dónde la viste?</h2><LocationPicker value={location} required onChange={place => { changed(); setLocation(place); setLocationError(""); }} />{locationError && <p role="alert" className="notice notice-error">{locationError}</p>}</div>}
             <div>
-              <details className="optional-traits"><summary>Agregar características que reconociste (opcional)</summary><p className="field-help">Completá solo lo que pudiste observar. No necesitás repetir los datos del aviso.</p><div className="form-grid"><ReportTraitFields species={target.species} /></div></details>
-              <PhotoUploader name="photos" label="Fotos" maxFiles={MAX_REPORT_PHOTOS} inputRef={fileInput} files={photos} primaryIndex={primaryIndex} onPrimaryChange={index=>{changed();setPrimaryIndex(index);}} onFilesChange={next => { changed(); changePhotos(next); }} />
-              <p className="field-help">Las fotos de la mascota pueden verse en el mapa público, junto a una zona aproximada.</p>
+              {found && <><h2>La mascota que tenés con vos</h2><p className="field-help">Subí al menos una foto clara. Podés agregar hasta cinco: de la cara, de cuerpo entero y de sus marcas o accesorios.</p></>}
+              <PhotoUploader name="photos" label={found ? "Fotos de la mascota" : "Fotos"} required={found} maxFiles={MAX_REPORT_PHOTOS} inputRef={fileInput} files={photos} primaryIndex={primaryIndex} onPrimaryChange={index=>{changed();setPrimaryIndex(index);}} onFilesChange={next => { changed(); changePhotos(next); }} />
+              {found && <label className="field-label">Descripción de la mascota<textarea name="description" className="form-input" required minLength={10} maxLength={4000} rows={4} placeholder="Ej.: es rojiza, tiene una mancha blanca en el pecho y lleva un collar azul. Describí lo que ves, sin copiar el aviso." /></label>}
+              <details className="optional-traits"><summary>Agregar características que reconociste (opcional)</summary><p className="field-help">Completá solo lo que pudiste observar. No necesitás repetir los datos del aviso.</p><div className="form-grid">
+                {found && <><label className="field-label">Sexo<select name="sex" className="form-input"><option value="unknown">No lo sé</option><option value="male">Macho</option><option value="female">Hembra</option></select></label><label className="field-label">Tamaño<select name="size" className="form-input"><option value="unknown">No lo sé</option><option value="tiny">Muy pequeño</option><option value="small">Pequeño</option><option value="medium">Mediano</option><option value="large">Grande</option></select></label></>}
+                <ReportTraitFields species={target.species} />
+              </div></details>
+              {!found && <p className="field-help">Las fotos de la mascota pueden verse en el mapa público, junto a una zona aproximada.</p>}
             </div>
-            <label className="sighting-recent"><input type="checkbox" checked={recent} onChange={event => { changed(); setRecent(event.target.checked); }} />{found ? "La encontré recién" : "La vi recién"}</label>
-            {!recent && <label className="field-label">{found ? "¿Cuándo la encontraste?" : "¿Cuándo la viste?"}<input type="datetime-local" value={when} required className="form-input" onChange={event => { changed(); setWhen(event.target.value); }} /><span className="field-help">La fecha y la hora pueden ser aproximadas.</span></label>}
+            {found ? <section className="found-reporter-fields"><h2>Tu contacto para el reencuentro</h2><p className="field-help">El dueño verá primero las fotos y la descripción. Tu nombre y teléfono se compartirán con él únicamente si confirma que es su mascota.</p><div className="form-grid"><label className="field-label">Tu nombre<input name="finder_name" autoComplete="name" className="form-input" required minLength={2} maxLength={100} placeholder="¿Cómo te llamás?" /></label><label className="field-label">Teléfono de contacto<input name="finder_phone" type="tel" autoComplete="tel" className="form-input" required minLength={7} maxLength={32} placeholder="Ej.: +598 99 123 456" /><span className="field-help">Incluí el código de país para que puedan contactarte.</span></label></div></section> : <>
+              <label className="sighting-recent"><input type="checkbox" checked={recent} onChange={event => { changed(); setRecent(event.target.checked); }} />La vi recién</label>
+              {!recent && <label className="field-label">¿Cuándo la viste?<input type="datetime-local" value={when} required className="form-input" onChange={event => { changed(); setWhen(event.target.value); }} /><span className="field-help">La fecha y la hora pueden ser aproximadas.</span></label>}
+            </>}
             {error && <p role="alert" className="notice notice-error">{error}</p>}
-            <div className="form-footer"><button type="submit" className="button button-primary">{busy ? "Enviando…" : found ? "Informar que la tengo conmigo" : "Enviar avistamiento"}</button><p className="form-privacy">Podés enviarlo sin crear una cuenta. La ubicación exacta se compartirá de forma privada con el dueño si el reporte resulta relevante. La identidad de la mascota siempre está por confirmar.</p></div>
+            <div className="form-footer"><button type="submit" className="button button-primary">{busy ? "Enviando…" : found ? "Informar que la tengo conmigo" : "Enviar avistamiento"}</button><p className="form-privacy">{found ? "Podés enviarlo sin crear una cuenta. Al enviar, autorizás a compartir tu nombre y teléfono con el dueño únicamente después de que confirme la identidad de la mascota. Tus datos de contacto no se publican." : "Podés enviarlo sin crear una cuenta. La ubicación exacta se compartirá de forma privada con el dueño si el reporte resulta relevante. La identidad de la mascota siempre está por confirmar."}</p></div>
             <p className="form-privacy form-legal">Consultá los <Link href="/terminos" target="_blank" rel="noopener noreferrer" aria-label="Términos y condiciones, se abre en otra pestaña">Términos y condiciones</Link> antes de enviar tu reporte.</p>
           </fieldset>
         </form>

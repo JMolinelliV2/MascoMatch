@@ -113,7 +113,8 @@ def set_result(db, observation, case, pet, status, reasons, score=None, evidence
     observation.matching_reasons = reasons
     notification = db.scalar(select(Notification).where(Notification.observation_id == observation.id, Notification.lost_case_id == case.id))
     # A report explicitly submitted for this notice reaches its owner independently of AI compatibility.
-    notify = status in REPORTED_STATUSES and observation.author_id != pet.owner_id and (not match or match.status not in {"FALSE_MATCH","RESOLVED"})
+    found = observation.source_type == "FOUND_ANIMAL"
+    notify = status in REPORTED_STATUSES and observation.author_id != pet.owner_id and (not match or match.status != "FALSE_MATCH" and (match.status != "RESOLVED" or found))
     if not notify:
         if notification:
             notification.is_active = False
@@ -133,7 +134,7 @@ def set_result(db, observation, case, pet, status, reasons, score=None, evidence
         body = "Las características de la foto son compatibles con tu aviso, junto con la ubicación y la fecha. Podría tratarse de tu mascota; revisá el avistamiento."
     if observation.source_type == "FOUND_ANIMAL":
         title = f"Una persona tiene una mascota que podría ser {pet.name}"[:180]
-        body = "La persona que envió este reporte indicó que la mascota está a salvo bajo su cuidado. " + body.replace("un avistamiento", "un reporte de mascota encontrada").replace("avistamiento", "reporte")
+        body = "La persona que envió este reporte indicó que la mascota está a salvo bajo su cuidado. Revisá las fotos y la descripción: la identidad está por confirmar. Si confirmás que es tu mascota, podrás ver su nombre y teléfono para coordinar la entrega."
     if notification is None:
         notification = Notification(owner_id=pet.owner_id, lost_case_id=case.id, observation_id=observation.id, match_id=match.id if match else None, kind=kind, title=title, body=body, email_available_at=utcnow()+timedelta(seconds=settings.mail_group_seconds))
         db.add(notification)
@@ -158,6 +159,14 @@ def evaluate_sighting(db: Session, observation_id: UUID) -> str:
         return set_result(db, observation, case, pet, "INACTIVE", ["MascoMatch admite únicamente perros y gatos"])
     if case.status != "ACTIVE" or case.moderation_status!="VISIBLE" or observation.moderation_status!="VISIBLE":
         return set_result(db, observation, case, pet, "INACTIVE", ["El aviso ya no está activo"])
+    if observation.source_type == "FOUND_ANIMAL":
+        # Explicit custody reports always reach the selected owner. Neither distance,
+        # discovery time nor a model result substitutes the owner's identification.
+        return set_result(db, observation, case, pet, "UNVERIFIED", [
+            "La persona indicó que tiene a la mascota bajo su cuidado",
+            "Revisá las fotos y los datos de la mascota para confirmar su identidad",
+            "El nombre y el teléfono se muestran únicamente después de tu confirmación",
+        ])
     if aware(observation.observed_at) < aware(case.lost_at) or aware(observation.observed_at) > utcnow() + timedelta(minutes=1):
         return set_result(db, observation, case, pet, "NOT_COMPATIBLE", ["La fecha no es compatible con el aviso"])
     coordinates = (case.latitude, case.longitude, observation.latitude, observation.longitude)

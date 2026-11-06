@@ -6,7 +6,8 @@ from app.analysis.service import utcnow, is_current, schedule_owner
 from app.core.config import settings
 from app.db.session import get_db
 from app.dependencies import current_user,verified_user
-from app.models import AnalysisJob, LostCase, Match, Notification, Observation, Pet, Photo, User
+from app.models import AnalysisJob, FoundReportContact, LostCase, Match, Notification, Observation, Pet, Photo, User
+from app.found_reports import FinderContact, pet_details
 from app.species import SUPPORTED_SPECIES, is_supported_species, require_supported_owner
 from app.routers.lost_cases import owned_case
 from app.routers.public_lost_dogs import notice, photo_scope
@@ -47,7 +48,26 @@ def case_matches(case_id: UUID, response: Response, db=Depends(get_db), user=Dep
     return {"items": [{"match": MatchRead.model_validate(match).model_copy(update={"presentation":presentation(match,user,rank) if match.recommended_at else None}), "observation": {"id": observation.id, "public_id": observation.public_id, "description": observation.description,
         "observed_at": observation.observed_at, "public_location": observation.public_location, "latitude":observation.latitude,"longitude":observation.longitude,
         "source_type":observation.source_type,"photo_url":f"/api/v1/public/observations/{observation.id}/photo" if photo else None,
+        "pet_details":pet_details(observation),
         "matching_status":observation.matching_status,"linked_to_notice":observation.linked_case_id==case_id}} for rank,(match, observation, photo) in enumerate(rows,1)]}
+
+
+@router.get("/matches/{match_id}/reporter-contact")
+def reporter_contact(match_id: UUID, response: Response, db=Depends(get_db), user=Depends(current_user)):
+    response.headers["Cache-Control"] = "private, no-store"
+    row = db.execute(select(Match, Observation).join(Observation, Match.observation_id == Observation.id)
+        .join(LostCase, Match.lost_case_id == LostCase.id).join(Pet, LostCase.pet_id == Pet.id).where(
+            Match.id == match_id, Pet.owner_id == user.id, Match.is_active.is_(True),
+            Observation.source_type == "FOUND_ANIMAL", Observation.linked_case_id == LostCase.id,
+            Observation.moderation_status == "VISIBLE", LostCase.moderation_status == "VISIBLE",
+            LostCase.status.in_(["ACTIVE", "FOUND"]))).first()
+    if row is None:
+        raise HTTPException(404, "Contacto no disponible.")
+    match, observation = row
+    if match.status != "RESOLVED":
+        raise HTTPException(403, "Confirmá que es tu mascota para ver el contacto.")
+    contact = db.get(FoundReportContact, observation.id)
+    return {"contact": FinderContact(name=contact.name, phone=contact.phone) if contact else None}
 
 
 @router.patch("/matches/{match_id}/feedback", response_model=MatchRead)

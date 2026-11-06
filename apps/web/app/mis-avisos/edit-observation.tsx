@@ -39,13 +39,13 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
     const form = new FormData(event.currentTarget);
     const details = readPetDetails(form);
     if (petDetailsError(details)) { setError(petDetailsError(details)); return; }
-    const when = new Date(String(form.get("observedAt")));
+    const when = new Date(found && linked ? observation.observed_at : String(form.get("observedAt")));
     if (!Number.isFinite(when.getTime()) || when.getTime() > Date.now() + 60_000) { setError("Ingresá una fecha y hora válidas, que no estén en el futuro."); return; }
     const description = String(form.get("description") || "").trim();
-    if (!description && !linked) { setError("Ingresá una descripción del reporte."); return; }
+    if (!description && (!linked || found)) { setError("Ingresá una descripción del reporte."); return; }
     if (!location && String(form.get("locationSearch") || "").trim()) { setError("Elegí un resultado de la búsqueda para guardar ese lugar."); return; }
     const payload = {
-      description, observed_at: when.toISOString(), share_contact: form.get("shareContact") === "on",
+      description, observed_at: when.toISOString(), share_contact: !(found && linked) && form.get("shareContact") === "on",
       ...details,
       ...(!linked ? { species: form.get("species"), sex: form.get("sex"), size: form.get("size") } : {}),
       ...(locationChanged && location ? { latitude: location.latitude, longitude: location.longitude, location_accuracy_meters: location.accuracyMeters ?? null,
@@ -75,7 +75,7 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
     <form className="observation-edit-card" onSubmit={submit} onChange={() => setSaved(false)} aria-busy={busy}>
       <h2>{found ? "Datos de la mascota encontrada" : "Datos del avistamiento"}</h2>
       <ReportId id={observation.id} publicId={observation.public_id} label="ID del reporte" copyable />
-      {linked && <p className="field-help">Este avistamiento está vinculado a un aviso. Podés corregir cuándo y dónde lo viste, sumar detalles y actualizar las fotos.</p>}
+      {linked && <p className="field-help">{found ? "Este reporte indica que tenés a la mascota con vos. Podés actualizar sus detalles y fotos; no necesitás indicar dónde la encontraste." : "Este avistamiento está vinculado a un aviso. Podés corregir cuándo y dónde lo viste, sumar detalles y actualizar las fotos."}</p>}
       <fieldset disabled={busy} className="section-fields">
         {!linked && <div className="form-grid">
           {select("species", "Mascota", observation.species, speciesOptions)}
@@ -84,12 +84,12 @@ export function EditObservationForm({ observation }: { observation: OwnedObserva
           {select("size", "Tamaño", observation.size, [["unknown", "No lo sé"], ["tiny", "Muy pequeño"], ["small", "Pequeño"], ["medium", "Mediano"], ["large", "Grande"]])}
         </div>}
         <div className="form-grid"><ReportTraitFields value={observation} species={speciesChoice} /></div>
-        <label className="field-label">{found ? "Cuándo lo encontraste" : "Cuándo lo viste"}<input name="observedAt" className="form-input" type="datetime-local" required defaultValue={localDateTime(new Date(observation.observed_at))} /></label>
-        <label className="field-label">Descripción{linked && <span className="optional">(opcional)</span>}<textarea name="description" className="form-input" required={!linked} maxLength={4000} rows={4} defaultValue={editableReportDescription(observation.description,observation.description_format,linked)} placeholder="Ej.: tiene una mancha blanca en el pecho, una oreja caída y un collar azul." /></label>
-        <div><h3>Ubicación</h3><p className="field-help">Si no elegís otro lugar, conservamos la ubicación actual.</p>
+        {!(found && linked) && <label className="field-label">{found ? "Cuándo lo encontraste" : "Cuándo lo viste"}<input name="observedAt" className="form-input" type="datetime-local" required defaultValue={localDateTime(new Date(observation.observed_at))} /></label>}
+        <label className="field-label">Descripción{linked && !found && <span className="optional">(opcional)</span>}<textarea name="description" className="form-input" required={!linked || found} maxLength={4000} rows={4} defaultValue={editableReportDescription(observation.description,observation.description_format,linked)} placeholder="Ej.: tiene una mancha blanca en el pecho, una oreja caída y un collar azul." /></label>
+        {!(found && linked) && <div><h3>Ubicación</h3><p className="field-help">Si no elegís otro lugar, conservamos la ubicación actual.</p>
           <LocationPicker value={location} onChange={place => { setLocation(place); setLocationChanged(true); setSaved(false); }} />
-        </div>
-        <label className="sighting-recent"><input name="shareContact" type="checkbox" defaultChecked={observation.share_contact} />Compartir mi contacto con el dueño si hay una posible coincidencia.</label>
+        </div>}
+        {!(found && linked) && <label className="sighting-recent"><input name="shareContact" type="checkbox" defaultChecked={observation.share_contact} />Compartir mi contacto con el dueño si hay una posible coincidencia.</label>}
         <p className="form-privacy">El contacto y la ubicación exacta no aparecen en el mapa público.</p>
         {error && <p role="alert" className="notice notice-warning">{error}</p>}
         {saved && <p role="status" className="notice notice-success">Los cambios quedaron guardados. Vamos a volver a comparar el reporte con la información actualizada.</p>}

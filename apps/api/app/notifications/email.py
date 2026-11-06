@@ -36,7 +36,7 @@ def build_message(notification, owner, observation=None, related=None):
             zone, label = timezone.utc, "UTC"
         local_time = aware(observation.observed_at).astimezone(zone).strftime("%d/%m/%Y %H:%M")
         when = f"{local_time} ({label})"
-        location = observation.public_location
+        location = None if observation.source_type == "FOUND_ANIMAL" and observation.linked_case_id else observation.public_location
     base_url = settings.public_site_url.rstrip('/')
     preferences_url = f"{base_url}/mi-cuenta#notificaciones"
     if related and len(related)>1:
@@ -44,7 +44,10 @@ def build_message(notification, owner, observation=None, related=None):
         reports = [(item.title, f"{base_url}/notificaciones?aviso={item.id}") for item in related]
         add_grouped_sightings_content(message, reports, f"{base_url}/notificaciones", preferences_url)
     else:
-        add_sighting_alert_content(message, notification.title, notification_body(notification.body),
+        body = notification_body(notification.body)
+        if observation and observation.source_type == "FOUND_ANIMAL" and observation.linked_case_id:
+            body += f"\n\nDescripción reportada: {observation.description}"
+        add_sighting_alert_content(message, notification.title, body,
             f"{base_url}/notificaciones?aviso={notification.id}", preferences_url, when=when, location=location)
     return message
 

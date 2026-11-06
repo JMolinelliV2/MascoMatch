@@ -14,8 +14,10 @@ import { ReviewRequest } from "../review-request";
 import { SightingComparison } from "../ui/sighting-comparison";
 import { PhotoGallery } from "../ui/photo-viewer";
 import { ReportId } from "../ui/report-id";
+import { FoundPetDetails } from "../ui/found-pet-details";
+import type { FoundPetDetailsData } from "../ui/found-pet-details";
 type User = { email_verified?: boolean; email_verification_required?: boolean; id: string; name: string; email: string; notification_preferences: { email?: boolean } };
-type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; archived_at: string | null; created_at: string; lost_case_id: string; lost_case_public_id?: string; observation_public_id?: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; presentation?:string|null; reporter_contact:string|null; linked_to_notice?:boolean; matching_status?:string|null };
+type Notice = { id: string; kind: string; title: string; body: string; read_at: string | null; archived_at: string | null; created_at: string; lost_case_id: string; lost_case_public_id?: string; observation_public_id?: string; pet_name: string; observed_at: string; public_location: string | null; latitude: number | null; longitude: number | null; reasons: string[]; photo_ids: string[]; email_status: string; match_id: string | null; match_status: string | null; presentation?:string|null; reporter_contact:string|null; linked_to_notice?:boolean; matching_status?:string|null; source_type?:string; description?:string|null; pet_details?:FoundPetDetailsData };
 type Inbox = { items: Notice[]; unread_count: number; total: number };
 type InboxView = "unread" | "all" | "archived";
 type NoticeAction = "read" | "archive" | "restore";
@@ -93,17 +95,19 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
 
   function feedbackSaved(noticeId: string, result: FeedbackSaved) {
     requestEpoch.current += 1; inboxController.current?.abort();
+    const foundConfirmed = result.status === "RESOLVED" && !result.recovered && inbox?.items.some(item => item.id === noticeId && item.source_type === "FOUND_ANIMAL" && item.linked_to_notice);
+    if (foundConfirmed && view === "unread") { setView("all"); setOffset(0); }
     if (result.recovered) setReviewCaseId(result.caseId);
     setFeedbackMessage(result.recovered ? "Tu mascota quedó marcada como encontrada. La búsqueda está cerrada y el aviso ya no aparece en el listado público."
-      : result.status === "RESOLVED" ? "Confirmaste el avistamiento. La búsqueda sigue activa hasta que recuperes a tu mascota."
+      : result.status === "RESOLVED" ? (foundConfirmed ? "Confirmaste que es tu mascota. Ya podés consultar el nombre y teléfono para coordinar el reencuentro." : "Confirmaste el avistamiento. La búsqueda sigue activa hasta que recuperes a tu mascota.")
       : result.status === "FALSE_MATCH" ? "Descartaste este avistamiento. Tu búsqueda sigue activa." : "Guardaste el avistamiento como posible coincidencia. Tu búsqueda sigue activa.");
     setInbox(current => {
       if (!current) return current;
       const removed = current.items.filter(item => result.recovered ? item.lost_case_id === result.caseId : result.status === "FALSE_MATCH" && item.id === noticeId);
       const confirmed = result.status === "RESOLVED" && !result.recovered ? current.items.find(item => item.id === noticeId) : undefined;
-      return { ...current, total: Math.max(0, current.total - removed.length - (confirmed && view === "unread" && !selectedId ? 1 : 0)),
+      return { ...current, total: Math.max(0, current.total - removed.length - (confirmed && view === "unread" && !selectedId && !foundConfirmed ? 1 : 0)),
         unread_count: Math.max(0, current.unread_count - removed.filter(item => !item.read_at).length - (confirmed && !confirmed.read_at ? 1 : 0)),
-        items: current.items.filter(item => !removed.includes(item) && !(view === "unread" && !selectedId && item.id === confirmed?.id)).map(item => item.id === noticeId ? { ...item, match_status: result.status,
+        items: current.items.filter(item => !removed.includes(item) && !(view === "unread" && !selectedId && !foundConfirmed && item.id === confirmed?.id)).map(item => item.id === noticeId ? { ...item, match_status: result.status,
           read_at: confirmed ? item.read_at || new Date().toISOString() : item.read_at,
           email_status: confirmed && item.email_status === "PENDING" ? "CANCELLED" : item.email_status,
         } : item),
@@ -209,22 +213,23 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       {inbox?.total === 0 && !selectedReviewed && <div className="lost-dogs-empty"><h2>{view === "unread" ? "No tenés notificaciones sin leer" : view === "archived" ? "No tenés notificaciones archivadas" : "No tenés notificaciones en la bandeja"}</h2><p>{view === "unread" ? "Las alertas que ya leíste están en Todas. Los nuevos avistamientos aparecerán acá." : view === "archived" ? "Cuando archives una alerta, podrás recuperarla desde esta sección." : "Acá aparecerán los avistamientos enviados desde tus avisos y las posibles coincidencias de otros reportes."}</p></div>}
       {inbox && <div className="notifications-list">{inbox.items.map(notice => <article key={notice.id} className={`notification-card ${notice.read_at ? "" : "notification-unread"}`}>
         <p className="notification-read-status">{notice.archived_at ? "Archivada" : notice.read_at ? "Leída" : "Sin leer"}{notice.read_at && <span> · <time dateTime={notice.read_at}>{date(notice.read_at)}</time></span>}</p>
-        {notice.linked_to_notice ? <SightingComparison status={notice.matching_status} reviewStatus={notice.match_status} /> : <span className="lost-status">{notice.match_status === "RESOLVED" ? "Avistamiento confirmado · búsqueda activa" : notice.kind === "POSSIBLE_MATCH" ? "Posible coincidencia" : notice.photo_ids.length ? "Con fotos · por confirmar" : "Sin foto · por confirmar"}</span>}
+        {notice.linked_to_notice ? <SightingComparison found={notice.source_type === "FOUND_ANIMAL"} status={notice.matching_status} reviewStatus={notice.match_status} /> : <span className="lost-status">{notice.match_status === "RESOLVED" ? "Avistamiento confirmado · búsqueda activa" : notice.kind === "POSSIBLE_MATCH" ? "Posible coincidencia" : notice.photo_ids.length ? "Con fotos · por confirmar" : "Sin foto · por confirmar"}</span>}
         <h2>{notice.title}</h2><p>{notice.body}</p>
         <ReportId id={notice.lost_case_id} publicId={notice.lost_case_public_id} />
-        <ReportId publicId={notice.observation_public_id} label="ID del avistamiento" />
-        <dl className="review-details"><div><dt>Cuándo lo vieron</dt><dd>{date(notice.observed_at)}</dd></div><div><dt>Zona del avistamiento</dt><dd>{notice.public_location || "Lugar indicado en el mapa"}</dd></div></dl>
+        <ReportId publicId={notice.observation_public_id} label={notice.source_type === "FOUND_ANIMAL" ? "ID del reporte" : "ID del avistamiento"} />
+        <dl className="review-details"><div><dt>{notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice ? "Reporte recibido" : "Cuándo la vieron"}</dt><dd>{date(notice.observed_at)}</dd></div>{!(notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice) && <div><dt>Zona del avistamiento</dt><dd>{notice.public_location || "Lugar indicado en el mapa"}</dd></div>}</dl>
+        {notice.source_type === "FOUND_ANIMAL" && <><p className="case-candidate-description">{notice.description}</p><FoundPetDetails details={notice.pet_details} /></>}
         {notice.reasons.length > 0 && <ul className="notification-reasons">{notice.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul>}
         {notice.reporter_contact&&<p>La persona autorizó compartir su contacto: <a href={`mailto:${encodeURIComponent(notice.reporter_contact)}`}>{notice.reporter_contact}</a></p>}
-        {notice.photo_ids.length > 0 && <PhotoGallery title={`Fotos del avistamiento para ${notice.pet_name}`} photos={notice.photo_ids.map((photoId, index) => ({ id: photoId, thumbnailSrc: `/api/notifications/${encodeURIComponent(notice.id)}/photos/${encodeURIComponent(photoId)}`, src: `/api/notifications/${encodeURIComponent(notice.id)}/photos/${encodeURIComponent(photoId)}/large`, alt: `foto ${index + 1} del avistamiento para ${notice.pet_name}` }))} />}
+        {notice.photo_ids.length > 0 && <PhotoGallery title={`Fotos del reporte para ${notice.pet_name}`} photos={notice.photo_ids.map((photoId, index) => ({ id: photoId, thumbnailSrc: `/api/notifications/${encodeURIComponent(notice.id)}/photos/${encodeURIComponent(photoId)}`, src: `/api/notifications/${encodeURIComponent(notice.id)}/photos/${encodeURIComponent(photoId)}/large`, alt: `foto ${index + 1} del reporte para ${notice.pet_name}` }))} />}
         <div className="location-actions"><Link href={`/perdidos/${notice.lost_case_id}`} className="text-button">Ver mi aviso</Link>
           {!selectedId && <Link href={`/notificaciones?aviso=${encodeURIComponent(notice.id)}`} className="text-button">Abrir alerta</Link>}
-          {notice.latitude !== null && notice.longitude !== null && <button type="button" className="text-button" aria-expanded={map === notice.id} onClick={() => setMap(current => current === notice.id ? null : notice.id)}>{map === notice.id ? "Ocultar mapa" : "Ver lugar del avistamiento"}</button>}
+          {!(notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice) && notice.latitude !== null && notice.longitude !== null && <button type="button" className="text-button" aria-expanded={map === notice.id} onClick={() => setMap(current => current === notice.id ? null : notice.id)}>{map === notice.id ? "Ocultar mapa" : "Ver lugar del avistamiento"}</button>}
           {!notice.read_at && <button type="button" className="text-button" disabled={Boolean(action)} onClick={() => void updateNotice(notice.id, "read")}>{action?.id === notice.id && action.kind === "read" ? "Guardando…" : "Marcar como leída"}</button>}
           <button type="button" className="text-button" disabled={Boolean(action)} onClick={() => void updateNotice(notice.id, notice.archived_at ? "restore" : "archive")}>{action?.id === notice.id && ["archive", "restore"].includes(action.kind) ? "Guardando…" : notice.archived_at ? "Restaurar notificación" : "Archivar notificación"}</button>
         </div>
-        {map === notice.id && notice.latitude !== null && notice.longitude !== null && <LocationMap latitude={notice.latitude} longitude={notice.longitude} editable={false} />}
-        {notice.match_id && <MatchFeedback presentation={notice.presentation} id={notice.match_id} caseId={notice.lost_case_id} status={notice.match_status} onSaved={result => feedbackSaved(notice.id, result)} />}
+        {!(notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice) && map === notice.id && notice.latitude !== null && notice.longitude !== null && <LocationMap latitude={notice.latitude} longitude={notice.longitude} editable={false} />}
+        {notice.match_id && <MatchFeedback found={notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice} presentation={notice.presentation} id={notice.match_id} caseId={notice.lost_case_id} status={notice.match_status} onSaved={result => feedbackSaved(notice.id, result)} />}
         {notice.email_status === "SENT" && <p className="field-help">Alerta enviada también por correo.</p>}
         {notice.email_status === "PREVIEWED" && <p className="field-help">Correo generado en el servidor local de pruebas.</p>}
         {notice.email_status === "FAILED" && <p className="field-help">El correo no pudo enviarse. La notificación quedó guardada acá.</p>}

@@ -18,6 +18,8 @@ from app.schemas import NotificationList, NotificationRead
 from app.report_text import notification_body
 from app.routers.photo_gallery import gallery_photo_response
 from app.matching.visibility import presentation
+from app.found_reports import pet_details
+from app.report_text import observation_description
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -40,7 +42,7 @@ def owned_row(db, identity, user):
 def serialize(db, row):
     notification, case, pet, observation = row
     match = db.get(Match, notification.match_id) if notification.match_id else None
-    author=db.get(User,observation.author_id) if observation.share_contact and observation.author_id else None
+    author=db.get(User,observation.author_id) if observation.share_contact and observation.author_id and not (observation.source_type == "FOUND_ANIMAL" and observation.linked_case_id) else None
     photos = list(db.scalars(select(Photo.id).where(Photo.owner_type == "observation", Photo.owner_id == observation.id).order_by(*album_order("observation",observation.id))))
     return NotificationRead(
         presentation=presentation(match,pet.owner,1,"NOTIFICATION") if match and match.recommended_at else None,
@@ -55,6 +57,7 @@ def serialize(db, row):
         match_id=notification.match_id, match_status=match.status if match else None,
         reporter_contact=author.email if author and author.status=="ACTIVE" and author.email_verified else None,
         matching_status=observation.matching_status,linked_to_notice=observation.linked_case_id==case.id,
+        source_type=observation.source_type, description=observation_description(observation), pet_details=pet_details(observation),
     )
 
 

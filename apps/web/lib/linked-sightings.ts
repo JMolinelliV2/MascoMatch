@@ -21,5 +21,6 @@ export function localDateTime(date = new Date()): string {
 }
 
 export function foundReportMessage(result: SightingResult, hasPhoto = false): string {
-  return `Informaste que la mascota está a salvo con vos. ${sightingMessage(result, hasPhoto).replaceAll("avistamiento", "reporte")}`;
+  if (result.status === "INACTIVE") return "Tu reporte quedó guardado, pero el aviso ya no está activo. Tu nombre y teléfono no se publican.";
+  return `Informaste que tenés a la mascota a salvo con vos. ${result.owner_notified ? "Generamos una alerta para que el dueño revise las fotos y los datos de la mascota. " : "El reporte quedó guardado para su revisión. "}La identidad está por confirmar. Tu nombre y teléfono se compartirán con el dueño únicamente si confirma que es su mascota.`;
 }

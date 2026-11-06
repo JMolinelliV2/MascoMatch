@@ -84,7 +84,7 @@ def get_public_observation(observation_id: UUID, response: Response, db: Session
         description=observation_description(observation), source_type=observation.source_type,
         public_location=observation.public_location, observed_at=observation.observed_at,
         photo_url=public_photo_url(observation.id, has_photo), related_notice=related_notice,
-        publisher_name=public_publisher_name(publisher_name),
+        publisher_name=None if observation.source_type == "FOUND_ANIMAL" and observation.linked_case_id else public_publisher_name(publisher_name),
     )
 
 

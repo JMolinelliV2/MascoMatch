@@ -92,3 +92,9 @@ Keep the simple flat vector illustration style and the reunion theme: one fully 
 Retain the reference's overall portrait composition, woman on the right and dog on the left, navy hair in a bun, navy trousers, natural skin and brown dog fur. Change the woman's lime sweater to warm coral #d93646 / #f26a76. Use dark navy #0b2a4a for her hair and trousers. Change turquoise background shapes to very pale brand green #ecfdf5 and soft blue #eff8ff.
 Remove the plain white outer background to genuine transparency while keeping the pale organic decorative shapes. Crisp clean flat colored shapes, no texture or 3D, no extra characters, hearts, text, logos, numbers or watermark. Keep all limbs and the entire scene inside the canvas with generous margins.
 ```
+
+# Perro de las pantallas de carga
+
+`loading-dog.webp` y `loading-dog-still.webp` proceden de los doce fotogramas PNG integrados en `mascomatch_spritesheet_animado.svg`, aportado por el usuario el 5 de noviembre de 2026 junto con el GIF de referencia. Se conserva la ilustración, la composición y el tamaño original de 500 × 500 píxeles; la conversión a WebP usa calidad 92, sin redimensionar ni recortar los archivos.
+
+La versión animada conserva las doce poses, un ciclo de 1,26 segundos y repetición continua. La versión quieta corresponde a la primera pose y se utiliza cuando el navegador solicita reducir el movimiento. Los textos y el logo del sitio se renderizan por separado para conservar el mensaje de cada pantalla.

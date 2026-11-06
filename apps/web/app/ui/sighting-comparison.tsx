@@ -7,9 +7,9 @@ const comparisons: Record<string, { label: string; tone: string }> = {
   INACTIVE: { label: "Aviso inactivo", tone: "info" },
 };
 
-export function SightingComparison({ status, reviewStatus }: { status?: string | null; reviewStatus?: string | null }) {
+export function SightingComparison({ status, reviewStatus, found = false }: { status?: string | null; reviewStatus?: string | null; found?: boolean }) {
   const comparison = reviewStatus === "FALSE_MATCH" ? { label: "Descartado por vos", tone: "info" }
-    : reviewStatus === "RESOLVED" ? { label: "Avistamiento confirmado · búsqueda activa", tone: "positive" }
+    : reviewStatus === "RESOLVED" ? { label: found ? "Mascota reconocida · entrega por coordinar" : "Avistamiento confirmado · búsqueda activa", tone: "positive" }
       : reviewStatus === "CONFIRMED_RELEVANT" ? { label: "Marcado como posible por vos", tone: "info" }
         : comparisons[status || ""] || comparisons.UNVERIFIED;
   return <span className={`sighting-comparison sighting-comparison-${comparison.tone}`}>{comparison.label}</span>;

@@ -10,7 +10,7 @@ from app.analysis.service import purge_owner, purge_photo, utcnow
 from app.core.image_storage import delete_private_image
 from app.core.security import decode_token_claims
 from app.db.session import SessionLocal
-from app.models import AuthSession, CaseReview, LostCase, Observation, Pet, Photo, PhotoDeletion, User
+from app.models import AuthSession, CaseReview, FoundReportContact, LostCase, Observation, Pet, Photo, PhotoDeletion, User
 
 
 def lock_active_user(db, user):
@@ -52,6 +52,7 @@ def delete_account(db, user):
         purge_photo(db, photo.id)
         db.add(PhotoDeletion(storage_key=photo.storage_key, available_at=utcnow()))
         db.delete(photo)
+    db.execute(delete(FoundReportContact).where(FoundReportContact.observation_id.in_(select(Observation.id).where(Observation.author_id == user.id))))
     db.execute(update(Observation).where(Observation.author_id == user.id).values(author_id=None, share_contact=False))
     db.execute(update(Observation).where(Observation.id.in_(linked_ids)).values(
         matching_status="PENDING", matching_score=None, matching_reasons=[], matching_checked_at=None))

@@ -28,7 +28,6 @@ export function LocationPicker({ value, onChange, required = false, lost = false
   const [searchOrigin, setSearchOrigin] = useState<SearchOrigin | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [nearbyError, setNearbyError] = useState("");
-  const [mapOpen, setMapOpen] = useState(false);
   const [mapResolving, setMapResolving] = useState(false);
 
   const enableNearby = useCallback(async (silent = false) => {
@@ -124,7 +123,6 @@ export function LocationPicker({ value, onChange, required = false, lost = false
     reverseController.current?.abort();
     setLocating(false);
     setMapResolving(false);
-    setMapOpen(false);
     onChange(null);
     setQuery(next);
     setOpen(true);
@@ -310,11 +308,9 @@ export function LocationPicker({ value, onChange, required = false, lost = false
         {value.source === "device" && <p className="field-help">Precisión aproximada: {value.accuracyMeters} m.</p>}
         <div className="location-actions">
           <button type="button" onClick={() => { edit(""); inputRef.current?.focus(); }} className="text-button">Cambiar lugar</button>
-          <button type="button" className="text-button" aria-expanded={mapOpen} aria-controls={`${id}-map`}
-            onClick={() => setMapOpen(current => !current)}>{mapOpen ? "Ocultar mapa" : "Ver en mapa"}</button>
         </div>
       </div>}
-      {value && mapOpen && <div id={`${id}-map`}>
+      {value && <div id={`${id}-map`}>
         <LocationMap latitude={value.latitude} longitude={value.longitude} onMove={(lat, lon) => void movePin(lat, lon)} />
         {mapResolving && <p role="status" className="status-text">Actualizando la dirección del punto elegido…</p>}
       </div>}

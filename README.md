@@ -4,6 +4,8 @@ Repositorio: [JMolinelliV2/MascoMatch](https://github.com/JMolinelliV2/MascoMatc
 
 Para entender el proyecto: [qué hace cada tecnología y cómo funciona un aviso](docs/architecture.md).
 
+Recorridos implementados: [flujos de publicación, usuarios, edición, notificaciones, administración y respaldos](docs/FLUJOS_DEL_SISTEMA.md).
+
 Medición propia del producto, coincidencias e impacto: [definiciones de analytics](docs/analytics.md), [diseño del panel](docs/analytics-design.md) e [informe de validación](docs/analytics-delivery-report.md).
 
 Mi cuenta permite [editar contacto, confirmar un nuevo correo y eliminar la cuenta conservando los avistamientos](docs/account-management.md).

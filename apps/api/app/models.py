@@ -282,6 +282,15 @@ class Observation(PublicationIdentityMixin, TimestampMixin, Base):
     matching_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class FoundReportContact(TimestampMixin, Base):
+    """Private finder-supplied contact; never part of a public observation."""
+    __tablename__ = "found_report_contacts"
+
+    observation_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("observations.id", ondelete="CASCADE"), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    phone: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
 class Notification(TimestampMixin, Base):
     __tablename__ = "notifications"
     __table_args__ = (UniqueConstraint("lost_case_id", "observation_id", name="uq_notification_case_observation"),)

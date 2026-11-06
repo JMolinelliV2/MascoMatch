@@ -25,7 +25,8 @@ test("la hora opcional conserva el formato que acepta datetime-local", () => {
 test("el reporte de mascota encontrada informa el resguardo sin confirmar la identidad", () => {
   const message = foundReportMessage({ id: "1", status: "UNVERIFIED", owner_notified: true });
   assert.match(message, /a salvo con vos/);
-  assert.match(message, /alerta para el dueño/);
+  assert.match(message, /dueño revise las fotos/);
+  assert.match(message, /nombre y teléfono.*únicamente si confirma/);
   assert.match(message, /por confirmar/);
   assert.doesNotMatch(message, /avistamiento/);
   assert.doesNotMatch(foundReportMessage({ id: "1", status: "INACTIVE", owner_notified: false }), /Generamos una alerta/);

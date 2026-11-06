@@ -88,7 +88,7 @@ def update_observation(observation_id: UUID, payload: ObservationUpdate, db: Ses
     longitude = changes.get("longitude", observation.longitude)
     if (latitude is None) != (longitude is None):
         raise HTTPException(status_code=422, detail="La ubicación necesita un punto completo.")
-    if observation.linked_case_id and latitude is None:
+    if observation.linked_case_id and observation.source_type != "FOUND_ANIMAL" and latitude is None:
         raise HTTPException(status_code=422, detail="El avistamiento vinculado necesita una ubicación.")
     for field, value in changes.items():
         setattr(observation, field, value)

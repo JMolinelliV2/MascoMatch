@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import {RecoveryQuestion} from "./recovery-question";
 import type {RecoveryReason} from "./recovery-question";
 import {useMatchVisibility} from "./product-tracking";
+import { FoundReporterContact } from "./ui/found-reporter-contact";
 
 type FeedbackStatus = "CONFIRMED_RELEVANT" | "FALSE_MATCH" | "RESOLVED";
 export type FeedbackSaved = { status: FeedbackStatus; recovered: boolean; caseId: string };
 
-export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, presentation }: {
+export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, presentation, found = false }: {
+  found?: boolean;
   presentation?:string|null;
   id: string;
   caseId: string;
@@ -38,7 +40,7 @@ export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, 
       if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "No pudimos guardar tu respuesta. Intentá de nuevo.");
       setCurrent(data.status); setRecovered(wasRecovered);
       setMessage(wasRecovered ? "Tu mascota quedó marcada como encontrada. La búsqueda está cerrada."
-        : value === "RESOLVED" ? "Confirmaste el avistamiento. Tu búsqueda sigue activa y la mascota sigue publicada como perdida."
+        : value === "RESOLVED" ? (found ? "Confirmaste que es tu mascota. Ya podés ver el contacto para coordinar la entrega. La búsqueda sigue abierta hasta que la recuperes." : "Confirmaste el avistamiento. Tu búsqueda sigue activa y la mascota sigue publicada como perdida.")
         : value === "FALSE_MATCH" ? "Descartaste este avistamiento. Tu búsqueda sigue activa."
         : "Guardaste este avistamiento como posible coincidencia. Tu búsqueda sigue activa.");
       onSaved?.({ status: data.status as FeedbackStatus, recovered: wasRecovered, caseId });
@@ -57,9 +59,9 @@ export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, 
       <div className="location-actions">
         <button type="button" className="text-button" disabled={busy || current === "CONFIRMED_RELEVANT"} onClick={() => void save("CONFIRMED_RELEVANT")}>Podría ser, todavía no estoy seguro</button>
         <button type="button" className="text-button" disabled={busy || current === "FALSE_MATCH"} onClick={() => void save("FALSE_MATCH")}>No es mi mascota</button>
-        <button type="button" className="text-button" disabled={busy || current === "RESOLVED"} onClick={() => void save("RESOLVED")}>Es mi mascota, sigo buscándola</button>
+        <button type="button" className={found ? "button button-primary" : "text-button"} disabled={busy || current === "RESOLVED"} onClick={() => void save("RESOLVED")}>{found ? "Es mi mascota, ver contacto" : "Es mi mascota, sigo buscándola"}</button>
       </div>
-      {current === "RESOLVED" && <p className="field-help">Este avistamiento está confirmado. La búsqueda sigue abierta hasta que recuperes a tu mascota.</p>}
+      {found ? current === "RESOLVED" ? <FoundReporterContact matchId={id} /> : <p className="field-help">El nombre y teléfono de la persona se mostrarán cuando confirmes que es tu mascota.</p> : current === "RESOLVED" && <p className="field-help">Este avistamiento está confirmado. La búsqueda sigue abierta hasta que recuperes a tu mascota.</p>}
       <div className="match-recovery">
         <h3>¿Ya está con vos?</h3>
         <p className="field-help">Si ya recuperaste a tu mascota, marcala como encontrada. El aviso dejará de aparecer en el listado público y de generar alertas.</p>

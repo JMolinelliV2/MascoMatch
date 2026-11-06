@@ -413,6 +413,9 @@ class NotificationRead(BaseModel):
     reporter_contact: str | None = None
     matching_status: str | None = None
     linked_to_notice: bool = False
+    source_type: str = "USER_SIGHTING"
+    description: str | None = None
+    pet_details: dict = Field(default_factory=dict)
 
 
 class MatchRead(ORMModel):

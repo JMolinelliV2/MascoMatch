@@ -9,18 +9,19 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.analysis.service import schedule_photo, utcnow
+from app.analysis.service import schedule_photo, schedule_text, utcnow
 from app.core.config import settings
 from app.core.image_storage import delete_private_image, store_private_image
 from app.db.session import get_db
 from app.dependencies import optional_user
 from app.matching.linked import aware, evaluate_sighting
-from app.models import LostCase, Notification, Observation, Photo, User
+from app.models import FoundReportContact, LostCase, Notification, Observation, Photo, User
+from app.found_reports import FinderContact
 from app.photo_albums import MAX_REPORT_PHOTOS, set_cover
 from app.species import is_supported_species, owner_is_supported
 from app.schemas import CoarseGeo, LinkedSightingRead
 from app.report_details import ReportDetailsCreate
-from app.report_text import LINKED_SIGHTING_DESCRIPTION, LINKED_FOUND_DESCRIPTION
+from app.report_text import LINKED_SIGHTING_DESCRIPTION
 from app.account_management import lock_active_user
 
 router = APIRouter(prefix="/public/lost-animals", tags=["linked-sightings"])
@@ -36,14 +37,19 @@ def create_linked_sighting(
     case_id: UUID,
     request: Request,
     request_id: UUID = Form(),
-    observed_at: datetime = Form(),
-    latitude: float = Form(ge=-90, le=90, allow_inf_nan=False),
-    longitude: float = Form(ge=-180, le=180, allow_inf_nan=False),
+    observed_at: datetime | None = Form(default=None),
+    latitude: float | None = Form(default=None, ge=-90, le=90, allow_inf_nan=False),
+    longitude: float | None = Form(default=None, ge=-180, le=180, allow_inf_nan=False),
     location_accuracy_meters: int | None = Form(default=None, ge=0, le=100000),
     public_location: str | None = Form(default=None, max_length=350),
     analytics_geo: str | None = Form(default=None,max_length=350),
     details: str | None = Form(default=None, max_length=3000),
     source_type: Literal["USER_SIGHTING", "FOUND_ANIMAL"] = Form(default="USER_SIGHTING"),
+    finder_name: str | None = Form(default=None, max_length=100),
+    finder_phone: str | None = Form(default=None, max_length=32),
+    description: str | None = Form(default=None, max_length=4000),
+    sex: Literal["unknown", "male", "female"] = Form(default="unknown"),
+    size: Literal["unknown", "tiny", "small", "medium", "large"] = Form(default="unknown"),
     photos: list[UploadFile] | None = File(default=None),
     primary_index: int = Form(default=0,ge=0,le=4),
     db: Session = Depends(get_db),
@@ -51,6 +57,20 @@ def create_linked_sighting(
 ):
     if user:
         user=lock_active_user(db,user)
+    found = source_type == "FOUND_ANIMAL"
+    contact = None
+    if found:
+        try:
+            contact = FinderContact(name=finder_name, phone=finder_phone)
+        except ValueError:
+            raise HTTPException(422, "Ingresá tu nombre y un número de teléfono válido, con código de país.")
+        description = (description or "").strip()
+        if len(description) < 10:
+            raise HTTPException(422, "Describí la mascota que tenés con vos, con al menos 10 caracteres.")
+        # Custody, unlike a sighting, is independent of where or when the pet was found.
+        latitude = longitude = location_accuracy_meters = public_location = analytics_geo = None
+    elif latitude is None or longitude is None or observed_at is None:
+        raise HTTPException(422, "El avistamiento necesita una ubicación y una fecha.")
     try:geo=CoarseGeo.model_validate_json(analytics_geo).model_dump() if analytics_geo else CoarseGeo().model_dump()
     except ValueError:raise HTTPException(422,"La zona general no es válida.")
     try:
@@ -60,10 +80,13 @@ def create_linked_sighting(
     case = db.scalar(select(LostCase).where(LostCase.id == case_id, LostCase.status == "ACTIVE").with_for_update())
     if case is None or not is_supported_species(case.pet.species) or case.moderation_status != "VISIBLE" or case.pet.owner.status != "ACTIVE":
         raise HTTPException(status_code=404, detail="El aviso ya no está activo.")
-    observed_at = aware(observed_at)
-    if observed_at > utcnow() + timedelta(minutes=1):
+    supplied_date = aware(observed_at) if observed_at else None
+    observed_at = utcnow() if found else supplied_date
+    if not found and observed_at > utcnow() + timedelta(minutes=1):
         raise HTTPException(status_code=422, detail="La fecha del avistamiento no puede estar en el futuro.")
     uploads = photos or []
+    if found and not uploads:
+        raise HTTPException(422, "Adjuntá al menos una foto de la mascota que tenés con vos.")
     if len(uploads) > MAX_REPORT_PHOTOS:
         raise HTTPException(status_code=422, detail="Podés adjuntar hasta 5 fotos.")
     if (uploads and primary_index >= len(uploads)) or (not uploads and primary_index != 0):
@@ -77,7 +100,7 @@ def create_linked_sighting(
         if len(payload) > settings.max_photo_size_bytes:
             raise HTTPException(status_code=413, detail="Cada foto debe pesar hasta 10 MB.")
         images.append((mime, payload))
-    snapshot = {"case": str(case_id), "date": observed_at.isoformat(), "lat": latitude, "lon": longitude,
+    snapshot = {"case": str(case_id), "date": supplied_date.isoformat() if supplied_date and not found else None, "lat": latitude, "lon": longitude,
                 "accuracy": location_accuracy_meters, "area": public_location,
                 "photos": [hashlib.sha256(payload).hexdigest() for _, payload in images]}
     if primary_index:
@@ -85,8 +108,14 @@ def create_linked_sighting(
     supplied = {key: value for key, value in traits.items() if value not in (None, "unknown", [])}
     if supplied:
         snapshot["details"] = supplied
+    for key, value in (("sex", sex), ("size", size)):
+        if value != "unknown":
+            snapshot[key] = value
     if source_type != "USER_SIGHTING":
         snapshot["source_type"] = source_type
+    if contact:
+        snapshot["contact"] = contact.model_dump()
+        snapshot["description"] = description
     digest = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
     previous = db.get(Observation, request_id)
     if previous:
@@ -96,7 +125,7 @@ def create_linked_sighting(
     # Species is a routing hint from the selected notice, never independent proof of identity.
     observation = Observation(
         id=request_id, author_id=user.id if user else None, linked_case_id=case_id, submission_hash=digest,
-        **traits, species=case.pet.species, sex="unknown", description=LINKED_FOUND_DESCRIPTION if source_type == "FOUND_ANIMAL" else LINKED_SIGHTING_DESCRIPTION, description_format="SYSTEM",
+        **traits, species=case.pet.species, sex=sex, size=size, description=description if found else LINKED_SIGHTING_DESCRIPTION, description_format="USER_TEXT" if found else "SYSTEM",
         observed_at=observed_at, latitude=latitude, longitude=longitude, location_accuracy_meters=location_accuracy_meters,
         public_location=public_location, source_type=source_type, matching_status="PENDING",analytics_geo=geo,
     )
@@ -104,6 +133,9 @@ def create_linked_sighting(
     try:
         db.add(observation)
         db.flush()
+        if contact:
+            db.add(FoundReportContact(observation_id=observation.id, **contact.model_dump()))
+            schedule_text(db, "observation", observation.id)
         for index,(mime, payload) in enumerate(images):
             try:
                 key, width, height = store_private_image("observation", observation.id, mime, payload)

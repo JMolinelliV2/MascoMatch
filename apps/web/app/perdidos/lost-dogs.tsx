@@ -8,6 +8,7 @@ import type { FormEvent } from "react";
 import { lostDogsEndpoint } from "@/lib/lost-dogs";
 import type { LostDogList } from "@/lib/lost-dogs";
 import { PetCard } from "../ui/pet-card";
+import { SuggestionField } from "../ui/suggestion-field";
 
 const pageSize = 24;
 const emptyFilters = { q: "", species: "", breed: "", color: "", sex: "", size: "", lost_from: "", lost_to: "", with_photos: "", collar: "" };
@@ -59,10 +60,8 @@ export function LostDogs() {
       </label><button type="submit" className="button button-primary">Buscar</button></div>
       <div className="lost-filter-grid">
         <label className="field-label">Especie<select className="form-input" name="species" value={draft.species} onChange={e => setField("species", e.target.value)}><option value="">Perros y gatos</option><option value="dog">Perro</option><option value="cat">Gato</option></select></label>
-        <label className="field-label">Raza<input className="form-input" name="breed" list="filter-breeds" maxLength={120} placeholder="Cualquier raza" value={draft.breed} onChange={e => setField("breed", e.target.value)} /></label>
-        <datalist id="filter-breeds">{(breedOptions[draft.species] || [...breedOptions.dog, ...breedOptions.cat]).filter((v, i, all) => all.indexOf(v) === i).map(v => <option key={v} value={v} />)}</datalist>
-        <label className="field-label">Color<input className="form-input" name="color" list="filter-colors" maxLength={40} placeholder="Cualquier color" value={draft.color} onChange={e => setField("color", e.target.value)} /></label>
-        <datalist id="filter-colors">{colorOptions.map(v => <option key={v} value={v} />)}</datalist>
+        <SuggestionField label="Raza" name="breed" options={breedOptions[draft.species] || [...breedOptions.dog, ...breedOptions.cat]} maxLength={120} placeholder="Cualquier raza" value={draft.breed} onValueChange={value => setField("breed", value)} />
+        <SuggestionField label="Color" name="color" options={colorOptions} maxLength={40} placeholder="Cualquier color" value={draft.color} onValueChange={value => setField("color", value)} />
       </div>
       <details className="lost-extra-filters"><summary>Más filtros <span className="field-help">Fecha, sexo, tamaño, fotos y collar</span></summary><div className="lost-filter-grid">
         <label className="field-label">Perdida desde<input className="form-input" name="lost_from" type="date" value={draft.lost_from} max={draft.lost_to || undefined} onChange={e => setField("lost_from", e.target.value)} /></label>

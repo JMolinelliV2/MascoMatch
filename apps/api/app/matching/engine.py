@@ -9,12 +9,120 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.embeddings.specs import EmbeddingSpec,compatible
 from app.matching.linked import aware, distance_meters
-from app.matching.scoring import WEIGHTS, known, feature_similarity, combine, cosine, aggregate_visual_similarity, notification_evidence
+from app.matching.scoring import WEIGHTS, known, normalized, feature_similarity, combine, cosine, aggregate_visual_similarity, notification_evidence
 from app.matching.tracking import record_recommendation
 from app.models import AnalysisJob, Embedding, FeatureSet, LostCase, Match, Notification, Observation, Pet, Photo, User
 from app.species import SUPPORTED_SPECIES, is_supported_species, owner_is_supported
+from app.report_details import COLOR_LABELS, color_value
 
 PENDING = {"PENDING", "DISPATCHING", "QUEUED", "RUNNING"}
+
+
+def declared_traits(item):
+    """General matching only: feed the same declared fields on either side."""
+    fields = {"species": "species", "sex": "sex", "primary_color": "primary_color",
+              "secondary_colors": "secondary_colors", "size": "size", "breed_type": "breed",
+              "coat_length": "coat_type", "distinctive_features": "distinctive_features"}
+    traits = {}
+    for name, field in fields.items():
+        value = getattr(item, field, None)
+        if isinstance(value, str):
+            value = value.strip()
+        elif isinstance(value, list):
+            value = [v.strip() if isinstance(v, str) else v for v in value
+                     if known(v.strip() if isinstance(v, str) else v)]
+        if known(value):
+            traits[name] = value
+    return traits
+
+
+ACCESSORY_NAMES = {
+    "collar": {"collar"},
+    "clothing": {"ropa", "prenda", "camiseta", "remera", "abrigo", "chaleco", "arnes",
+                 "bandana", "panuelo", "campera", "clothing", "shirt", "coat", "jacket", "harness"},
+}
+ACCESSORY_COLOR_ALIASES = {
+    "rojo": "red", "roja": "red", "colorado": "red", "colorada": "red", "cafe": "brown",
+    "negra": "black", "blanca": "white", "grey": "gray", "azul": "blue", "verde": "green",
+    "amarillo": "yellow", "amarilla": "yellow", "rosa": "pink", "rosado": "pink", "rosada": "pink",
+    "morado": "purple", "morada": "purple", "violeta": "purple",
+}
+ACCESSORY_UNCERTAIN = {
+    "sin", "no", "not", "without", "unknown", "uncertain", "incierto", "incierta",
+    "desconocido", "desconocida", "quiza", "quizas", "posible", "posiblemente", "podria",
+    "parece", "parecido", "maybe", "possibly", "ningun", "ninguna", "ausente", "dudoso", "dudosa",
+}
+ACCESSORY_DETAILS = {"de", "con", "color", "tela", "cuero", "nylon", "placa", "chapa",
+                     "claro", "clara", "oscuro", "oscura", "light", "dark"}
+
+
+def accessory_color(value):
+    if not isinstance(value, str) or not known(value.strip()):
+        return None
+    value = normalized(color_value(value))
+    return ACCESSORY_COLOR_ALIASES.get(value, value) or None
+
+
+def accessory_facts(item, inferred):
+    """Recognize bounded labels, then let each explicit subfield override inference."""
+    facts, colors = {}, {}
+    basic_colors = set(COLOR_LABELS) | {"blue", "green", "yellow", "pink", "purple"}
+    for label in inferred if isinstance(inferred, list) else []:
+        if not isinstance(label, str) or "?" in label:
+            continue
+        words = normalized(label).split()
+        if words and words[0] in {"un", "una", "a", "an"}:
+            words = words[1:]
+        if not words or set(words) & ACCESSORY_UNCERTAIN:
+            continue
+        kinds = [kind for kind, names in ACCESSORY_NAMES.items() if set(words) & names]
+        if len(kinds) != 1:
+            continue  # One label naming multiple items cannot assign a color safely.
+        kind = kinds[0]
+        if words[0] not in ACCESSORY_NAMES[kind] and not (
+                words[-1] in ACCESSORY_NAMES[kind] and accessory_color(" ".join(words[:-1])) in basic_colors):
+            continue
+        if any(word not in ACCESSORY_NAMES[kind] | ACCESSORY_DETAILS
+               and accessory_color(word) not in basic_colors for word in words):
+            continue  # Unrecognized prose must not turn an uncertain label into presence.
+        facts[kind] = ("yes", None)
+        colors.setdefault(kind, set()).update(c for word in words if (c := accessory_color(word)) in basic_colors)
+    for kind, values in colors.items():
+        facts[kind] = ("yes", next(iter(values)) if len(values) == 1 else None)
+    for kind in ACCESSORY_NAMES:
+        status = getattr(item, f"{kind}_status", None)
+        if status == "no":
+            facts[kind] = ("no", None)
+        elif status == "yes" or kind in facts:
+            inferred_color = facts.get(kind, (None, None))[1]
+            facts[kind] = ("yes", accessory_color(getattr(item, f"{kind}_color", None)) or inferred_color)
+    return facts
+
+
+def comparable_traits(left_item, left, right_item, right):
+    # Do not reinterpret legacy inferred labels when neither report adds structured accessories.
+    if not any(getattr(item, f"{kind}_status", None) in {"yes", "no"}
+               or accessory_color(getattr(item, f"{kind}_color", None)) is not None
+               for item in (left_item, right_item) for kind in ACCESSORY_NAMES):
+        return left, right
+    parts = (accessory_facts(left_item, left.get("accessories")),
+             accessory_facts(right_item, right.get("accessories")))
+    tokens = ([], [])
+    for kind in ACCESSORY_NAMES:
+        a, b = parts[0].get(kind), parts[1].get(kind)
+        if a is None or b is None or a[0] == b[0] == "no":
+            continue  # Unknowns and shared absences supply no comparable evidence.
+        for output, fact in zip(tokens, (a, b)):
+            output.append(f"{kind} {fact[0]}")
+        if a[0] == b[0] == "yes" and a[1] and b[1]:
+            for output, fact in zip(tokens, (a, b)):
+                output.append(f"{kind} color {fact[1]}")
+    result = (dict(left), dict(right))
+    for traits, values in zip(result, tokens):
+        traits.pop("accessories", None)
+        if values:
+            traits["accessories"] = values
+    return result
 
 
 def should_wait(job):
@@ -148,8 +256,8 @@ def evaluate_observation(db, identity):
     if observation.latitude is None or observation.longitude is None or aware(observation.observed_at) > utcnow() + timedelta(minutes=1):
         observation.matching_status = "INSUFFICIENT"
         return
-    observed_traits, waiting = evidence(db, "observation", identity, {"species": observation.species, "sex": observation.sex, "primary_color": observation.primary_color, "size": observation.size})
-    observed_vectors = vectors(db, and_(Photo.owner_type == "observation", Photo.owner_id == identity)) if settings.embeddings_enabled else []
+    observed_traits, waiting = evidence(db, "observation", identity, declared_traits(observation))
+    observed_vectors = None
     if observed_traits.get("_species_conflict"):
         observation.matching_status="INSUFFICIENT"
         return
@@ -158,18 +266,21 @@ def evaluate_observation(db, identity):
         return
     ranked = []
     for case, pet, distance, radius, accuracy in candidates(db, observation):
-        declared = {"species": pet.species, "sex": pet.sex, "primary_color": pet.primary_color, "secondary_colors": pet.secondary_colors,
-            "size": pet.size, "coat_length": pet.coat_type, "breed_type": pet.breed, "distinctive_features": pet.distinctive_features}
-        target, case_waiting = evidence(db, "lost_case", case.id, declared)
+        target, case_waiting = evidence(db, "lost_case", case.id, declared_traits(pet))
         target, pet_waiting = evidence(db, "pet", pet.id, target)
         if target.get("_species_conflict"):
             continue
         if case_waiting or pet_waiting:
             waiting = True
             continue
-        feature, coverage, reasons, contradiction = feature_similarity(target, observed_traits)
+        expected, observed = comparable_traits(pet, target, observation, observed_traits)
+        feature, coverage, reasons, contradiction = feature_similarity(expected, observed)
+        if contradiction or feature < .5:
+            continue
+        if observed_vectors is None:
+            observed_vectors = vectors(db, and_(Photo.owner_type == "observation", Photo.owner_id == identity)) if settings.embeddings_enabled else []
         raw_visual,visual_provider,visual_quality = visual_evidence(db, observed_vectors, case)
-        if contradiction or coverage < (.25 if raw_visual is not None else .35) or feature < .5:
+        if coverage < (.25 if raw_visual is not None else .35):
             continue
         days = (aware(observation.observed_at) - aware(case.lost_at)).total_seconds() / 86400
         score, visual, geo, temporal = combine(feature, raw_visual, distance, radius, days, accuracy,provider=visual_provider or "open_clip",quality=visual_quality)

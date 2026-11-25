@@ -2,6 +2,7 @@
 import re
 from pydantic import BaseModel, Field, field_validator
 from app.report_details import ReportDetailsCreate
+from app.phone_numbers import validate_phone
 
 
 class FinderContact(BaseModel):
@@ -26,6 +27,14 @@ class FinderContact(BaseModel):
         if not re.fullmatch(r"\+?[0-9 ()\-.]+", value) or not 7 <= sum(c.isdigit() for c in value) <= 15:
             raise ValueError("Ingresá un número de teléfono válido, con código de país.")
         return value
+
+
+class FinderContactCreate(FinderContact):
+    # Keep historical contacts readable; apply current numbering plans on input.
+    @field_validator("phone")
+    @classmethod
+    def valid_phone(cls, value):
+        return validate_phone(value)
 
 
 def pet_details(observation):

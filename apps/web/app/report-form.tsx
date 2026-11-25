@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "./ui/error-state";
 
 import { ReportTraitFields } from "./ui/report-trait-fields";
 import { readPetDetails, accessoryLabels, colorLabel, petDetailsError } from "@/lib/pet-details";
@@ -351,7 +352,6 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
       <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy} className="report-form" onChange={event => { const control = event.target; if ((control instanceof HTMLInputElement || control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement) && control.name === errorField) { setErrorField(""); setError(""); } }}>
         <Stepper steps={["Mascota", "Fecha y lugar", "Contacto y revisión"]} current={step} />
         <div className="form-card">
-        <p className="step-count">Paso {step} de 3</p>
         <h2 ref={stepHeadingRef} tabIndex={-1} className="step-heading">{stepTitles[step - 1]}</h2>
         <p className="step-intro">{stepIntros[step - 1]}</p>
         <fieldset disabled={busy} className="form-controls">
@@ -428,7 +428,7 @@ export function ReportForm({ kind }: { kind: ReportKind }) {
             </section>
             <h3 className="contact-heading">Tu contacto</h3>
             {sessionChecking && <p role="status" className="field-help">Consultando tu cuenta…</p>}
-            {sessionError && <p role="alert" className="notice notice-warning">{sessionError} <button type="button" className="text-button" onClick={() => setSessionRefresh(value => value + 1)}>Reintentar</button></p>}
+            {sessionError && <ErrorState compact headingLevel={3} title="No pudimos consultar tu cuenta" description="Tus datos siguen en este formulario. Reintentá para comprobar la sesión antes de publicar." onRetry={() => setSessionRefresh(value => value + 1)} retrying={sessionChecking} />}
             {sessionUser ? <><div className="notice"><p>Vas a publicar con la cuenta de <strong>{sessionUser.name}</strong>.</p><p className="field-help">Correo de contacto: {sessionUser.email}</p><button type="button" className="text-button" disabled={busy || sessionChecking} onClick={() => void switchAccount()}>Usar otra cuenta</button></div>{needsVerification && <><VerifyEmailNotice email={sessionUser.email} /><p className="field-help">Confirmá el correo y volvé a esta pestaña para publicar. Los datos y la foto siguen en el formulario.</p></>}</> : <>
             <div className="account-options" role="group" aria-label="Opciones de cuenta">
               <label><input type="radio" name="accountMode" checked={accountMode === "register"} onChange={() => setAccountMode("register")} />Crear cuenta</label>

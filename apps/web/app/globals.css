@@ -362,6 +362,15 @@ h1, h2, h3 { color: var(--text-primary); }
   .review-request > .location-actions { margin-top: 16px; }
   .review-request .notice { margin-top: 16px; }
   .review-form { margin-top: 20px; }
+  .review-identity-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .review-identity-options legend { margin-bottom: 10px; font-size: 14px; font-weight: 600; }
+  .review-identity-options label { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface); cursor: pointer; overflow-wrap: anywhere; }
+  .review-identity-options label:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+  .review-identity-options input { flex-shrink: 0; margin-top: 4px; accent-color: var(--primary); }
+  .review-identity-options .field-help { display: block; margin-top: 4px; }
+  .review-identity-options > p { grid-column: 1 / -1; }
+  .review-summary { padding: 16px; margin-top: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+  .review-summary .review-rating { margin-top: 0; }
   .review-rating-options legend { margin-bottom: 10px; font-size: 14px; font-weight: 600; }
   .review-rating-options > div { display: flex; flex-wrap: wrap; gap: 8px; }
   .review-rating-options label { position: relative; min-width: 48px; cursor: pointer; }
@@ -512,8 +521,8 @@ h1, h2, h3 { color: var(--text-primary); }
   .step-complete .step-number { background: var(--primary-soft); color: var(--primary); }
   .step-progress { appearance: none; display: block; width: 100%; height: 3px; margin: 20px 0 24px; border: 0; border-radius: 4px; overflow: hidden; background: var(--border); color: var(--primary); }
   .step-progress::-webkit-progress-bar { background: var(--border); }
-  .step-progress::-webkit-progress-value, .step-progress::-moz-progress-bar { background: var(--primary); }
-  .step-count { margin: 0 0 8px; color: var(--accent-blue); font-size: 12px; font-weight: 600; }
+  .step-progress::-webkit-progress-value { background: var(--primary); }
+  .step-progress::-moz-progress-bar { background: var(--primary); }
   .step-heading { margin: 0; font-size: 25px; line-height: 1.25; font-weight: 700; letter-spacing: -.5px; }
   .step-heading:focus { outline: none; }
   .step-intro { margin: 10px 0 24px; color: var(--text-secondary); font-size: 14px; }
@@ -612,6 +621,22 @@ h1, h2, h3 { color: var(--text-primary); }
   .report-confirmation { display: grid; gap: 24px; padding-top: 48px; padding-bottom: 64px; }
   .confirmation-card { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); align-items: center; gap: 48px; padding: 40px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); box-shadow: 0 8px 32px rgb(11 42 74 / 4%); }
   .confirmation-summary { min-width: 0; }
+  .recovery-confirmation { grid-template-columns: minmax(0, 1fr); margin-bottom: 24px; }
+  .owner-recovery-action { min-width: 0; }
+  .owner-recovery-action .notice { margin-top: 16px; }
+  .owner-recovery-login { display: grid; justify-items: center; gap: 2px; margin: 0; text-align: center; }
+  .owner-recovery-login .text-button { padding-inline: 0; }
+  .masco-error { display: grid; align-content: center; justify-items: center; gap: 24px; min-width: 0; min-height: clamp(420px, calc(100svh - 180px), 700px); padding: 40px 20px 56px; text-align: center; }
+  .masco-error-dog { display: block; width: clamp(180px, 26vw, 280px); height: auto; max-width: 100%; object-fit: contain; user-select: none; }
+  .masco-error-copy { width: 100%; max-width: 560px; }
+  .masco-error .masco-error-title { margin: 0; color: var(--text-primary); font-size: clamp(24px, 3vw, 34px); font-weight: 800; line-height: 1.2; letter-spacing: -.7px; text-wrap: balance; }
+  .masco-error .masco-error-description { margin: 14px auto 0; color: var(--text-secondary); font-size: 16px; line-height: 1.65; overflow-wrap: anywhere; text-wrap: pretty; }
+  .masco-error-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; max-width: 100%; }
+  .masco-error-actions .button { gap: 9px; min-height: 44px; }
+  .masco-error--compact { min-height: 0; padding: 24px 20px; gap: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .masco-error--compact .masco-error-dog { width: 112px; }
+  .masco-error--compact .masco-error-title { font-size: 20px; letter-spacing: -.3px; }
+  .masco-error--compact .masco-error-description { margin-top: 8px; font-size: 14px; }
   .confirmation-status { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; color: var(--success); background: var(--success-soft); border-radius: 999px; font-size: 13px; font-weight: 700; }
   .confirmation-status .ui-icon { width: 17px; height: 17px; }
   .confirmation-card h1 { max-width: 560px; margin: 20px 0 12px; font-size: clamp(30px, 3.2vw, 40px); line-height: 1.15; letter-spacing: -1px; text-wrap: balance; }
@@ -1196,6 +1221,7 @@ h1, h2, h3 { color: var(--text-primary); }
     .review-request-heading .feature-icon { width: 36px; height: 36px; border-radius: 10px; }
     .review-request-heading .feature-icon .ui-icon { width: 21px; height: 21px; }
     .review-form .button-primary { width: 100%; }
+    .review-identity-options { grid-template-columns: minmax(0, 1fr); }
     .home-support { width: calc(100% - 40px); padding: 24px 20px; gap: 16px; margin-bottom: 32px; }
     .home-support > div { flex-basis: calc(100% - 64px); }
     .home-support h2 { font-size: 21px; }

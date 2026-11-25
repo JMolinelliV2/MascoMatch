@@ -1,5 +1,6 @@
 "use client";
 import { LoadingState } from "./ui/loading-state";
+import { ErrorState } from "./ui/error-state";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { lostDogsEndpoint } from "@/lib/lost-dogs";
@@ -23,7 +24,7 @@ export function HomeLostAnimals() {
   }, [refresh]);
   return <section className="home-animals" aria-labelledby="home-animals-title">
     <div className="section-heading"><div><h2 id="home-animals-title">Mascotas reportadas</h2></div><Link href="/perdidos" className="text-button">Ver todos los avisos <Icon name="arrow" /></Link></div>
-    {error ? <p className="notice notice-warning" role="alert">{error} <button className="text-button" type="button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></p>
+    {error ? <ErrorState compact headingLevel={3} title="No pudimos cargar los avisos" description="Las mascotas reportadas no están disponibles en este momento. Reintentá en unos instantes." onRetry={() => setRefresh(value => value + 1)} />
       : !result ? <LoadingState compact title="Cargando mascotas reportadas" />
         : result.items.length ? <div className="home-animals-grid">{result.items.map(animal => <PetCard key={animal.id} animal={animal} compact />)}</div>
           : <div className="lost-dogs-empty"><h3>Todavía no hay avisos activos</h3><p>Las mascotas con avisos activos aparecerán acá.</p><Link href="/perdi" className="button button-secondary">Publicar un aviso</Link></div>}

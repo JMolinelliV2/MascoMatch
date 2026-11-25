@@ -1,4 +1,6 @@
 "use client";
+import { requestError } from "@/lib/request-error";
+import { AdminDataError } from "./admin-data-error";
 import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
@@ -40,7 +42,7 @@ function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriod
     void fetch(`/api/admin/reports?${params}`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]) }).then(async response => {
       if (!response.ok) throw new Error("No pudimos consultar las denuncias. Revisá tu sesión y permisos.");
       const next: ReportData = await response.json(); if (!controller.signal.aborted) setData(next);
-    }).catch(cause => { if (!controller.signal.aborted) setError(cause.message); }).finally(finish);
+    }).catch(cause => { if (!controller.signal.aborted) setError(requestError(cause, "La consulta no pudo completarse. Intentá de nuevo en unos instantes.")); }).finally(finish);
     return () => {controller.abort();finish();};
   }, [status, period, offset, refresh, version, beginRequest]);
   async function action(id: string, value: string) {
@@ -50,7 +52,7 @@ function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriod
       const result = await response.json();
       if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : "No pudimos aplicar la acción.");
       setSaved("Acción aplicada y registrada en la auditoría."); setRefresh(value => value + 1);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos aplicar la acción."); }
+    } catch (cause) { setError(requestError(cause, "No pudimos aplicar la acción.")); }
     finally { setBusy(null); }
   }
   return <section aria-labelledby="admin-reports-title">
@@ -58,7 +60,7 @@ function PlatformManagement({period,onPeriodChange}:{period:AdminPeriod;onPeriod
     <AdminDateRange value={period} onApply={next => { onPeriodChange(next); setOffset(0); }} />
     <p className="field-help">El período se aplica a la recepción de la denuncia. Las correcciones del final conservan su listado de registros recientes.</p>
     <div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-status`} label="Estado de la denuncia" help="Pendiente significa que falta revisión; con acción aplicada indica que administración intervino; descartada indica que se revisó sin mantener una acción sobre la publicación." /><select id={`${fieldId}-status`} className="form-input" value={status} onChange={event => { setStatus(event.target.value); setOffset(0); }}><option value="OPEN">Pendientes</option><option value="ACTION_TAKEN">Con acción aplicada</option><option value="DISMISSED">Descartadas</option><option value="">Todas</option></select></div>
-    {error && <p className="notice notice-warning" role="alert">{error}</p>}{saved && <p className="notice" role="status">{saved}</p>}
+    {error && (!data ? <AdminDataError description={error} title="No pudimos consultar las denuncias" /> : <p className="notice notice-warning" role="alert">{error}</p>)}{saved && <p className="notice" role="status">{saved}</p>}
     {!data && !error && <LoadingState compact title="Cargando las denuncias" />}
     {data && <><p className="field-help">{data.total} denuncias con estos filtros.</p>{!data.items.length && <p>No hay denuncias con estos filtros.</p>}
       {data.items.map(report => <article key={report.id} className="notification-card"><h3>{report.title}</h3>{report.public_id && <ReportId publicId={report.public_id} />}<p>{reasons[report.reason] || report.reason} · {report.visibility === "HIDDEN" ? "Publicación oculta" : report.visibility ? "Publicación visible" : "Publicación eliminada"}</p><p className="field-help">Recibida: {adminDate(report.created_at)}</p><p className="admin-contact-message">{report.detail || "Sin detalles adicionales"}</p>

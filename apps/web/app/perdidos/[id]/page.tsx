@@ -7,5 +7,5 @@ export default async function DogNoticePage({ params }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <DogDetail id={id} />;
+  return <DogDetail key={id} id={id} />;
 }

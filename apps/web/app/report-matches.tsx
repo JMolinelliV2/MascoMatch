@@ -1,4 +1,6 @@
 "use client";
+import { ErrorState } from "./ui/error-state";
+import { requestError } from "@/lib/request-error";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DogPhoto } from "./perdidos/dog-photo";
@@ -23,7 +25,7 @@ export function ReportMatches({ observationId }: { observationId: string }) {
         if (controller.signal.aborted) return;
         setResult(data); setError("");
         if (["PENDING", "WAITING_ANALYSIS"].includes(data.status) && Date.now() < deadline) timer = setTimeout(load, 5000);
-      } catch (cause) { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No pudimos consultar las coincidencias."); }
+      } catch (cause) { if (!controller.signal.aborted) setError(requestError(cause, "No pudimos consultar las coincidencias. Tu reporte sigue guardado.")); }
     }
     void load();
     return () => { controller.abort(); if (timer) clearTimeout(timer); };
@@ -37,7 +39,7 @@ export function ReportMatches({ observationId }: { observationId: string }) {
       <MatchScore score={item.match.final_score} />
       <ul>{item.match.explanation.map(reason => <li key={reason}>{reason}</li>)}</ul>
       <Link href={`/perdidos/${item.animal.id}`} className="text-button">Ver aviso</Link></div></article>)}
-    {error && <p role="alert" className="notice notice-warning">{error}</p>}
-    <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}><Icon name="refresh" />Actualizar coincidencias</button>
+    {error && <ErrorState compact headingLevel={3} title="No pudimos consultar las coincidencias" description={error} onRetry={() => setRefresh(value => value + 1)} />}
+    {!error && <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}><Icon name="refresh" />Actualizar coincidencias</button>}
   </section>;
 }

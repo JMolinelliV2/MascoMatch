@@ -1,21 +1,25 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { matchSupportKind } from "@/lib/match-support";
+import type { MatchSupportKind } from "@/lib/match-support";
 import {RecoveryQuestion} from "./recovery-question";
 import type {RecoveryReason} from "./recovery-question";
 import {useMatchVisibility} from "./product-tracking";
 import { FoundReporterContact } from "./ui/found-reporter-contact";
 
 type FeedbackStatus = "CONFIRMED_RELEVANT" | "FALSE_MATCH" | "RESOLVED";
-export type FeedbackSaved = { status: FeedbackStatus; recovered: boolean; caseId: string };
+export type FeedbackSaved = { status: FeedbackStatus; recovered: boolean; caseId: string; support: MatchSupportKind | null };
 
-export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, presentation, found = false }: {
+export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, presentation, found = false, afterContact }: {
   found?: boolean;
   presentation?:string|null;
   id: string;
   caseId: string;
   status: string | null;
   caseActive?: boolean;
+  afterContact?: ReactNode;
   onSaved?: (result: FeedbackSaved) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -43,7 +47,7 @@ export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, 
         : value === "RESOLVED" ? (found ? "Confirmaste que es tu mascota. Ya podés ver el contacto para coordinar la entrega. La búsqueda sigue abierta hasta que la recuperes." : "Confirmaste el avistamiento. Tu búsqueda sigue activa y la mascota sigue publicada como perdida.")
         : value === "FALSE_MATCH" ? "Descartaste este avistamiento. Tu búsqueda sigue activa."
         : "Guardaste este avistamiento como posible coincidencia. Tu búsqueda sigue activa.");
-      onSaved?.({ status: data.status as FeedbackStatus, recovered: wasRecovered, caseId });
+      onSaved?.({ status: data.status as FeedbackStatus, recovered: wasRecovered, caseId, support: matchSupportKind(current, data.status, wasRecovered, found) });
       window.dispatchEvent(new Event("mascomatch:notifications"));
       if (wasRecovered) window.dispatchEvent(new Event("mascomatch:cases"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos guardar tu respuesta."); }
@@ -62,6 +66,7 @@ export function MatchFeedback({ id, caseId, status, caseActive = true, onSaved, 
         <button type="button" className={found ? "button button-primary" : "text-button"} disabled={busy || current === "RESOLVED"} onClick={() => void save("RESOLVED")}>{found ? "Es mi mascota, ver contacto" : "Es mi mascota, sigo buscándola"}</button>
       </div>
       {found ? current === "RESOLVED" ? <FoundReporterContact matchId={id} /> : <p className="field-help">El nombre y teléfono de la persona se mostrarán cuando confirmes que es tu mascota.</p> : current === "RESOLVED" && <p className="field-help">Este avistamiento está confirmado. La búsqueda sigue abierta hasta que recuperes a tu mascota.</p>}
+      {found && current === "RESOLVED" && afterContact}
       <div className="match-recovery">
         <h3>¿Ya está con vos?</h3>
         <p className="field-help">Si ya recuperaste a tu mascota, marcala como encontrada. El aviso dejará de aparecer en el listado público y de generar alertas.</p>

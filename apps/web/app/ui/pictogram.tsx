@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 const paths = {
   paw: <><ellipse cx="5.5" cy="8" rx="2" ry="2.8" /><ellipse cx="10" cy="5.5" rx="2" ry="2.8" /><ellipse cx="15.5" cy="5.5" rx="2" ry="2.8" /><ellipse cx="20" cy="9" rx="2" ry="2.8" /><path d="M6 18c0-3 3-7 6.5-7S19 15 19 18c0 2-1.5 3-3.5 2.5-2-.7-4-.7-6 0C7.5 21 6 20 6 18Z" /></>,
   copy: <><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></>,
+  share: <><circle cx="6" cy="12" r="3" /><circle cx="18" cy="5" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" /></>,
   camera: <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z" /><circle cx="12" cy="13" r="4" /></>,
   pin: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
   eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></>,

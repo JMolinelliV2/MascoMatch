@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 import psycopg
 from psycopg import sql
 import sqlalchemy as sa
@@ -64,7 +65,7 @@ def test_fresh_and_existing_postgres_preserve_historical_vectors(monkeypatch):
                 command.upgrade(cfg,"head")
                 command.upgrade(cfg,"head")  # Safe repeated deploy.
                 with engine.connect() as connection:
-                    assert connection.scalar(sa.text("SELECT version_num FROM alembic_version"))=="0032_report_details"
+                    assert connection.scalar(sa.text("SELECT version_num FROM alembic_version"))==ScriptDirectory.from_config(cfg).get_current_head()
                     assert connection.scalar(sa.text("SELECT count(*) FROM analytics_tracking"))==1
                     assert {"product_events","product_daily","recovery_outcomes","match_exposures"}<=set(sa.inspect(connection).get_table_names())
                     assert {"vector","postgis"}<=set(connection.scalars(sa.text("SELECT extname FROM pg_extension")))
@@ -86,4 +87,64 @@ def test_fresh_and_existing_postgres_preserve_historical_vectors(monkeypatch):
                 engine.dispose()
                 control.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(name)))
     finally:
+        control.close()
+
+
+@pytest.mark.skipif(os.getenv("RUN_VISUAL_MIGRATION_TESTS") != "1", reason="Requires disposable PostgreSQL with pgvector/PostGIS")
+def test_account_reviews_upgrade_preserves_history_and_withdrawal(monkeypatch):
+    base = os.environ["MIGRATION_TEST_DATABASE_URL"]
+    assert os.environ.get("DISPOSABLE_STACK") == "mascomatch-ai-upgrade"
+    control = psycopg.connect(base.replace("postgresql+psycopg://", "postgresql://"), autocommit=True)
+    name = "mascomatch_upgrade_" + uuid4().hex
+    control.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+    url = make_url(base).set(database=name).render_as_string(hide_password=False)
+    monkeypatch.setattr(settings, "database_url", url)
+    root = Path(__file__).resolve().parents[1]
+    cfg = Config(str(root / "alembic.ini")); cfg.set_main_option("script_location", str(root / "migrations"))
+    engine = sa.create_engine(url)
+    try:
+        command.upgrade(cfg, "0033_found_report_contacts")
+        owners, cases, ids = [uuid4(), uuid4()], [], []
+        now = datetime.now(timezone.utc)
+        with engine.begin() as connection:
+            metadata = sa.MetaData()
+            def table(name): return sa.Table(name, metadata, autoload_with=connection, extend_existing=True)
+            for index, owner in enumerate(owners):
+                connection.execute(table("users").insert().values(id=owner, email=f"review-{index}@example.test", name="Julian Molinelli", password_hash="unused", notification_preferences={}, status="ACTIVE"))
+                pet = uuid4()
+                connection.execute(table("pets").insert().values(id=pet, owner_id=owner, name="Test", species="dog", breed="unknown", sex="unknown", size="unknown", primary_color="unknown", secondary_colors=[], coat_type="unknown", distinctive_features=[]))
+                for order, visibility in enumerate(["VISIBLE", "HIDDEN", "WITHDRAWN"] if index == 0 else ["HIDDEN"]):
+                    case, review = uuid4(), uuid4(); cases.append(case); ids.append(review)
+                    number = connection.execute(table("publication_numbers").insert().returning(table("publication_numbers").c.id)).scalar_one()
+                    connection.execute(table("lost_cases").insert().values(id=case, public_number=number, pet_id=pet, status="FOUND", lost_at=now, description="Test", search_radius_meters=15000))
+                    connection.execute(table("case_reviews").insert().values(id=review, author_id=owner, lost_case_id=case, display_name="Alias privado", rating=4, comment=f"Experiencia histórica {index}-{order}", visibility=visibility, consent_at=now, created_at=now.replace(microsecond=order)))
+            for identity, decisions in [(ids[0], ["HIDE_REVIEW", "RESTORE_REVIEW"]), (ids[2], ["HIDE_REVIEW"])]:
+                for order, action in enumerate(decisions):
+                    connection.execute(table("admin_audit").insert().values(id=uuid4(), action=action,
+                        target_type="case_review", target_id=identity, details={}, created_at=now.replace(microsecond=order)))
+        command.upgrade(cfg, "head")
+        command.upgrade(cfg, "head")
+        with engine.connect() as connection:
+            rows = list(connection.execute(sa.text("SELECT id, is_current, is_anonymous, moderation_hidden, visibility, display_name, comment FROM case_reviews ORDER BY author_id, created_at")).mappings())
+            assert len(rows) == 4
+            by_id = {row["id"]: row for row in rows}
+            assert [by_id[identity]["is_current"] for identity in ids] == [False, False, True, True]
+            assert all(row["is_anonymous"] and row["display_name"] == "Alias privado" for row in rows)
+            assert by_id[ids[2]]["visibility"] == "WITHDRAWN"
+            assert by_id[ids[2]]["moderation_hidden"] is True
+            assert by_id[ids[3]]["moderation_hidden"] is True
+            assert by_id[ids[0]]["moderation_hidden"] is False
+            assert by_id[ids[0]]["comment"] == "Experiencia histórica 0-0"
+        with pytest.raises(sa.exc.IntegrityError):
+            with engine.begin() as connection:
+                connection.execute(sa.text("INSERT INTO case_reviews(id,author_id,display_name,rating,comment,consent_at) VALUES (:id,:author,'Anónimo',5,'Otra opinión que no debe duplicarse',now())"), {"id": uuid4(), "author": owners[0]})
+        with engine.begin() as connection:
+            connection.execute(sa.text("DELETE FROM lost_cases WHERE id=:id"), {"id": cases[2]})
+            assert connection.scalar(sa.text("SELECT lost_case_id FROM case_reviews WHERE id=:id"), {"id": ids[2]}) is None
+            assert connection.scalar(sa.text("SELECT count(*) FROM case_reviews")) == 4
+        with pytest.raises(RuntimeError, match="explicit data migration"):
+            command.downgrade(cfg, "0033_found_report_contacts")
+    finally:
+        engine.dispose()
+        control.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(name)))
         control.close()

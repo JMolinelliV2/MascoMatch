@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from app.species import Species
+from app.phone_numbers import OptionalPhone
 Sex = Literal["male", "female", "unknown"]
 
 
@@ -17,7 +18,7 @@ class RegisterRequest(BaseModel):
     email: str = Field(min_length=5, max_length=320)
     password: str = Field(min_length=12, max_length=128)
     name: str = Field(min_length=1, max_length=120)
-    phone: str | None = Field(default=None, max_length=32)
+    phone: OptionalPhone = None
 
 
 class LoginRequest(BaseModel):

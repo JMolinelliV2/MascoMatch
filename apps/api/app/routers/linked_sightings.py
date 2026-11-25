@@ -16,7 +16,7 @@ from app.db.session import get_db
 from app.dependencies import optional_user
 from app.matching.linked import aware, evaluate_sighting
 from app.models import FoundReportContact, LostCase, Notification, Observation, Photo, User
-from app.found_reports import FinderContact
+from app.found_reports import FinderContactCreate
 from app.photo_albums import MAX_REPORT_PHOTOS, set_cover
 from app.species import is_supported_species, owner_is_supported
 from app.schemas import CoarseGeo, LinkedSightingRead
@@ -61,9 +61,9 @@ def create_linked_sighting(
     contact = None
     if found:
         try:
-            contact = FinderContact(name=finder_name, phone=finder_phone)
+            contact = FinderContactCreate(name=finder_name, phone=finder_phone)
         except ValueError:
-            raise HTTPException(422, "Ingresá tu nombre y un número de teléfono válido, con código de país.")
+            raise HTTPException(422, "Ingresá tu nombre y un teléfono válido. Para Uruguay, por ejemplo 099 123 456; para otros países, incluí + y el código de país.")
         description = (description or "").strip()
         if len(description) < 10:
             raise HTTPException(422, "Describí la mascota que tenés con vos, con al menos 10 caracteres.")

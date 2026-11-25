@@ -1,5 +1,7 @@
 "use client";
 import { LoadingState } from "../../ui/loading-state";
+import { ErrorState } from "../../ui/error-state";
+import { requestError } from "@/lib/request-error";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "../../ui/pictogram";
@@ -41,7 +43,7 @@ export function DonationResult({ identity }: { identity: string | null }) {
           if (Date.now() < deadline) timer = setTimeout(load, 5000);
           else setWaiting(true);
         }
-      } catch (cause) { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No pudimos consultar el resultado del aporte."); }
+      } catch (cause) { if (!controller.signal.aborted) setError(requestError(cause, "No pudimos consultar el resultado del aporte. Podés revisar su estado en Mercado Pago.")); }
       finally { if (!controller.signal.aborted) setLoading(false); }
     }
     void load();
@@ -61,6 +63,7 @@ export function DonationResult({ identity }: { identity: string | null }) {
   }
 
   if (loading && !receipt) return <LoadingState title="Consultando tu aporte" description="Estamos consultando el estado de la operación." />;
+  if (!receipt && error) return <ErrorState headingLevel={1} title="No pudimos consultar tu aporte" description={`${error} Esto no confirma que el pago haya fallado. Revisá su estado antes de iniciar otro aporte.`} onRetry={identity ? () => setRefresh(value => value + 1) : undefined} />;
 
   const confirmed = receipt?.status === "APPROVED";
   const message = receipt ? messages[receipt.status] || messages.PENDING : null;

@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "../ui/error-state";
 
 import { LoadingState } from "../ui/loading-state";
 import { ReportTraitFields } from "../ui/report-trait-fields";
@@ -119,7 +120,7 @@ function OwnedEditor({ id }: { id: string }) {
       }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error && !["TypeError", "TimeoutError", "AbortError"].includes(cause.name) ? cause.message : "No pudimos abrir el reporte. Intentá de nuevo."); });
     return () => controller.abort();
   }, [id, refresh]);
-  if (error) return <div className="notice notice-warning observation-edit-error" role="alert">{error}<button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
+  if (error) return <ErrorState title="No pudimos abrir tu reporte" description={error} onRetry={() => setRefresh(value => value + 1)} />;
   return observation ? <EditObservationForm key={observation.id} observation={observation} /> : <LoadingState title="Cargando tu reporte" description="Estamos preparando los datos y las fotos para editarlo." />;
 }
 

@@ -27,6 +27,8 @@ El menú ofrece Administración solo cuando `/auth/me` devuelve `admin_access: t
 | Seguimiento de coincidencias | Recomendaciones únicas y respuestas de los dueños, con filtro de fecha y hora. |
 | Denuncias y correcciones | Denuncias con período, estado y paginación; se conservan las correcciones de descripción y moderación de reseñas. |
 
+Cada cuenta tiene una sola reseña actual, editable por su autor. Los registros anteriores se conservan como históricos y no pueden volver a publicarse desde administración. El listado distingue ese historial y el contador incluye únicamente las reseñas actuales. Una reseña retirada por el autor tampoco se puede publicar desde administración; la ocultación por moderación se conserva aunque el autor edite o retire y vuelva a publicar su opinión.
+
 ### Fechas, conteos y búsquedas
 
 Los formularios reciben fecha y hora con precisión de minuto en Uruguay (UTC−3). El navegador convierte los extremos a UTC y suma un minuto al final; el servidor usa `desde <= fecha < hasta`. Así incluye el minuto final completo, sin depender de la zona horaria de la computadora. Fechas invertidas y fechas sin zona horaria son rechazadas por la API. Los atajos ofrecen 7, 30 y 90 días o todo el período.

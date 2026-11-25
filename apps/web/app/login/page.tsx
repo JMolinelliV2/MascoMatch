@@ -4,8 +4,9 @@ import { AuthLayout } from "../ui/auth-layout";
 
 export const metadata: Metadata = { title: "Ingresar — MascoMatch" };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
+  const { next } = await searchParams;
   return <AuthLayout mode="login">
-    <LoginForm />
+    <LoginForm returnTo={typeof next === "string" ? next : undefined} />
   </AuthLayout>;
 }

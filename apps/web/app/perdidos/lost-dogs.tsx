@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "../ui/error-state";
 
 import { LoadingState } from "../ui/loading-state";
 import { breedOptions, colorOptions, colorValue } from "@/lib/pet-details";
@@ -80,7 +81,7 @@ export function LostDogs() {
 
         {!loading && !error && result && <p className="status-text">{result.total === 1 ? "1 mascota sigue perdida" : `${result.total} mascotas siguen perdidas`}</p>}
       </div>
-      {error && <div className="notice notice-warning" role="alert">{error} <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>}
+      {error && <ErrorState compact headingLevel={3} title="No pudimos cargar los avisos" description="Podés reintentar sin perder tu búsqueda ni los filtros elegidos." onRetry={() => setRefresh(value => value + 1)} retrying={loading} />}
       {!loading && !error && result?.items.length === 0 && <div className="lost-dogs-empty">
         <h3>{search ? "No encontramos avisos con esa búsqueda" : "Todavía no hay avisos activos"}</h3>
         <p>{search ? "Probá con otro nombre o zona, o quitá algunos filtros." : "Cuando alguien publique una mascota perdida, su aviso aparecerá acá."}</p>

@@ -101,6 +101,7 @@ def overview(response:Response,db=Depends(get_db),user=Depends(admin)):
     from sqlalchemy import func
     response.headers["Cache-Control"]="no-store"
     counts={model.__tablename__:db.scalar(select(func.count()).select_from(model)) for model in (User,Pet,LostCase,Observation,Match,ModerationReport,CaseReview)}
+    counts["case_reviews"] = db.scalar(select(func.count()).select_from(CaseReview).where(CaseReview.is_current.is_(True)))
     failures=[{"id":job.id,"source":job.source_type,"error_code":job.error_code,"finished_at":job.finished_at} for job in db.scalars(select(AnalysisJob).where(AnalysisJob.status=="FAILED").order_by(AnalysisJob.finished_at.desc()).limit(50))]
     audits=[{"action":item.action,"target_type":item.target_type,"target_id":item.target_id,"created_at":item.created_at} for item in db.scalars(select(AdminAudit).order_by(AdminAudit.created_at.desc()).limit(50))]
     return {"counts":counts,"ai_failures":failures,"audit":audits}
@@ -108,6 +109,12 @@ def overview(response:Response,db=Depends(get_db),user=Depends(admin)):
 
 @router.get("/admin/records/{kind}")
 def records(kind:Literal["users","pets","lost_cases","observations","matches","reviews"],response:Response,limit:int=Query(default=50,ge=1,le=100),offset:int=Query(default=0,ge=0,le=10000),db=Depends(get_db),user=Depends(admin)):
+    if kind == "reviews":
+        from app.routers.reviews import public_review
+        response.headers["Cache-Control"] = "no-store"
+        rows = db.execute(select(CaseReview, User).join(User, CaseReview.author_id == User.id)
+            .order_by(CaseReview.is_current.desc(), CaseReview.updated_at.desc()).offset(offset).limit(limit))
+        return {"items": [{**public_review(item, author), "visibility": item.visibility, "is_current": item.is_current} for item, author in rows]}
     config={"users":(User,["id","name","status","role"]),"pets":(Pet,["id","name","species","owner_id"]),
         "lost_cases":(LostCase,["id","status","moderation_status","description","pet_id"]),"observations":(Observation,["id","source_type","moderation_status","description","author_id"]),
         "matches":(Match,["id","status","lost_case_id","observation_id","final_score","explanation"]),

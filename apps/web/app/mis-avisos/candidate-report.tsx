@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { observationDate } from "@/lib/public-observations";
 import { MatchFeedback } from "../match-feedback";
 import type { FeedbackSaved } from "../match-feedback";
@@ -19,7 +20,7 @@ export type Candidate = {
     matching_status: string; linked_to_notice: boolean; pet_details?: FoundPetDetailsData };
 };
 
-export function CandidateReport({ candidate, caseId, caseActive, onSaved }: { candidate: Candidate; caseId: string; caseActive: boolean; onSaved: (result: FeedbackSaved) => void }) {
+export function CandidateReport({ candidate, caseId, caseActive, onSaved, afterContact }: { candidate: Candidate; caseId: string; caseActive: boolean; onSaved: (result: FeedbackSaved) => void; afterContact?: ReactNode }) {
   const [mapOpen, setMapOpen] = useState(false);
   const { match, observation } = candidate;
   const found = observation.source_type === "FOUND_ANIMAL" && observation.linked_to_notice;
@@ -39,6 +40,6 @@ export function CandidateReport({ candidate, caseId, caseActive, onSaved }: { ca
     {found && <FoundPetDetails details={observation.pet_details} />}
     <ul>{match.explanation.map(reason => <li key={reason}>{reason}</li>)}</ul>
     {!found && observation.latitude != null && observation.longitude != null && <><button type="button" className="text-button" aria-expanded={mapOpen} onClick={() => setMapOpen(value => !value)}>{mapOpen ? "Ocultar lugar" : "Ver lugar del avistamiento"}</button>{mapOpen && <LocationMap latitude={observation.latitude} longitude={observation.longitude} editable={false} label="Lugar del reporte compartido de forma privada con el dueño" />}</>}
-    <MatchFeedback found={found} id={match.id} caseId={caseId} caseActive={caseActive} status={match.status} onSaved={onSaved} />
+    <MatchFeedback found={found} id={match.id} caseId={caseId} caseActive={caseActive} status={match.status} onSaved={onSaved} afterContact={afterContact} />
   </article>;
 }

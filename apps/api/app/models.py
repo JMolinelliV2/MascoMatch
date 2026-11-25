@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Text, Uuid, UniqueConstraint, func, insert
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, JSON, Numeric, String, Text, Uuid, UniqueConstraint, func, insert, text
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
@@ -526,11 +526,16 @@ class CaseReview(TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("lost_case_id", name="uq_case_review_case"),
         CheckConstraint("rating >= 1 AND rating <= 5", name="ck_case_review_rating"),
+        Index("uq_case_review_current_author", "author_id", unique=True,
+              postgresql_where=text("is_current = true"), sqlite_where=text("is_current = 1")),
     )
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    lost_case_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("lost_cases.id", ondelete="CASCADE"), nullable=False)
+    lost_case_id: Mapped[UUID | None] = mapped_column(Uuid(as_uuid=True), ForeignKey("lost_cases.id", ondelete="SET NULL", name="fk_case_review_origin"))
     author_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    is_current: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
+    is_anonymous: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
+    moderation_hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
     rating: Mapped[int] = mapped_column(Integer, nullable=False)
     comment: Mapped[str] = mapped_column(String(800), nullable=False)
     visibility: Mapped[str] = mapped_column(String(24), default="VISIBLE", server_default="VISIBLE", nullable=False)

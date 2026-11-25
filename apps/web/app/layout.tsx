@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import "./mobile.css";
 import { SiteHeader } from "./site-header";
 import { SiteFooter } from "./site-footer";
 import { ProductTracking } from "./product-tracking";

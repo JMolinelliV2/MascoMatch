@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "./ui/error-state";
 import { LoadingState } from "./ui/loading-state";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -93,7 +94,6 @@ export function HomeLostMap() {
     <div ref={container} className="home-lost-map-canvas" role="region" aria-label="Mapa de mascotas reportadas" aria-describedby="home-lost-map-help" />
     {selection && createPortal(<LostLocationPreview key={selection.points[0].id} selection={selection} origin="inicio" onRefresh={() => setRefresh(value => value + 1)} />, selection.content)}
     <p className="field-help" id="home-lost-map-help">Los puntos muestran zonas aproximadas. Los avisos sin ubicación se pueden consultar en el catálogo.</p>
-    {error && <p className="notice notice-warning" role="alert">{error} <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></p>}
-    {mapError && <p className="notice notice-warning" role="alert">{mapError} <button type="button" className="text-button" onClick={retryMap}>Reintentar mapa</button></p>}
+    {(error || mapError) && <ErrorState compact headingLevel={3} title="No pudimos completar el mapa" description="Podés reintentar o seguir consultando las mascotas en el catálogo." onRetry={() => { if (error) setRefresh(value => value + 1); if (mapError) retryMap(); }} retrying={busy} />}
   </section>;
 }

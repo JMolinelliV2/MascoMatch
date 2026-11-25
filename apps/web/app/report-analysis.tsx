@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "./ui/error-state";
 
 import { useEffect, useId, useState } from "react";
 import { Icon } from "./ui/pictogram";
@@ -143,8 +144,8 @@ export function ReportAnalysisContent({ analysis, message = "", paused = false, 
         );
       })}</div>
       {!reviewing && !message && !hasResults && <p className="report-analysis-empty">No hay características disponibles por ahora. Tu reporte conserva la información que ingresaste.</p>}
-      {message && <p role="alert" className="notice notice-warning">{message}</p>}
-      {(paused || message) && <button type="button" className="text-button report-analysis-refresh" disabled={loading} onClick={onRefresh}><Icon name="refresh" />{loading ? "Consultando…" : "Actualizar análisis"}</button>}
+      {message && (!analysis ? <ErrorState compact headingLevel={3} title="No pudimos consultar el análisis" description="Tu reporte sigue guardado. Podés reintentar la consulta sin volver a enviarlo." onRetry={onRefresh} retrying={loading} /> : <p role="alert" className="notice notice-warning">{message}</p>)}
+      {(paused || message) && (!message || analysis) && <button type="button" className="text-button report-analysis-refresh" disabled={loading} onClick={onRefresh}><Icon name="refresh" />{loading ? "Consultando…" : "Actualizar análisis"}</button>}
       <p className="report-analysis-note"><Icon name="info" />Estas sugerencias pueden tener errores. La descripción y los datos que ingresaste se conservan.</p>
     </section>
   );

@@ -1,6 +1,6 @@
 # MascoMatch: flujos implementados
 
-**Fecha de revisión: 5 de noviembre de 2026.**
+**Fecha de revisión: 7 de noviembre de 2026.**
 
 Este documento describe el comportamiento del código actual, sus pantallas, los procesos en segundo plano y las acciones de operación. Que una integración esté implementada no significa que esté habilitada en una instalación: SMTP, los modelos de IA, Mercado Pago y Backblaze requieren su configuración correspondiente. No se presupone que el proyecto ya esté desplegado en un VPS. Las guías técnicas y operativas se organizan en el [índice de documentación](README.md).
 
@@ -19,6 +19,8 @@ Este documento describe el comportamiento del código actual, sus pantallas, los
 
 Los actores son el visitante sin cuenta, el usuario registrado, el usuario con correo confirmado, el dueño de un aviso, el autor de un reporte y la cuenta administradora. Las comprobaciones de acceso se realizan en el servidor; no dependen solamente de los botones visibles.
 
+Las fallas al consultar una pantalla o sección muestran una ilustración estática del perrito con signos de pregunta, el contexto del error y una acción de reintento cuando corresponde. Las pantallas completas y las secciones pequeñas usan versiones adaptadas del mismo componente. Reintentar una consulta conserva los filtros y no vuelve a enviar reportes ni inicia pagos. Los errores de campos y de operaciones de guardado permanecen junto al formulario. Los enlaces inexistentes y los errores inesperados de página tienen el mismo tratamiento visual.
+
 ### Accesos según la sesión
 
 - Sin cuenta se puede explorar el catálogo y el mapa, abrir avisos, ampliar fotos, enviar contacto o denuncias, consultar Apoyanos y completar los reportes breves vinculados a un aviso.
@@ -35,6 +37,10 @@ Los actores son el visitante sin cuenta, el usuario registrado, el usuario con c
 | Encontré una mascota, sin aviso elegido | `/encontre` | CTA del inicio; menú Publicar; footer; cambio desde el formulario general de avistamiento. | Sí, con correo confirmado. |
 | La vi, para un aviso particular | `/avistamiento?aviso=ID_INTERNO` | Botón La vi de la ficha de una mascota perdida; cambio desde La tengo conmigo del mismo aviso. | No. |
 | La tengo conmigo, para un aviso particular | `/encontre?aviso=ID_INTERNO` | Botón La tengo conmigo de la ficha de una mascota perdida; cambio desde La vi del mismo aviso. | No. |
+
+Si la persona con sesión es dueña del aviso, la ficha ofrece **Ya la tengo conmigo** para confirmar directamente la recuperación. No se solicitan fotos, descripción ni contacto y no se crea otro reporte. El aviso pasa a encontrado, se cierra la búsqueda y se ofrece dejar una reseña opcional. El acceso directo a `/encontre?aviso=…` reconoce la misma titularidad y presenta esa acción en lugar del formulario para terceros. La titularidad se verifica mediante el acceso privado al aviso y el servidor vuelve a comprobarla al guardar; conocer el ID no permite cerrar una búsqueda ajena. No se atribuye el reencuentro a una coincidencia de IA sin que el dueño lo haya indicado.
+
+Si la persona no tiene sesión, debajo de **Informar que la tengo conmigo** aparece **Soy el dueño del aviso**. El enlace lleva a `/login` y conserva el aviso elegido. Después de ingresar, se regresa a `/encontre?aviso=…` y se verifica la titularidad: el dueño puede marcar la recuperación sin fotos ni datos adicionales; otra cuenta conserva el formulario para terceros. No se cierra el aviso por iniciar sesión: el dueño confirma con **Ya la tengo conmigo**. Esta acción de cierre también está permitida si tiene pendiente confirmar el correo. El retorno del login solo admite la ruta interna de recuperación con un ID de aviso válido.
 
 La ficha del aviso se puede abrir desde las tarjetas del inicio, el catálogo `/perdidos`, el mapa del inicio, los marcadores del mapa completo y las posibles coincidencias mostradas tras un reporte o en Mis avisos. En esos recorridos se abre la ficha y desde allí se elige uno de los dos botones: no todos los mapas o tarjetas tienen un formulario de publicación propio.
 
@@ -116,7 +122,7 @@ Los reportes enviados por el propio dueño para su aviso no le generan una alert
 
 1. Se carga el aviso seleccionado y se explica que primero se revisará la identidad de la mascota.
 2. Se solicita al menos una foto, hasta un máximo de cinco, y una descripción de lo que la persona tiene delante. Se pueden añadir sexo, tamaño, raza, colores, collar y prendas.
-3. Se solicitan nombre y teléfono de contacto. El formulario explica que se compartirán con el dueño únicamente después de que confirme la identidad.
+3. Se solicitan nombre y teléfono de contacto. El formulario y el servidor validan el teléfono contra los formatos y prefijos de su país: Uruguay admite formato local; otros países usan el prefijo internacional. No se envían SMS ni se comprueba que la línea esté activa o pertenezca a la persona. El formulario explica que el contacto se compartirá con el dueño únicamente después de que confirme la identidad.
 4. No se pide lugar ni fecha de hallazgo. Se registra la fecha de envío; el lugar donde se encontró no condiciona este recorrido.
 5. Puede enviarse sin cuenta. El sistema guarda los datos de la mascota y almacena el nombre y teléfono en un registro privado separado.
 6. Se genera una alerta para el dueño del aviso elegido. No se espera una aprobación del modelo ni se descarta el reporte por distancia o fecha de hallazgo.
@@ -159,7 +165,7 @@ Los mismos controles se usan en publicación general, detalles opcionales de rep
 
 ### Al publicar
 
-Se admiten JPEG, PNG y WebP, hasta 10 MiB por foto y hasta cinco fotos por reporte. Se selecciona la miniatura antes de enviar. En los avisos perdidos y reportes generales las fotos son opcionales; en el nuevo recorrido vinculado de mascota bajo cuidado se exige al menos una.
+Se admiten JPEG, PNG y WebP, hasta 10 MiB por foto y hasta cinco fotos por reporte. Se selecciona la miniatura antes de enviar. En los avisos perdidos y reportes generales las fotos son opcionales; en el recorrido vinculado de mascota bajo cuidado reportada por otra persona se exige al menos una. El dueño que confirma que ya recuperó a su propia mascota no necesita cargar fotos ni crear un reporte.
 
 El servidor comprueba el archivo real, procesa la imagen y retira metadatos. Las fotos se almacenan como objetos privados y se sirven a través de rutas que verifican la visibilidad o los permisos que correspondan. Una dirección privada del almacenamiento no se publica como enlace de la foto.
 
@@ -186,6 +192,10 @@ Muestra búsquedas activas con ubicación aproximada. Pasar por el marcador o to
 ### Mapa completo `/mapa`
 
 La interfaz ofrece Perdidos y Avistamientos. Los avisos de pérdida se distinguen en rojo y los avistamientos en azul, con marcadores y tarjetas de un mismo estilo. Los encontrados no forman parte de las capas, contador ni lista de esta pantalla.
+
+Los filtros permiten elegir especie y un rango de fechas desde/hasta; ambos días se incluyen completos en horario de Uruguay. Se puede dejar un extremo abierto o limpiar las fechas para ver todos los reportes, sin el límite anterior de 30 días.
+
+La distancia se elige con un deslizador o escribiendo kilómetros enteros de 0 a 500; el extremo final «Todo el país» elimina el filtro de proximidad. Si el navegador ya tiene permiso de geolocalización, se abre automáticamente un radio de 15 km desde la ubicación disponible. Si no hay permiso o falla la ubicación, se muestran todas las zonas sin pedir permiso al cargar. El botón Usar mi ubicación permite solicitarlo. Una distancia elegida sin ubicación se aplica cuando se obtiene una referencia; los demás filtros se conservan.
 
 Los reportes de la lista incluyen miniatura cuando hay foto. Los avistamientos abren detalles dentro del mapa: características, descripción, hora, zona, fotos ampliables y aviso relacionado si existe. Si el reporte pertenece a la cuenta que inició sesión, se ofrece el acceso a editarlo.
 
@@ -231,6 +241,8 @@ La web conserva la sesión en una cookie HttpOnly; en producción se configura a
 | Reenviar o cancelar cambio de correo | Se realiza desde Mi cuenta mientras existe una dirección pendiente. Un enlace anterior no puede confirmar otra dirección distinta. |
 | Cambiar contraseña con sesión | Se ingresa la contraseña actual, una nueva y su confirmación. Se conservan la sesión actual y la verificación; se revocan las otras sesiones y los enlaces de recuperación pendientes. |
 | Preferencias de correo | La casilla de Notificaciones guarda la preferencia en la misma página. Afecta alertas y recordatorios; no elimina la bandeja ni desactiva los correos de acceso solicitados. |
+
+El teléfono de la cuenta es opcional: puede dejarse vacío o eliminarse. Si se informa, se aplica la misma validación local por país que en el formulario de mascota bajo cuidado, también al registrar una cuenta mediante la API. Un número inválido impide guardar toda esa solicitud; no deja cambios parciales en los otros datos. La validación funciona sin servicios pagos ni consultas externas. Los contactos históricos siguen siendo consultables y no se reescriben automáticamente.
 
 ### Foto de perfil
 
@@ -282,7 +294,7 @@ El dueño puede abrir Avistamientos y coincidencias en Mis avisos o abrir una no
 | Cerrar aviso | Se da por terminada la búsqueda sin afirmar una recuperación. | Pasa a `CLOSED` y deja el catálogo activo. |
 | Reabrir búsqueda | Se reactiva un aviso retirado de una especie admitida. | Pasa a `ACTIVE` y vuelve a ser elegible para publicación y comparación. |
 
-El código público no cambia. Cerrar o recuperar un aviso retira las alertas que ya no corresponden a una búsqueda activa y permite pedir una reseña. Reabrirlo retira temporalmente de la portada la reseña de esa búsqueda cerrada.
+El código público no cambia. Cerrar o recuperar un aviso retira las alertas que ya no corresponden a una búsqueda activa y permite compartir una reseña o revisar la que ya existe. La reseña pertenece a la cuenta y se conserva si se reabre o elimina el aviso de origen.
 
 Reconocer una mascota en una foto, informar que otra persona la tiene y recuperarla físicamente son tres hechos diferentes. El sistema conserva esa distinción.
 
@@ -333,11 +345,12 @@ La API tiene consultas de análisis propio y operaciones autorizadas de solicitu
 
 1. Después de cerrar un aviso perdido o marcar la recuperación, se ofrece al dueño compartir su experiencia.
 2. Es opcional: omitirla no impide cerrar el aviso ni afecta la comparación.
-3. Se eligen de una a cinco estrellas, se escribe un comentario y se autoriza expresamente su publicación. Se puede usar un nombre o apodo, o dejarlo vacío para publicar como Anónimo.
-4. Se admite una reseña por aviso y se comprueba la titularidad y el cierre en el servidor.
+3. Se eligen de una a cinco estrellas, se escribe un comentario y se autoriza expresamente su publicación. La identidad puede ser **Anónimo**, sin foto, o el nombre de la cuenta abreviado: primer nombre e inicial de la palabra siguiente, por ejemplo **Julian M.**. No se admite un apodo específico para la reseña y el servidor genera el nombre público.
+4. Se admite una sola reseña actual por cuenta. El primer envío exige un aviso propio cerrado o recuperado y correo confirmado. En siguientes reencuentros se muestra la reseña existente: **Dejarla así** no modifica sus datos; **Editar mi reseña** permite actualizar estrellas, comentario y anonimato, renovando el consentimiento.
 5. La portada muestra las reseñas elegibles. Si no hay ninguna, no aparece la sección ni un bloque vacío.
 6. Las reseñas con nombre pueden mostrar la foto actual del perfil; las anónimas no muestran esa foto. Ver más reseñas despliega las restantes disponibles.
-7. El dueño puede retirar su reseña. El administrador puede ocultar o restaurar las que siguen siendo moderables, pero no volver a publicar una retirada por el propio autor.
+7. También puede editarse o retirarse desde **Mi cuenta**. El autor puede volver a publicar una reseña retirada con consentimiento explícito. Editar o retirar y volver a publicar no elimina una ocultación por moderación. El administrador puede ocultar o restaurar la reseña actual, pero no publicar una retirada por el autor ni una reseña histórica.
+8. La migración conserva las reseñas anteriores como historial privado y selecciona la última por cuenta como actual, respetando su estado. Las identidades anteriores pasan a mostrarse anónimas hasta que su autor elija expresamente la opción con su nombre de cuenta. El historial no duplica reseñas en la portada ni en el conteo administrativo.
 
 ## 19. Denunciar publicaciones y contactar a administración
 

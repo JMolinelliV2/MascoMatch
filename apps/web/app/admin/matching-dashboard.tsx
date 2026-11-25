@@ -1,4 +1,6 @@
 "use client";
+import { requestError } from "@/lib/request-error";
+import { AdminDataError } from "./admin-data-error";
 
 import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
@@ -41,12 +43,12 @@ function ResponseHistory({ id }: { id: string }) {
       if (!response.ok) throw new Error("No pudimos consultar el historial.");
       const data: { items: FeedbackEvent[] } = await response.json();
       if (!controller.signal.aborted) setEvents(data.items);
-    }).catch(cause => { if (!controller.signal.aborted) setError(cause.message); }).finally(finish);
+    }).catch(cause => { if (!controller.signal.aborted) setError(requestError(cause, "La consulta no pudo completarse. Intentá de nuevo en unos instantes.")); }).finally(finish);
     return () => {controller.abort();finish();};
   }, [id, refresh, version, beginRequest]);
   return <div className="admin-response-history">
     <AdminHeading level={4} label="Historial de respuestas" />
-    {error ? <p role="alert">{error} <button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></p>
+    {error ? <AdminDataError description={error} title="No pudimos consultar las respuestas" />
       : !events ? <LoadingState compact title="Cargando las respuestas" />
         : !events.length ? <p>El dueño todavía no respondió.</p>
           : <ol>{events.map(event => <li key={event.id}><strong>{feedbackLabels[event.status] || event.status}{event.recovered && " · Ya la recuperó"}</strong><time dateTime={event.created_at}>{date(event.created_at)}</time>{event.legacy && <span className="field-help">Respuesta anterior al seguimiento; no hay historial previo disponible.</span>}</li>)}</ol>}
@@ -87,7 +89,7 @@ export function MatchingDashboard({period,onPeriodChange,fixedFilters}:{period:A
       {!fixedFilters&&<div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-source`} label="Origen" help="Permite consultar recomendaciones de la búsqueda general o de reportes enviados desde una ficha que fueron considerados una posible coincidencia." /><select id={`${fieldId}-source`} className="form-input" value={source} onChange={event => filter(setSource, event.target.value)}><option value="all">Todos los orígenes</option><option value="GENERAL">Búsqueda general</option><option value="LINKED">Desde un aviso</option></select></div>}
       <div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-dataset`} label="Registro" help="Distingue registros creados desde el inicio del seguimiento de registros anteriores recuperados de la información disponible. Los anteriores pueden tener un historial incompleto." /><select id={`${fieldId}-dataset`} className="form-input" value={dataset} onChange={event => filter(setDataset, event.target.value)}><option value="all">Todos los registros</option><option value="live">Desde el inicio del seguimiento</option><option value="legacy">Registros anteriores</option></select></div>
     </div>
-    {error && <p role="alert" className="notice notice-warning">{error}</p>}
+    {error && (!data ? <AdminDataError description={error} title="No pudimos consultar las coincidencias" /> : <p role="alert" className="notice notice-warning">{error}</p>)}
     {!data && !error && <LoadingState compact title="Cargando el seguimiento de coincidencias" />}
     {data && counts && <>
       <div className="admin-matching-summary">

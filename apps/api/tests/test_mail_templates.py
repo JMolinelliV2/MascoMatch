@@ -55,7 +55,8 @@ def test_single_alert_keeps_its_evidence_time_links_and_untrusted_text_safe(monk
     report = SimpleNamespace(id=uuid4(), title='Luna <img src=x onerror="alert(1)">',
                              body="La comparación detectó diferencias. <script>alert(1)</script>")
     observation = SimpleNamespace(observed_at=datetime(2026, 11, 2, 18, 30, tzinfo=timezone.utc),
-                                  public_location='Zona <b>de ejemplo</b>', latitude=-34.90123, longitude=-56.15234)
+                                  public_location='Zona <b>de ejemplo</b>', latitude=-34.90123, longitude=-56.15234,
+                                  source_type="USER_SIGHTING", linked_case_id=None)
     owner = SimpleNamespace(email="owner@example.test")
     message = build_message(report, owner, observation)
     plain, html = contents(message)

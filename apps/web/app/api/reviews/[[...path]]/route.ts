@@ -6,12 +6,12 @@ async function handle(request: NextRequest, context: { params: Promise<{ path?: 
   const { path = [] } = await context.params;
   const publicRead = request.method === "GET" && path.length === 0;
   const publicAvatar = request.method === "GET" && path.length === 2 && uuid.test(path[0]) && path[1] === "avatar";
-  const ownReview = path.length === 2 && path[0] === "lost-cases" && uuid.test(path[1]) && ["GET", "POST", "DELETE"].includes(request.method);
+  const ownReview = ((path.length === 1 && path[0] === "me") || (path.length === 2 && path[0] === "lost-cases" && uuid.test(path[1]))) && ["GET", "POST", "PATCH", "DELETE"].includes(request.method);
   if ((!publicRead && !publicAvatar && !ownReview) || (request.method !== "GET" && !sameOrigin(request))) {
     return NextResponse.json({ detail: "Solicitud no permitida." }, { status: 403 });
   }
   try {
-    const body = request.method === "POST" ? Buffer.from(await boundedBody(request, 8192)) : undefined;
+    const body = ["POST", "PATCH"].includes(request.method) ? Buffer.from(await boundedBody(request, 8192)) : undefined;
     const target = publicRead ? "public/reviews?limit=6" : publicAvatar ? `public/reviews/${path[0]}/avatar` : `reviews/${path.join("/")}`;
     const upstream = await fetch(`${serverApi}/${target}`, {
       method: request.method, headers: { ...(publicRead || publicAvatar ? proxyHeaders(request) : authorization(request)), ...(body ? { "Content-Type": "application/json" } : {}) },
@@ -27,4 +27,5 @@ async function handle(request: NextRequest, context: { params: Promise<{ path?: 
 }
 export const GET = handle;
 export const POST = handle;
+export const PATCH = handle;
 export const DELETE = handle;

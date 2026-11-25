@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "../ui/error-state";
 import { LoadingState } from "../ui/loading-state";
 import { ReportAccessories } from "../ui/report-accessories";
 import Link from "next/link";
@@ -30,8 +31,8 @@ function ObservationPreview({ id, onLayout, onRefresh }: { id: string; onLayout:
     return () => controller.abort();
   }, [id, refresh]);
   useEffect(() => { onLayout(); }, [report, missing, error, onLayout]);
-  if (missing) return <div className="home-map-preview observation-map-preview"><h3>Este reporte ya no está disponible</h3><button type="button" className="text-button" onClick={onRefresh}>Actualizar mapa</button></div>;
-  if (error) return <div className="home-map-preview observation-map-preview"><p role="alert">{error}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
+  if (missing) return <div className="home-map-preview observation-map-preview"><ErrorState compact headingLevel={3} title="Este reporte ya no está disponible" description="Podés actualizar el mapa para consultar los reportes actuales." onRetry={onRefresh} retryLabel="Actualizar mapa" /></div>;
+  if (error) return <div className="home-map-preview observation-map-preview"><ErrorState compact headingLevel={3} title="No pudimos abrir este reporte" description="Los detalles no están disponibles en este momento. Reintentá para consultarlos." onRetry={() => setRefresh(value => value + 1)} /></div>;
   if (!report) return <div className="home-map-preview observation-map-preview"><LoadingState compact title="Cargando el reporte" /></div>;
   const found = report.source_type === "FOUND_ANIMAL";
   return <div className={`home-map-preview observation-map-preview map-report-${found ? "found" : "sighting"}`}>

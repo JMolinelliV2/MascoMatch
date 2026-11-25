@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "./error-state";
 
 import {useEffect, useState} from "react";
 import type {FormEvent} from "react";
@@ -66,9 +67,9 @@ export function PhotoManager({ownerType,ownerId,onChanged,active=true}:{ownerTyp
 
   return <div className="photo-manager" aria-busy={busy||loading}>
     {loading&&<p role="status" className="field-help">Consultando fotos…</p>}
-    {error&&<p role="alert" className="notice notice-warning">{error}</p>}
+    {error&&album&&<p role="alert" className="notice notice-warning">{error}</p>}
     {message&&<p role="status" className="notice">{message}</p>}
-    {!album&&!loading&&<button type="button" className="text-button" onClick={()=>{setError("");setRevision(value=>value+1);}}>Reintentar</button>}
+    {error&&!album&&!loading&&<ErrorState compact headingLevel={3} title="No pudimos cargar tus fotos" description="No logramos consultar el álbum de este reporte. Podés reintentar sin volver a subir las fotos." onRetry={()=>{setError("");setRevision(value=>value+1);}}/>}
     {album&&<>
       <p className="field-help">{album.items.length} de {MAX_REPORT_PHOTOS} fotos. La miniatura se muestra en el aviso, los listados y el mapa.</p>
       {!!album.items.length&&<ul className="photo-thumbnails photo-album">{album.items.map((photo,index)=><li key={photo.id} className={photo.is_primary?"photo-is-primary":undefined}>

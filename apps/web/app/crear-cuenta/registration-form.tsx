@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "../ui/error-state";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -80,7 +81,7 @@ export function RegistrationForm() {
   }
 
   if (checking) return <AccountLoading description="Estamos abriendo tu espacio en MascoMatch." />;
-  if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
+  if (sessionUnavailable) return <ErrorState compact title="No pudimos comprobar tu sesión" description="Necesitamos consultar tu cuenta antes de continuar. Reintentá en unos instantes." onRetry={() => { setChecking(true); setRefresh(value => value + 1); }} />;
   if (user && !created) return <AccountLoading title="Abriendo tu cuenta" description="Enseguida vas a poder continuar." />;
   if (user) return <section className="auth-form auth-created">
     <h2>Tu cuenta está creada</h2>

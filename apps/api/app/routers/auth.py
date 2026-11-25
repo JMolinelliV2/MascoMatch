@@ -18,6 +18,7 @@ from app.dependencies import current_user, oauth2_scheme
 from app.models import User, AuthSession, Notification, AccountToken
 from app.admin_access import claim_reserved_access
 from app.schemas import LoginRequest, NotificationPreferences, RegisterRequest, TokenResponse, UserRead
+from app.phone_numbers import OptionalPhone
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -176,7 +177,7 @@ def me(user: User = Depends(current_user)):
 class ContactUpdate(BaseModel):
     model_config=ConfigDict(extra="forbid")
     name: str=Field(min_length=1,max_length=120)
-    phone: str | None=Field(default=None,max_length=32)
+    phone: OptionalPhone = None
     email: str=Field(min_length=5,max_length=320)
     password: str | None=Field(default=None,max_length=128)
 

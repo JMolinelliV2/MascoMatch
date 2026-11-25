@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
+from sqlalchemy import func, select
+from app.models import FoundReportContact, LostCase, Notification, Observation, Photo, RecoveryOutcome
 
 
 def publish(client, headers, *, name="Luna", species="dog", sex="unknown", description="Perro marrón con pecho blanco", area="El Pinar, Canelones, Uruguay"):
@@ -64,6 +66,47 @@ def test_finished_notices_are_hidden_in_list_detail_and_photo(client, auth_heade
     assert client.get("/api/v1/public/lost-animals").json()["total"] == 0
     assert client.get(f"/api/v1/public/lost-animals/{case['id']}").status_code == 404
     assert client.get(f"/api/v1/public/lost-animals/{case['id']}/photo").status_code == 404
+
+
+@pytest.mark.parametrize("species", ["dog", "cat"])
+def test_owner_can_confirm_recovery_without_photos_or_another_report(client, auth_headers, db_factory, species):
+    _, case = publish(client, auth_headers, species=species)
+    path = f"/api/v1/lost-cases/{case['id']}"
+    # This is the action used by the owner on the notice and its linked found page.
+    # Nothing is required beyond the existing notice and the intended new state.
+    for _ in range(2):
+        response = client.patch(path, headers=auth_headers, json={"status": "FOUND"})
+        assert response.status_code == 200, response.text
+        assert response.json()["status"] == "FOUND"
+        assert response.json()["public_id"] == case["public_id"]
+    with db_factory() as db:
+        assert db.get(LostCase, UUID(case["id"])).status == "FOUND"
+        outcome = db.get(RecoveryOutcome, UUID(case["id"]))
+        assert outcome and outcome.reason == "PREFER_NOT_TO_SAY"
+        assert outcome.match_id is outcome.observation_id is None
+        assert db.scalar(select(func.count()).select_from(RecoveryOutcome)) == 1
+        for model in (Photo, Observation, FoundReportContact, Notification):
+            assert db.scalar(select(func.count()).select_from(model)) == 0
+    assert client.get("/api/v1/public/lost-animals").json()["total"] == 0
+    assert client.get(f"/api/v1/public/lost-animals/{case['id']}").status_code == 404
+    assert client.get(f"/api/v1/reviews/lost-cases/{case['id']}", headers=auth_headers).json()["eligible"] is True
+
+
+def test_direct_recovery_is_exclusively_for_the_notice_owner(client, auth_headers, db_factory):
+    _, case = publish(client, auth_headers)
+    path = f"/api/v1/lost-cases/{case['id']}"
+    stranger = client.post("/api/v1/auth/register", json={
+        "email": "recovery-stranger@example.test", "password": "a-strong-passphrase", "name": "Stranger",
+    }).json()
+    stranger_headers = {"Authorization": f"Bearer {stranger['access_token']}"}
+    assert client.get(path, headers=auth_headers).status_code == 200
+    assert client.get(path, headers=stranger_headers).status_code == 404
+    assert client.patch(path, json={"status": "FOUND"}).status_code == 401
+    assert client.patch(path, headers=stranger_headers, json={"status": "FOUND"}).status_code == 404
+    with db_factory() as db:
+        assert db.get(LostCase, UUID(case["id"])).status == "ACTIVE"
+        assert db.scalar(select(func.count()).select_from(RecoveryOutcome)) == 0
+    assert client.get(f"/api/v1/public/lost-animals/{case['id']}").status_code == 200
 
 
 @pytest.mark.parametrize("species", ["dog", "cat"])

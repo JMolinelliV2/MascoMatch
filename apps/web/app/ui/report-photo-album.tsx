@@ -1,4 +1,5 @@
 "use client";
+import { ErrorState } from "./error-state";
 
 import { useEffect, useState } from "react";
 import { Icon } from "./pictogram";
@@ -57,7 +58,7 @@ export function ReportPhotoAlbum({ src, alt, galleryEndpoint }: { src: string | 
       </button></li>)}
     </ul>}
     {loading && <p className="report-album-message" role="status">Cargando fotos del aviso…</p>}
-    {error && <div className="report-album-error"><p role="status">{error}</p><button type="button" className="text-button" onClick={() => setRetry(value => value + 1)}>Reintentar</button></div>}
+    {error && <div className="report-album-error"><ErrorState compact headingLevel={3} title="No pudimos cargar las otras fotos" description={src ? "La foto principal sigue disponible. Reintentá para consultar el resto del álbum." : "No logramos consultar el álbum de este reporte. Reintentá en unos instantes."} onRetry={() => setRetry(value => value + 1)} /></div>}
     {expanded && <PhotoViewer photos={viewerPhotos} title={alt} initialIndex={currentIndex} onClose={() => setExpanded(false)} />}
   </div>;
 }

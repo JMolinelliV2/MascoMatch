@@ -8,8 +8,10 @@ import { useSessionRefresh } from "../use-session-refresh";
 import { AccountLoading } from "../ui/account-loading";
 import { AuthPasswordField } from "../ui/auth-password-field";
 import { Icon } from "../ui/pictogram";
+import { loginDestination, ownerRecoveryReturnPath } from "@/lib/login-return";
+import { ErrorState } from "../ui/error-state";
 
-export function LoginForm() {
+export function LoginForm({ returnTo }: { returnTo?: string }) {
   const sessionVersion = useSessionRefresh();
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -18,6 +20,7 @@ export function LoginForm() {
   const [refresh, setRefresh] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const recoveryReturn = ownerRecoveryReturnPath(returnTo);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -33,8 +36,8 @@ export function LoginForm() {
   }, [refresh, sessionVersion]);
 
   useEffect(() => {
-    if (user) router.replace(user.email_verified ? "/mis-avisos" : "/confirmar-correo");
-  }, [user, router]);
+    if (user) router.replace(loginDestination(recoveryReturn, user.email_verified));
+  }, [user, router, recoveryReturn]);
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,10 +63,11 @@ export function LoginForm() {
   }
 
   if (checking) return <AccountLoading description="Estamos abriendo tu espacio en MascoMatch." />;
-  if (sessionUnavailable) return <div className="notice notice-warning" role="alert"><p>{error}</p><button type="button" className="text-button" onClick={() => { setChecking(true); setRefresh(value => value + 1); }}>Reintentar</button></div>;
-  if (user) return <AccountLoading title={user.email_verified ? "Abriendo tus avisos" : "Abriendo la confirmación de correo"} description={user.email_verified ? "Enseguida vas a poder seguir tus búsquedas." : "Ya falta un paso para empezar a publicar."} />;
+  if (sessionUnavailable) return <ErrorState compact title="No pudimos comprobar tu sesión" description="No logramos consultar tu cuenta. Reintentá para continuar con el ingreso." onRetry={() => { setChecking(true); setRefresh(value => value + 1); }} />;
+  if (user) return <AccountLoading title={recoveryReturn ? "Abriendo tu aviso" : user.email_verified ? "Abriendo tus avisos" : "Abriendo la confirmación de correo"} description={recoveryReturn ? "Estamos comprobando las opciones de tu aviso." : user.email_verified ? "Enseguida vas a poder seguir tus búsquedas." : "Ya falta un paso para empezar a publicar."} />;
 
   return <form className="auth-form" onSubmit={login} aria-busy={busy}>
+    {recoveryReturn && <p className="field-help">Ingresá con la cuenta que creó el aviso. Después podrás marcar que recuperaste a tu mascota sin cargar fotos ni otros datos.</p>}
     <fieldset className="section-fields" disabled={busy}>
       <label className="field-label">Correo electrónico<input className="form-input" name="email" type="email" required maxLength={320} autoComplete="email" placeholder="nombre@ejemplo.com" /></label>
       <AuthPasswordField name="password" label="Contraseña" autoComplete="current-password" recovery />

@@ -55,6 +55,8 @@ def test_anonymous_custody_report_needs_no_location_or_discovery_time(client, au
 @pytest.mark.parametrize("change,with_photo", [
     ({"finder_name": " "}, True), ({"finder_name": "123"}, True), ({"finder_phone": "abc"}, True),
     ({"finder_phone": "+598 123"}, True), ({"description": " "}, True), ({}, False),
+    ({"finder_phone": "8812391923012301023"}, True), ({"finder_phone": "11111111"}, True),
+    ({"finder_phone": "+999 99123456"}, True),
 ])
 def test_custody_requires_real_contact_pet_description_and_photo(client, auth_headers, monkeypatch, change, with_photo):
     _, case = lost_notice(client, auth_headers)
@@ -74,6 +76,17 @@ def test_discovery_location_and_date_never_reject_a_custody_report(client, auth_
         observation = db.get(Observation, UUID(response.json()["id"]))
         assert observation.latitude is observation.longitude is observation.public_location is None
         assert not any("radio" in reason or "Falta una ubicación" in reason for reason in observation.matching_reasons)
+
+
+def test_historical_contact_remains_readable_after_numbering_validation_changes(client, auth_headers, db_factory, monkeypatch):
+    _, _, result, match_id = found_report(client, auth_headers, monkeypatch)
+    with db_factory() as db:
+        db.get(FoundReportContact, UUID(result["id"])).phone = "11111111"
+        db.commit()
+    assert client.patch(f"/api/v1/matches/{match_id}/feedback", headers=auth_headers, json={"status": "RESOLVED"}).status_code == 200
+    response = client.get(f"/api/v1/matches/{match_id}/reporter-contact", headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json()["contact"]["phone"] == "11111111"
 
 
 def test_only_the_notice_owner_after_identity_confirmation_can_read_contact(client, auth_headers, db_factory, monkeypatch):

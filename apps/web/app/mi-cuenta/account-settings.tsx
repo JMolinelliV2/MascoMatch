@@ -7,6 +7,9 @@ import type { SessionUser } from "../account-session";
 import { SavedChangesDialog } from "../ui/saved-changes-dialog";
 import { ProfilePhoto } from "./profile-photo";
 import { ChangePassword } from "./change-password";
+import { ReviewRequest } from "../review-request";
+import { PhoneField } from "../ui/phone-field";
+import { phoneError } from "@/lib/phone-numbers";
 
 async function requestChange(method: string, payload?: object, action?: "cancel" | "resend") {
   const response = await fetch(`/api/account-settings${action ? `?action=${action}` : ""}`, {
@@ -58,6 +61,8 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (controlsDisabled) return;
+    const invalidPhone = phoneError(phone);
+    if (invalidPhone) { setError(invalidPhone); return; }
     const form = event.currentTarget;
     const values = new FormData(form);
     setBusy(true); setError(""); setMessage("");
@@ -109,7 +114,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
       <form onSubmit={save} aria-busy={busy}>
         <fieldset className="section-fields" disabled={controlsDisabled}>
           <label className="field-label">Nombre o apodo<input className="form-input" required maxLength={120} autoComplete="nickname" value={name} onChange={event => setName(event.target.value)} /><span className="field-help">En tus publicaciones mostramos solo la primera palabra de este nombre o apodo.</span></label>
-          <label className="field-label">Teléfono <span className="field-help">(opcional)</span><input className="form-input" type="tel" maxLength={32} autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)} /></label>
+          <PhoneField value={phone} onChange={setPhone} />
           <label className="field-label">Correo electrónico<input className="form-input" type="email" required maxLength={320} autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} /><span className="field-help">Para cambiarlo, confirmá la nueva dirección. Hasta entonces seguirá funcionando {user.email}.</span></label>
           {changingEmail && <label className="field-label">Contraseña actual<input className="form-input" type="password" name="password" required maxLength={128} autoComplete="current-password" /><span className="field-help">Al confirmar el nuevo correo, tendrás que ingresar nuevamente.</span></label>}
           <button className="button button-primary" type="submit">{busy ? "Guardando…" : "Guardar cambios"}</button>
@@ -120,6 +125,7 @@ function Settings({ user, onDeleted }: { user: SessionUser; onDeleted: () => voi
       {error && <p className="notice notice-warning" role="alert">{error}</p>}
     </section>
     <ChangePassword disabled={busy || preferencesBusy || photoBusy} onBusyChange={setPasswordBusy} onSaved={message => { setSavedScope("password"); setSavedConfirmation(message); }} />
+    <ReviewRequest />
     <section id="notificaciones" className="notification-login account-form account-notification-settings" aria-labelledby="notification-settings-title">
       <h2 id="notification-settings-title">Notificaciones</h2>
       <label className="sighting-recent"><input type="checkbox" checked={emailNotifications} disabled={controlsDisabled} onChange={event => void saveNotificationPreference(event.target.checked)} aria-describedby="notification-settings-help" />Recibir alertas y recordatorios por correo</label>

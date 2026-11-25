@@ -1,4 +1,5 @@
 "use client";
+import { AdminDataError } from "./admin-data-error";
 import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
@@ -118,7 +119,7 @@ export function OperationsDashboard({section,onNavigate,period,onPeriodChange}:{
       {section === "publications" && <div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-kind`} label="Tipo" help="Distingue los avisos de pérdida de los reportes de avistamiento o mascota encontrada. Recuperar una mascota conserva su aviso de pérdida con estado encontrado." /><select id={`${fieldId}-kind`} className="form-input" value={kind} onChange={event => filter(setKind, event.target.value)}><option value="all">Todos los avisos y reportes</option><option value="lost_case">Avisos de pérdida</option><option value="observation">Avistamientos y encontrados</option></select></div>}
       <form className="admin-record-search" onSubmit={event => { event.preventDefault(); setQ(search.trim()); setOffset(0); }}><div className="field-label"><AdminFieldLabel htmlFor={`${fieldId}-search`} label="Buscar" help={section === "users" ? "Busca cuentas por nombre o correo." : section === "publications" ? "Busca publicaciones por ID, nombre de la mascota, descripción o autor." : section === "jobs" ? "Busca trabajos por modelo de procesamiento o código de error." : section === "contacts" ? "Busca contactos por nombre, correo o contenido del mensaje." : "Busca registros por tipo de correo o nombre de la acción administrativa."} /><input id={`${fieldId}-search`} type="search" className="form-input" maxLength={120} value={search} placeholder={section === "users" ? "Nombre o correo" : section === "publications" ? "ID, mascota, descripción o autor" : section === "jobs" ? "Modelo o código de error" : section === "contacts" ? "Nombre, correo o mensaje" : "Tipo o acción"} onChange={event => setSearch(event.target.value)} /></div><button type="submit" className="button button-secondary">Buscar</button></form>
     </div>}
-    {saved && <p role="status" className="notice">{saved}</p>}{error && <p role="alert" className="notice notice-warning">{error}</p>}
+    {saved && <p role="status" className="notice">{saved}</p>}{error && (!data ? <AdminDataError description={error} /> : <p role="alert" className="notice notice-warning">{error}</p>)}
     {!data && !error && <LoadingState compact title={`Cargando ${title?.toLowerCase() || "los datos"}`} />}
     {data && <>
       {section === "overview" ? <><OverviewWidgets metrics={data.metrics||[]} charts={data.charts} queue={data.mail_queue} onQueue={()=>{navigate("mail");setMailView("mail_queue");}}/><BackupStatusWidget status={data.backups}/></>

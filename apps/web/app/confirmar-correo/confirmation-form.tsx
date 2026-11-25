@@ -1,5 +1,6 @@
 "use client";
 import { LoadingState } from "../ui/loading-state";
+import { ErrorState } from "../ui/error-state";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -67,7 +68,7 @@ export function ConfirmationForm() {
   </form>;
 
   if (checking) return <LoadingState title="Cargando tu cuenta" />;
-  if (sessionError) return <div className="notice notice-warning" role="alert"><p>{sessionError}</p><button type="button" className="text-button" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></div>;
+  if (sessionError) return <ErrorState title="No pudimos consultar tu cuenta" description="No logramos comprobar el estado de tu correo. Reintentá para continuar." onRetry={() => { setChecking(true); setRefresh(value => value + 1); }} />;
   if (user) return <section className="notification-login account-form"><VerifyEmailNotice email={user.email} showInstructions={false} /><Link href="/mi-cuenta" className="text-button">Ir a mi cuenta</Link></section>;
   return <section className="notification-login account-form"><h2>Abrí el enlace de tu correo</h2><p>Buscá el mensaje de MascoMatch y tocá “Confirmar mi correo”. Si necesitás otro enlace, ingresá a tu cuenta para reenviarlo.</p><div className="location-actions"><Link href="/login" className="button button-primary">Ingresar</Link><Link href="/crear-cuenta" className="text-button">Crear cuenta</Link></div></section>;
 }

@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./pictogram";
+import { ErrorState } from "./error-state";
+import { requestError } from "@/lib/request-error";
 
 export type ViewerPhoto = { id: string; src: string; alt: string; thumbnailSrc?: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -12,7 +14,7 @@ function ViewerImage({ photo }: { photo: ViewerPhoto }) {
   const [retry, setRetry] = useState(0);
   return <div className="photo-viewer-image">
     {status === "loading" && <p className="photo-viewer-message" role="status">Cargando foto…</p>}
-    {status === "failed" ? <div className="photo-viewer-message"><p role="alert">No pudimos cargar esta foto. Puede que ya no esté disponible.</p><button type="button" className="button button-secondary" onClick={() => { setStatus("loading"); setRetry(value => value + 1); }}>Reintentar</button></div>
+    {status === "failed" ? <div className="photo-viewer-message"><ErrorState compact title="No pudimos cargar esta foto" description="Puede que ya no esté disponible o que la conexión se haya interrumpido." onRetry={() => { setStatus("loading"); setRetry(value => value + 1); }} /></div>
       : <img key={retry} src={retry ? `${photo.src}${photo.src.includes("?") ? "&" : "?"}reintento=${retry}` : photo.src} alt={photo.alt} onLoad={() => setStatus("ready")} onError={() => setStatus("failed")} />}
   </div>;
 }
@@ -50,7 +52,7 @@ export function PhotoViewer({ photos, galleryEndpoint, title, initialIndex = 0, 
       const data: { items: { id: string }[] } = await response.json();
       if (!data || !Array.isArray(data.items) || data.items.some(item => !item || typeof item.id !== "string" || !uuid.test(item.id))) throw new Error("No pudimos consultar las fotos.");
       if (!controller.signal.aborted) setRemotePhotos(data.items.map(item => ({ id: item.id, src: `${galleryEndpoint}/${encodeURIComponent(item.id)}`, alt: title })));
-    }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No pudimos consultar las fotos."); })
+    }).catch(cause => { if (!controller.signal.aborted) setError(requestError(cause, "No pudimos consultar las fotos. Reintentá en unos instantes.")); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [galleryEndpoint, retry, title]);
@@ -75,7 +77,7 @@ export function PhotoViewer({ photos, galleryEndpoint, title, initialIndex = 0, 
     <header className="photo-viewer-header"><h2 id={titleId}>{title}</h2><button type="button" className="photo-viewer-close" aria-label="Cerrar fotos" autoFocus onClick={() => dialogRef.current?.close()}><Icon name="close" /></button></header>
     <div className="photo-viewer-canvas">
       {loading ? <p className="photo-viewer-message" role="status">Buscando las fotos del reporte…</p>
-        : error ? <div className="photo-viewer-message"><p role="alert">{error}</p><button type="button" className="button button-secondary" onClick={() => setRetry(value => value + 1)}>Reintentar</button></div>
+        : error ? <div className="photo-viewer-message"><ErrorState compact title="No pudimos abrir las fotos" description={error} onRetry={() => setRetry(value => value + 1)} /></div>
           : !items.length ? <p className="photo-viewer-message" role="status">Este reporte no tiene fotos disponibles.</p>
             : <ViewerImage key={items[currentIndex].id} photo={items[currentIndex]} />}
     </div>

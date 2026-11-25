@@ -1,12 +1,16 @@
 "use client";
 
 import { LoadingState } from "../ui/loading-state";
+import { ErrorState } from "../ui/error-state";
+import { requestError } from "@/lib/request-error";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { LocationMap } from "../location-map";
 import { MatchFeedback } from "../match-feedback";
 import type { FeedbackSaved } from "../match-feedback";
+import { MatchSupport } from "../ui/match-support";
+import type { MatchSupportKind } from "@/lib/match-support";
 
 import { VerifyEmailNotice } from "../verify-email-notice";
 import { useSessionRefresh } from "../use-session-refresh";
@@ -29,6 +33,8 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
   const sessionVersion = useSessionRefresh();
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
+  const [sessionError, setSessionError] = useState(false);
+  const [sessionRetry, setSessionRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [inbox, setInbox] = useState<Inbox | null>(null);
@@ -46,19 +52,20 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [selectedReviewed, setSelectedReviewed] = useState(false);
   const [reviewCaseId, setReviewCaseId] = useState<string | null>(null);
+  const [support, setSupport] = useState<{ noticeId: string; kind: MatchSupportKind; petName?: string } | null>(null);
 
-  useEffect(() => { setSelectedReviewed(false); setFeedbackMessage(""); setActionMessage(""); setReviewCaseId(null); automaticReadAttempt.current = ""; }, [selectedId, user?.id]);
+  useEffect(() => { setSelectedReviewed(false); setFeedbackMessage(""); setActionMessage(""); setReviewCaseId(null); setSupport(null); automaticReadAttempt.current = ""; }, [selectedId, user?.id]);
 
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/api/session", { cache: "no-store", signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error("No pudimos consultar tu sesión.");
       const session = await response.json();
-      if (!controller.signal.aborted) setUser(session.user);
-    }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "No pudimos consultar tu sesión."); })
+      if (!controller.signal.aborted) { setUser(session.user); setSessionError(false); }
+    }).catch(() => { if (!controller.signal.aborted) setSessionError(true); })
       .finally(() => { if (!controller.signal.aborted) setChecking(false); });
     return () => controller.abort();
-  }, [sessionVersion]);
+  }, [sessionVersion, sessionRetry]);
 
   useEffect(() => {
     if (!user || selectedReviewed) return;
@@ -82,7 +89,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
           if (!selectedId && offset > 0 && offset >= data.total) { setOffset(Math.max(0, Math.floor((data.total - 1) / 20) * 20)); return; }
           setInbox(data); setError("");
         }
-      } catch (cause) { if (!disposed && !signal.aborted && epoch === requestEpoch.current) setError(cause instanceof Error ? cause.message : "No pudimos cargar las notificaciones."); }
+      } catch (cause) { if (!disposed && !signal.aborted && epoch === requestEpoch.current) setError(requestError(cause, "No pudimos cargar las notificaciones. Reintentá en unos instantes.")); }
     }
     const scope = `${user.id}:${selectedId || view}:${offset}`;
     if (inboxScope.current !== scope) { inboxScope.current = scope; setInbox(null); }
@@ -95,6 +102,12 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
 
   function feedbackSaved(noticeId: string, result: FeedbackSaved) {
     requestEpoch.current += 1; inboxController.current?.abort();
+    if (result.support) {
+      const petName = inbox?.items.find(item => item.id === noticeId)?.pet_name;
+      setSupport({ noticeId, kind: result.support, petName });
+    } else if (result.recovered || result.status !== "RESOLVED") {
+      setSupport(current => current?.noticeId === noticeId ? null : current);
+    }
     const foundConfirmed = result.status === "RESOLVED" && !result.recovered && inbox?.items.some(item => item.id === noticeId && item.source_type === "FOUND_ANIMAL" && item.linked_to_notice);
     if (foundConfirmed && view === "unread") { setView("all"); setOffset(0); }
     if (result.recovered) setReviewCaseId(result.caseId);
@@ -188,7 +201,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
 
   return <main id="main-content" className="page notifications-page">
     <h1>Notificaciones</h1><p className="page-intro">Avistamientos que podrían ayudar a encontrar a tus mascotas.</p>
-    {checking ? <LoadingState title="Cargando tus notificaciones" description="Estamos consultando tu cuenta." /> : !user ? <form onSubmit={login} className="notification-login">
+    {checking ? <LoadingState title="Cargando tus notificaciones" description="Estamos consultando tu cuenta." /> : sessionError ? <ErrorState title="No pudimos consultar tu cuenta" description="Necesitamos comprobar tu sesión para mostrar las notificaciones." onRetry={() => { setChecking(true); setSessionRetry(value => value + 1); }} /> : !user ? <form onSubmit={login} className="notification-login">
       <h2>Ingresá con la cuenta de tu aviso</h2><p className="field-help">Así podrás ver los lugares y las fotos que compartieron.</p>
       <fieldset disabled={busy} className="form-controls section-fields">
         <label className="field-label">Correo electrónico<input name="email" type="email" required maxLength={320} autoComplete="email" className="form-input" /></label>
@@ -209,6 +222,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       <div className="notifications-toolbar"><span aria-live="polite">{selectedId ? "Avistamiento de la alerta" : inbox ? `${inbox.unread_count} sin leer` : "Cargando avisos…"}</span><div className="notifications-toolbar-actions">{!selectedId && view !== "archived" && Boolean(inbox?.unread_count) && <button type="button" className="text-button" disabled={Boolean(action)} onClick={() => void readAll()}>{action?.kind === "read-all" ? "Guardando…" : "Marcar todas como leídas"}</button>}<button type="button" className="text-button" disabled={Boolean(action)} onClick={() => setRefresh(value => value + 1)}>Actualizar</button></div></div>
       {actionMessage && <p className="notice" role="status">{actionMessage}</p>}
       {feedbackMessage && <div className="notice" role="status"><p>{feedbackMessage}</p><Link className="text-button" href="/mis-avisos">Ver el estado en Mis avisos</Link></div>}
+      {support && support.kind !== "contact" && <MatchSupport key={support.noticeId} kind={support.kind} petName={support.petName} onClose={() => setSupport(null)} />}
       {reviewCaseId && <ReviewRequest key={reviewCaseId} caseId={reviewCaseId} recovered />}
       {inbox?.total === 0 && !selectedReviewed && <div className="lost-dogs-empty"><h2>{view === "unread" ? "No tenés notificaciones sin leer" : view === "archived" ? "No tenés notificaciones archivadas" : "No tenés notificaciones en la bandeja"}</h2><p>{view === "unread" ? "Las alertas que ya leíste están en Todas. Los nuevos avistamientos aparecerán acá." : view === "archived" ? "Cuando archives una alerta, podrás recuperarla desde esta sección." : "Acá aparecerán los avistamientos enviados desde tus avisos y las posibles coincidencias de otros reportes."}</p></div>}
       {inbox && <div className="notifications-list">{inbox.items.map(notice => <article key={notice.id} className={`notification-card ${notice.read_at ? "" : "notification-unread"}`}>
@@ -229,7 +243,7 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
           <button type="button" className="text-button" disabled={Boolean(action)} onClick={() => void updateNotice(notice.id, notice.archived_at ? "restore" : "archive")}>{action?.id === notice.id && ["archive", "restore"].includes(action.kind) ? "Guardando…" : notice.archived_at ? "Restaurar notificación" : "Archivar notificación"}</button>
         </div>
         {!(notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice) && map === notice.id && notice.latitude !== null && notice.longitude !== null && <LocationMap latitude={notice.latitude} longitude={notice.longitude} editable={false} />}
-        {notice.match_id && <MatchFeedback found={notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice} presentation={notice.presentation} id={notice.match_id} caseId={notice.lost_case_id} status={notice.match_status} onSaved={result => feedbackSaved(notice.id, result)} />}
+        {notice.match_id && <MatchFeedback found={notice.source_type === "FOUND_ANIMAL" && notice.linked_to_notice} presentation={notice.presentation} id={notice.match_id} caseId={notice.lost_case_id} status={notice.match_status} onSaved={result => feedbackSaved(notice.id, result)} afterContact={support?.kind === "contact" && support.noticeId === notice.id ? <MatchSupport kind="contact" onClose={() => setSupport(null)} /> : undefined} />}
         {notice.email_status === "SENT" && <p className="field-help">Alerta enviada también por correo.</p>}
         {notice.email_status === "PREVIEWED" && <p className="field-help">Correo generado en el servidor local de pruebas.</p>}
         {notice.email_status === "FAILED" && <p className="field-help">El correo no pudo enviarse. La notificación quedó guardada acá.</p>}
@@ -237,6 +251,6 @@ export function NotificationsInbox({ selectedId }: { selectedId?: string }) {
       </article>)}</div>}
       {inbox && inbox.total > 20 && <nav className="lost-dogs-pagination" aria-label="Páginas de notificaciones"><button type="button" className="button button-secondary" disabled={Boolean(action) || offset === 0} onClick={() => setOffset(Math.max(0, offset - 20))}>Anterior</button><span>Página {Math.floor(offset / 20) + 1}</span><button type="button" className="button button-secondary" disabled={Boolean(action) || offset + inbox.items.length >= inbox.total} onClick={() => setOffset(offset + 20)}>Siguiente</button></nav>}
     </>}
-    {error && <p role="alert" className="notice notice-error">{error}</p>}
+    {error && !sessionError && (user && !inbox ? <ErrorState title="No pudimos abrir tus notificaciones" description={error} onRetry={() => setRefresh(value => value + 1)} /> : <p role="alert" className="notice notice-error">{error}</p>)}
   </main>;
 }

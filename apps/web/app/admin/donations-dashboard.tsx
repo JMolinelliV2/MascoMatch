@@ -1,4 +1,6 @@
 "use client";
+import { requestError } from "@/lib/request-error";
+import { AdminDataError } from "./admin-data-error";
 import { LoadingState } from "../ui/loading-state";
 import { useEffect, useId, useState } from "react";
 import { AdminDateRange, adminDate, periodQuery } from "./date-range";
@@ -25,7 +27,7 @@ export function DonationsDashboard({ period, onPeriodChange }: { period: AdminPe
     void fetch(`/api/admin/donations?${params}`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]) }).then(async response => {
       if (!response.ok) throw new Error("No pudimos consultar los aportes. Revisá tu sesión y permisos.");
       const next = await response.json(); if (!controller.signal.aborted) setData(next);
-    }).catch(cause => { if (!controller.signal.aborted) setError(cause.message); }).finally(finish);
+    }).catch(cause => { if (!controller.signal.aborted) setError(requestError(cause, "La consulta no pudo completarse. Intentá de nuevo en unos instantes.")); }).finally(finish);
     return () => { controller.abort(); finish(); };
   }, [environment, state, offset, period, version, beginRequest]);
   return <section>
@@ -36,7 +38,7 @@ export function DonationsDashboard({ period, onPeriodChange }: { period: AdminPe
       <div className="field-label"><AdminFieldLabel htmlFor={`${id}-state`} label="Estado" help="Confirmado indica que Mercado Pago acreditó el importe. Pendiente y preparando checkout todavía no significan un aporte recibido." /><select id={`${id}-state`} className="form-input" value={state} onChange={event => { setState(event.target.value); setData(null); setOffset(0); }}><option value="all">Todos los estados</option>{Object.entries(states).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
     </div>
     <p className="field-help">El período se aplica a la fecha de inicio del aporte. No se guardan datos de tarjetas ni la identidad de quien aporta.</p>
-    {error && <p className="notice notice-warning" role="alert">{error}</p>}
+    {error && (!data ? <AdminDataError description={error} title="No pudimos consultar los aportes" /> : <p className="notice notice-warning" role="alert">{error}</p>)}
     {!data && !error && <LoadingState compact title="Cargando los aportes" />}
     {data && <>
       <div className="admin-widget"><AdminHeading level={3} label={environment === "test" ? "Total confirmado de prueba" : "Total confirmado"} help="Suma de importes de aportes con estado actual Confirmado, en el entorno y período elegidos. Excluye reembolsos, reembolsos parciales, contracargos y operaciones pendientes. No descuenta comisiones de Mercado Pago ni representa el saldo disponible." /><strong className="support-selection-amount">$U {new Intl.NumberFormat("es-UY").format(BigInt(data.approved_amount_uyu))}</strong><p className="field-help">{data.summary.APPROVED || 0} confirmados · {data.queue.pending} confirmaciones en cola · {data.queue.retrying} con reintento. La cola corresponde al estado actual del entorno, sin filtro de fechas.</p><p className="field-help">Recepción {data.enabled ? "habilitada" : "desactivada"} · Entorno activo: {data.active_environment === "test" ? "pruebas" : "producción"}.</p></div>

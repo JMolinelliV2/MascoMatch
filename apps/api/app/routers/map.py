@@ -1,5 +1,6 @@
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Literal
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from sqlalchemy import and_,exists,select,text,or_
 from app.analysis.service import utcnow
@@ -15,14 +16,28 @@ router=APIRouter(prefix="/public/map",tags=["public-map"])
 @router.get("")
 def public_map(response:Response,species:Literal["", "dog", "cat"]=Query(default=""),days:int=Query(default=30,ge=0,le=3650),
     latitude:float|None=Query(default=None,ge=-90,le=90),longitude:float|None=Query(default=None,ge=-180,le=180),
-    radius_km:int=Query(default=15,ge=1,le=200),compatible_only:bool=False,layer:Literal["all","lost"]="all",db=Depends(get_db)):
+    radius_km:int=Query(default=15,ge=0,le=500),compatible_only:bool=False,layer:Literal["all","lost"]="all",
+    date_from:date|None=None,date_to:date|None=None,db=Depends(get_db)):
     if (latitude is None)!=(longitude is None):raise HTTPException(status_code=422,detail="Falta la referencia completa de ubicación.")
+    if date_from and date_to and date_from>date_to:
+        raise HTTPException(422,"La fecha desde debe ser anterior o igual a la fecha hasta.")
+    if date_to==date.max:
+        raise HTTPException(422,"Ingresá una fecha hasta válida.")
     points=[]
     case_query=active_dogs().where(LostCase.latitude.is_not(None),LostCase.longitude.is_not(None),LostCase.lost_at<=utcnow()+timedelta(minutes=1))
     obs_query=visible_observations().where(Observation.latitude.is_not(None),Observation.longitude.is_not(None))
     if species:
         case_query=case_query.where(Pet.species==species);obs_query=obs_query.where(Observation.species==species)
-    if days:
+    zone=ZoneInfo("America/Montevideo")
+    if date_from:
+        start=datetime.combine(date_from,time.min,zone).astimezone(timezone.utc)
+        case_query=case_query.where(LostCase.lost_at>=start)
+        obs_query=obs_query.where(Observation.observed_at>=start)
+    if date_to:
+        end=datetime.combine(date_to+timedelta(days=1),time.min,zone).astimezone(timezone.utc)
+        case_query=case_query.where(LostCase.lost_at<end)
+        obs_query=obs_query.where(Observation.observed_at<end)
+    if days and date_from is None and date_to is None:
         case_query=case_query.where(LostCase.lost_at>=utcnow()-timedelta(days=days))
         obs_query=obs_query.where(Observation.observed_at>=utcnow()-timedelta(days=days))
     if compatible_only:

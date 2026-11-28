@@ -4,6 +4,7 @@ import { ErrorState } from "./ui/error-state";
 import { LoadingState } from "./ui/loading-state";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker, TileLayer } from "leaflet";
+import { createLeafletMap } from "@/lib/leaflet-map";
 
 type Props = { latitude: number; longitude: number; onMove?: (latitude: number, longitude: number) => void; editable?: boolean; label?: string };
 
@@ -24,7 +25,7 @@ export function LocationMap({ latitude, longitude, onMove, editable = true, labe
     void import("leaflet").then(L => {
       if (disposed || !container.current) return;
       const point: [number, number] = [current.current.latitude, current.current.longitude];
-      const map = L.map(container.current, { scrollWheelZoom: false, zoomControl: false }).setView(point, 16);
+      const map = createLeafletMap(L, container.current, { zoomControl: false }).setView(point, 16);
       L.control.zoom({ zoomInTitle: "Acercar", zoomOutTitle: "Alejar" }).addTo(map);
       mapRef.current = map;
       const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -84,7 +85,7 @@ export function LocationMap({ latitude, longitude, onMove, editable = true, labe
   }, [latitude, longitude]);
 
   return <div className="location-map-section">
-    <p id={`${id}-help`} className="field-help">{editable ? "Arrastrá el pin o tocá el mapa para elegir otro punto. También podés mover el pin con las flechas del teclado." : label || "Lugar indicado por la persona que envió el avistamiento."}</p>
+    <p id={`${id}-help`} className="field-help">{editable ? "Arrastrá el pin o tocá el mapa para elegir otro punto. También podés mover el pin con las flechas del teclado." : label || "Lugar indicado por la persona que envió el avistamiento."}<span className="map-wheel-help"> Ctrl + rueda para acercar o alejar.</span></p>
     <div ref={container} className="location-map" role="region" aria-label={label || (editable ? "Mapa para ajustar la ubicación" : "Mapa del avistamiento")} aria-describedby={`${id}-help`} />
     {!ready && !error && <LoadingState compact title="Cargando el mapa" />}
     {error && <ErrorState compact headingLevel={3} title="No pudimos cargar este mapa" description={error} onRetry={ready ? () => { setError(""); tilesRef.current?.redraw(); } : undefined} />}

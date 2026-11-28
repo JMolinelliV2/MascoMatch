@@ -730,6 +730,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--text-primary); font-family: var(--font-hea
   .location-pin-shape::after { content: ""; position: absolute; width: 8px; height: 8px; top: 9px; left: 9px; border-radius: 50%; background: var(--surface); }
   .location-pin:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 4px; border-radius: 8px; }
   .leaflet-control-zoom a { width: 44px; height: 44px; line-height: 44px; }
+  .map-wheel-help { display: none; }
+  @media (any-pointer: fine) { .map-wheel-help { display: inline; } }
   .community-map { height: min(65vh, 560px); min-height: 320px; width: 100%; border-radius: 16px; border: 1px solid var(--border); margin-block: 16px; }
   .map-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
   .map-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 0; }

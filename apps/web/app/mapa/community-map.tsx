@@ -15,6 +15,7 @@ import {MapReportCard} from "./map-report-card";
 import type {MapReportPoint as Point} from "./map-report-card";
 import {ALL_MAP_DISTANCES,COUNTRY_MAP_BOUNDS,DEFAULT_MAP_RADIUS_KM,MAX_MAP_RADIUS_KM,knownMapLocation,mapDateRangeError,mapSearchParams,parseMapRadius} from "@/lib/map-filters";
 import type {MapOrigin} from "@/lib/map-filters";
+import { createLeafletMap } from "@/lib/leaflet-map";
 import "./map-filters.css";
 const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:8000/api/v1").replace(/\/$/,"");
 const mapLayers=["lost","sighting"] as const;
@@ -44,7 +45,7 @@ export function CommunityMap(){
     let disposed=false;let observer:ResizeObserver|undefined;
     void import("leaflet").then(L=>{
       if(disposed||!container.current)return;
-      const instance=L.map(container.current,{scrollWheelZoom:false}).fitBounds(COUNTRY_MAP_BOUNDS);map.current=instance;
+      const instance=createLeafletMap(L,container.current).fitBounds(COUNTRY_MAP_BOUNDS);map.current=instance;
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(instance).on("tileerror",()=>{if(!disposed)setError("No pudimos cargar algunas imágenes del mapa. Los reportes siguen disponibles en la lista.");});
       group.current=L.layerGroup().addTo(instance);observer=new ResizeObserver(()=>instance.invalidateSize({pan:false}));observer.observe(container.current);setReady(true);
     }).catch(()=>{if(!disposed)setError("No pudimos abrir el mapa. Los reportes siguen disponibles en la lista.");});
@@ -123,7 +124,7 @@ export function CommunityMap(){
     <fieldset className="map-legend"><legend>Mostrar capas</legend>{mapLayers.map(layer=><label key={layer}><input type="checkbox" checked={layers.includes(layer)} onChange={event=>setLayers(current=>event.target.checked?[...current,layer]:current.filter(item=>item!==layer))}/><span aria-hidden="true" className={`map-legend-dot ${layerClasses[layer]}`} /> {labels[layer]}</label>)}</fieldset>
     <label className="sighting-recent"><input type="checkbox" checked={compatible} onChange={event=>setCompatible(event.target.checked)}/>Solo avistamientos con posibles coincidencias</label>
     {error&&<ErrorState compact title="No pudimos completar la consulta del mapa" description={error} />}{busy ? <LoadingState compact title="Cargando reportes en el mapa" /> : <p role="status">{visible.length} reportes en las capas seleccionadas</p>}
-    <p className="field-help" id="community-map-help">Los círculos rojos son avisos de mascotas perdidas y los azules, avistamientos. Pasá el mouse o tocá una foto para ver su tarjeta. Las horas se muestran en horario de Uruguay.</p>
+    <p className="field-help" id="community-map-help">Los círculos rojos son avisos de mascotas perdidas y los azules, avistamientos. Pasá el mouse o tocá una foto para ver su tarjeta. Las horas se muestran en horario de Uruguay.<span className="map-wheel-help"> Ctrl + rueda para acercar o alejar.</span></p>
     <div ref={container} className="community-map" role="region" aria-label="Mapa de ubicaciones aproximadas" aria-describedby="community-map-help"/>
     {selection&&createPortal(selection.kind==="lost"?<LostLocationPreview key={selection.data.points[0].id} selection={selection.data} origin="mapa" onRefresh={()=>setRefresh(value=>value+1)}/>:<ObservationLocationPreview key={selection.data.selectedId} selection={selection.data} onRefresh={()=>setRefresh(value=>value+1)}/>,selection.data.content)}
     {!busy&&!visible.length&&<p>No hay reportes para estos filtros.</p>}<details className="map-report-list"><summary>Ver reportes en una lista</summary><ul className="map-report-grid" aria-label="Reportes en las capas seleccionadas">{visible.slice(0,100).map(point=><li key={`${point.layer}-${point.id}`}><MapReportCard point={point} href={point.url?noticeFromMap(point.url):undefined} onShowOnMap={point.layer==="sighting"&&ready?()=>showObservation(point):undefined}/></li>)}</ul>{visible.length>100&&<p>La lista muestra los primeros 100. Ajustá los filtros para ver menos resultados.</p>}</details>

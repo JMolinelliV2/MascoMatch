@@ -9,6 +9,7 @@ import { addLostMapMarker, lostMapLocations } from "@/lib/lost-map-marker";
 import type { LostMapPoint, LostMapSelection } from "@/lib/lost-map-marker";
 import { LostLocationPreview } from "./lost-map-preview";
 import { Icon } from "./ui/pictogram";
+import { createLeafletMap } from "@/lib/leaflet-map";
 
 type Point = LostMapPoint & { layer: "lost" | "sighting" | "found" };
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -33,7 +34,7 @@ export function HomeLostMap() {
     setReady(false); setMapError("");
     void import("leaflet").then(L => {
       if (disposed || !container.current) return;
-      const instance = L.map(container.current, { scrollWheelZoom: false, zoomControl: false }).setView([-34.9, -56.16], 11);
+      const instance = createLeafletMap(L, container.current, { zoomControl: false }).setView([-34.9, -56.16], 11);
       map.current = instance;
       L.control.zoom({ zoomInTitle: "Acercar", zoomOutTitle: "Alejar" }).addTo(instance);
       tiles.current = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -93,7 +94,7 @@ export function HomeLostMap() {
     {busy || !ready && !mapError ? <LoadingState compact title="Cargando el mapa" /> : <p className="home-map-status" role="status">{error ? "Los avisos del mapa no están disponibles en este momento." : points.length ? `${points.length} ${points.length === 1 ? "mascota reportada con ubicación" : "mascotas reportadas con ubicación"}` : "No hay avisos activos con ubicación por ahora."}</p>}
     <div ref={container} className="home-lost-map-canvas" role="region" aria-label="Mapa de mascotas reportadas" aria-describedby="home-lost-map-help" />
     {selection && createPortal(<LostLocationPreview key={selection.points[0].id} selection={selection} origin="inicio" onRefresh={() => setRefresh(value => value + 1)} />, selection.content)}
-    <p className="field-help" id="home-lost-map-help">Los puntos muestran zonas aproximadas. Los avisos sin ubicación se pueden consultar en el catálogo.</p>
+    <p className="field-help" id="home-lost-map-help">Los puntos muestran zonas aproximadas. Los avisos sin ubicación se pueden consultar en el catálogo.<span className="map-wheel-help"> Ctrl + rueda para acercar o alejar.</span></p>
     {(error || mapError) && <ErrorState compact headingLevel={3} title="No pudimos completar el mapa" description="Podés reintentar o seguir consultando las mascotas en el catálogo." onRetry={() => { if (error) setRefresh(value => value + 1); if (mapError) retryMap(); }} retrying={busy} />}
   </section>;
 }

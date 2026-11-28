@@ -157,21 +157,21 @@ def _add_branded_html(message: EmailMessage, url: str, *, preheader: str, eyebro
     safe_url = escape(url, quote=True)
     details_html = ""
     if details:
-        rows = "".join(f'<tr><td style="padding:8px 16px;font-size:14px;line-height:22px;color:#52677e;word-break:break-word;overflow-wrap:anywhere;"><strong style="color:#0b2a4a;">{escape(label)}</strong><br>{escape(value)}</td></tr>' for label, value in details)
-        details_html = f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#eff8ff" style="margin:0 0 24px;border-radius:10px;">{rows}</table>'
+        rows = "".join(f'<tr><td style="padding:8px 16px;font-size:14px;line-height:22px;color:#4e696d;word-break:break-word;overflow-wrap:anywhere;"><strong style="color:#133135;">{escape(label)}</strong><br>{escape(value)}</td></tr>' for label, value in details)
+        details_html = f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#eaf0f5" style="margin:0 0 24px;border-radius:10px;">{rows}</table>'
     reports_html = ""
     if report_links:
-        rows = "".join(f'<tr><td style="padding:14px 16px;border-bottom:1px solid #e5eaf0;word-break:break-word;overflow-wrap:anywhere;"><a href="{escape(link, quote=True)}" style="display:block;color:#0863b4;font-size:14px;line-height:22px;text-decoration:underline;"><strong>Reporte {index}</strong><br>{escape(label)}</a></td></tr>' for index, (label, link) in enumerate(report_links, 1))
-        reports_html = f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border:1px solid #e5eaf0;border-radius:10px;">{rows}</table>'
+        rows = "".join(f'<tr><td style="padding:14px 16px;border-bottom:1px solid #d2dddb;word-break:break-word;overflow-wrap:anywhere;"><a href="{escape(link, quote=True)}" style="display:block;color:#175b95;font-size:14px;line-height:22px;text-decoration:underline;"><strong>Reporte {index}</strong><br>{escape(label)}</a></td></tr>' for index, (label, link) in enumerate(report_links, 1))
+        reports_html = f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border:1px solid #d2dddb;border-radius:10px;">{rows}</table>'
         if more_reports:
-            reports_html += f'<p style="margin:0 0 24px;color:#52677e;font-size:14px;line-height:22px;">Hay {more_reports} reportes más. Podés revisar todos en tu bandeja.</p>'
+            reports_html += f'<p style="margin:0 0 24px;color:#4e696d;font-size:14px;line-height:22px;">Hay {more_reports} reportes más. Podés revisar todos en tu bandeja.</p>'
     tips_html = ""
     if tips:
         items = "".join(f'<li style="margin:0 0 10px;padding-left:2px;">{escape(tip)}</li>' for tip in tips)
         tips_html = f'<ul style="margin:12px 0 0;padding-left:20px;">{items}</ul>'
     preferences_html = ""
     if preferences_url:
-        preferences_html = f'<p style="margin:12px 0 0;font-size:13px;line-height:21px;"><a href="{escape(preferences_url, quote=True)}" style="color:#0863b4;text-decoration:underline;">Configurar notificaciones en Mi cuenta</a></p>'
+        preferences_html = f'<p style="margin:12px 0 0;font-size:13px;line-height:21px;"><a href="{escape(preferences_url, quote=True)}" style="color:#175b95;text-decoration:underline;">Configurar notificaciones en Mi cuenta</a></p>'
     html = f"""<!doctype html>
 <html lang="es">
 <head>
@@ -179,55 +179,55 @@ def _add_branded_html(message: EmailMessage, url: str, *, preheader: str, eyebro
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{escape(title)} — MascoMatch</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f6f7fb;color:#0b2a4a;font-family:Arial,Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background-color:#eff7f4;color:#133135;font-family:Lexend,Arial,Helvetica,sans-serif;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">{escape(preheader)}</div>
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f6f7fb">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#eff7f4">
     <tr>
       <td align="center" style="padding:32px 12px;">
         <!--[if mso]><table role="presentation" width="560" border="0" cellspacing="0" cellpadding="0"><tr><td><![endif]-->
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="max-width:560px;border:1px solid #e5eaf0;border-top:5px solid #d93646;border-radius:16px;">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="max-width:560px;border:1px solid #d2dddb;border-top:5px solid #0b6b69;border-radius:16px;">
           <tr>
-            <td style="padding:28px 28px 24px;border-bottom:1px solid #e5eaf0;">
+            <td style="padding:28px 28px 24px;border-bottom:1px solid #d2dddb;">
               <table role="presentation" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td width="44" valign="middle"><img src="cid:{logo_cid[1:-1]}" width="44" height="44" alt="" style="display:block;border:0;"></td>
-                  <td valign="middle" style="padding-left:10px;font-size:26px;line-height:32px;font-weight:800;letter-spacing:-0.8px;color:#0b2a4a;">Masco<span style="color:#d93646;">Match</span></td>
+                  <td valign="middle" style="padding-left:10px;font-size:26px;line-height:32px;font-weight:800;letter-spacing:-0.8px;color:#133135;">Masco<span style="color:#0b6b69;">Match</span></td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
             <td style="padding:28px;">
-              <p style="margin:0 0 12px;font-size:12px;line-height:18px;font-weight:700;letter-spacing:1.4px;color:#0863b4;">{escape(eyebrow)}</p>
-              <h1 style="margin:0 0 16px;font-size:28px;line-height:36px;font-weight:700;color:#0b2a4a;">{escape(title)}</h1>
-              <p style="margin:0 0 24px;font-size:16px;line-height:26px;color:#52677e;">{escape(description)}</p>
+              <p style="margin:0 0 12px;font-size:12px;line-height:18px;font-weight:700;letter-spacing:1.4px;color:#175b95;">{escape(eyebrow)}</p>
+              <h1 style="margin:0 0 16px;font-family:Poppins,Georgia,serif;font-size:28px;line-height:36px;font-weight:700;color:#133135;">{escape(title)}</h1>
+              <p style="margin:0 0 24px;font-size:16px;line-height:26px;color:#4e696d;">{escape(description)}</p>
               {details_html}
               {reports_html}
               <table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" style="margin:0 auto 24px;">
                 <tr>
-                  <td align="center" bgcolor="#d93646" style="border-radius:10px;">
-                    <a href="{safe_url}" style="display:inline-block;padding:14px 24px;border:1px solid #d93646;border-radius:10px;color:#ffffff;text-decoration:none;font-size:16px;line-height:24px;font-weight:700;">{escape(action)}</a>
+                  <td align="center" bgcolor="#0b6b69" style="border-radius:10px;">
+                    <a href="{safe_url}" style="display:inline-block;padding:14px 24px;border:1px solid #0b6b69;border-radius:10px;color:#ffffff;text-decoration:none;font-size:16px;line-height:24px;font-weight:700;">{escape(action)}</a>
                   </td>
                 </tr>
               </table>
-              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#fff1f2" style="border-radius:10px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ebf3f3" style="border-radius:10px;">
                 <tr>
-                  <td style="padding:14px 16px;font-size:14px;line-height:22px;color:#0b2a4a;"><strong>{escape(expiry_title)}</strong><br>{escape(expiry_text)}{tips_html}</td>
+                  <td style="padding:14px 16px;font-size:14px;line-height:22px;color:#133135;"><strong>{escape(expiry_title)}</strong><br>{escape(expiry_text)}{tips_html}</td>
                 </tr>
               </table>
-              <p style="margin:24px 0 8px;font-size:13px;line-height:21px;color:#52677e;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:</p>
-              <p style="margin:0;font-size:13px;line-height:21px;word-break:break-all;overflow-wrap:anywhere;"><a href="{safe_url}" style="color:#0863b4;text-decoration:underline;word-break:break-all;">{safe_url}</a></p>
+              <p style="margin:24px 0 8px;font-size:13px;line-height:21px;color:#4e696d;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:</p>
+              <p style="margin:0;font-size:13px;line-height:21px;word-break:break-all;overflow-wrap:anywhere;"><a href="{safe_url}" style="color:#175b95;text-decoration:underline;word-break:break-all;">{safe_url}</a></p>
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 28px;border-top:1px solid #e5eaf0;">
-              <p style="margin:0;font-size:13px;line-height:21px;color:#52677e;">{escape(footer)}</p>
+            <td style="padding:20px 28px;border-top:1px solid #d2dddb;">
+              <p style="margin:0;font-size:13px;line-height:21px;color:#4e696d;">{escape(footer)}</p>
               {preferences_html}
             </td>
           </tr>
         </table>
         <!--[if mso]></td></tr></table><![endif]-->
-        <p style="margin:20px 0 0;font-size:12px;line-height:20px;color:#64748b;">MascoMatch · Más miradas, más oportunidades de reencontrarse.</p>
+        <p style="margin:20px 0 0;font-size:12px;line-height:20px;color:#4e696d;">MascoMatch · Más miradas, más oportunidades de reencontrarse.</p>
       </td>
     </tr>
   </table>

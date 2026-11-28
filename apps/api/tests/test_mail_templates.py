@@ -25,7 +25,7 @@ def contents(message):
     assert logo.get_content_disposition() == "inline"
     assert f"cid:{str(logo['Content-ID'])[1:-1]}" in html
     assert logo.get_payload(decode=True).startswith(b"\x89PNG")
-    assert "#d93646" in html and 'align="center"' in html
+    assert "#0b6b69" in html and 'align="center"' in html
     return plain, html
 
 

@@ -14,9 +14,9 @@
   padding: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  box-shadow: 0 24px 65px rgb(11 42 74 / 24%);
+  box-shadow: 0 24px 65px color-mix(in srgb, var(--text-primary) 24%, transparent);
 }
-.match-support-dialog::backdrop { background: rgb(11 42 74 / 52%); }
+.match-support-dialog::backdrop { background: color-mix(in srgb, var(--text-primary) 52%, transparent); }
 .match-support-inline { margin-block: 20px; }
 .match-support-header {
   padding: 24px 24px 20px;
@@ -32,7 +32,7 @@
   border-radius: 15px;
   color: var(--primary);
   background: var(--surface);
-  box-shadow: 0 4px 14px rgb(11 42 74 / 8%);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text-primary) 8%, transparent);
 }
 .match-support-mark .ui-icon { width: 25px; height: 25px; }
 .match-support .match-support-header h2 { margin: 0; font-size: 1.5rem; line-height: 1.2; text-wrap: balance; }

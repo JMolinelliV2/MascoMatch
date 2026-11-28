@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "leaflet/dist/leaflet.css";
+import "./brand-fonts.css";
 import "./globals.css";
 import "./mobile.css";
 import { SiteHeader } from "./site-header";

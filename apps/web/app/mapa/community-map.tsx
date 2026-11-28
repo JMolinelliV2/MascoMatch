@@ -89,8 +89,8 @@ export function CommunityMap(){
         for(const point of location)observationOpeners.current.set(point.id,()=>handle.open(point.id));
       }
       if(center&&radius!==null){
-        L.circle([center.latitude,center.longitude],{radius:radius*1000,color:"#1261a0",weight:1,fillOpacity:.04,interactive:false}).addTo(group.current);
-        L.circleMarker([center.latitude,center.longitude],{radius:6,color:"#ffffff",weight:2,fillColor:"#1261a0",fillOpacity:1}).bindTooltip("Tu ubicación").addTo(group.current);
+        L.circle([center.latitude,center.longitude],{radius:radius*1000,color:"var(--accent-blue)",weight:1,fillOpacity:.04,interactive:false}).addTo(group.current);
+        L.circleMarker([center.latitude,center.longitude],{radius:6,color:"var(--surface)",weight:2,fillColor:"var(--accent-blue)",fillOpacity:1}).bindTooltip("Tu ubicación").addTo(group.current);
         map.current.fitBounds(L.latLng(center.latitude,center.longitude).toBounds(Math.max(radius,1)*2000),{padding:[24,24],maxZoom:15});
       }else map.current.fitBounds([...COUNTRY_MAP_BOUNDS,...bounds],{padding:[24,24]});
     });
